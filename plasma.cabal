@@ -70,7 +70,17 @@ library
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
 
-  pkgconfig-depends:   libLoam
+  -- pkgconfig-depends:   libLoam
+
+  include-dirs:        /opt/plasma/include
+
+  extra-lib-dirs:      /opt/plasma/lib
+
+  -- extra-lib-dirs-static: /opt/plasma/lib
+
+  extra-libraries:     Loam
+
+  -- extra-libraries-static: Loam
 
   -- Directories containing source files.
   hs-source-dirs:      src
