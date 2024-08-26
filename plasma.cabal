@@ -56,6 +56,7 @@ library
   -- LANGUAGE extensions enabled for all modules in this package.
   default-extensions:  BangPatterns
                      , BinaryLiterals
+                     , CApiFFI
                      , DeriveAnyClass
                      , DeriveFunctor
                      , DeriveGeneric

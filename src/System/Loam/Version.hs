@@ -10,6 +10,12 @@ Portability : GHC
 module System.Loam.Version
   ( VersionOfWhat(..)
   , SystemInfo(..)
+  , x86Features
   ) where
 
+import Data.Word
+
 import System.Loam.Internal.Enums
+
+foreign import capi "libLoam/c/ob-vers.h ob_x86_features"
+    x86Features :: IO Word64
