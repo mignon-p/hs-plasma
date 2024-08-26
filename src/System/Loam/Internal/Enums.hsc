@@ -29,9 +29,12 @@ module System.Loam.Internal.Enums
   , hasRdrnd
   ) where
 
+import Control.DeepSeq
 import Data.Bits
+import Data.Hashable
 import Data.Word
 import Foreign.C.Types
+import GHC.Generics (Generic)
 
 #include "libLoam/c/ob-vers.h"
 

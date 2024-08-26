@@ -69,6 +69,8 @@ library
 
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
+                     , deepseq              >= 1.4.4.0   && < 1.6
+                     , hashable             >= 1.4.0.0   && < 1.5
 
   -- pkgconfig-depends:   libLoam
 
