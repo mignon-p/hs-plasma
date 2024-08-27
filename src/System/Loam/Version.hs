@@ -12,9 +12,11 @@ module System.Loam.Version
   , SystemInfo(..)
   , x86Features
   , getVersion
+  , getSystemInfo
   ) where
 
 import qualified Data.ByteString.Unsafe as B
+import Data.Int
 import qualified Data.Text              as T
 import qualified Data.Text.Encoding     as T
 import Data.Word
@@ -28,8 +30,14 @@ foreign import capi "libLoam/c/ob-vers.h ob_x86_features"
 foreign import capi "libLoam/c/ob-vers.h ob_get_version"
     c_get_version :: CInt -> IO CString
 
+foreign import capi "libLoam/c/ob-vers.h ob_get_system_info"
+    c_get_system_info :: CInt -> IO Int64
+
 mallocStr2txt :: CString -> IO T.Text
 mallocStr2txt cs = T.decodeUtf8Lenient <$> B.unsafePackMallocCString cs
 
 getVersion :: VersionOfWhat -> IO T.Text
 getVersion v = c_get_version (versionOfWhat2int v) >>= mallocStr2txt
+
+getSystemInfo :: SystemInfo -> IO Int64
+getSystemInfo = c_get_system_info . systemInfo2int

@@ -6,9 +6,13 @@ import System.Loam.Version
 main :: IO ()
 main = do
   w <- x86Features
-  let s = printf "%016x" w
+  let s = printf "%-20s = %016x" ("features" :: String) w
   putStrLn s
 
   forM_ [minBound .. maxBound] $ \v -> do
     t <- getVersion v
-    putStrLn $ printf "%-18s = %s" (show v) t
+    putStrLn $ printf "%-20s = %s" (show v) t
+
+  forM_ [minBound .. maxBound] $ \si -> do
+    i <- getSystemInfo si
+    putStrLn $ printf "%-20s = %d" (show si) i
