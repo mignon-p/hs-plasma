@@ -9,10 +9,25 @@ Portability : GHC
 
 module System.Loam.Version
   ( VersionOfWhat(..)
-  , SystemInfo(..)
-  , x86Features
   , getVersion
+  , SystemInfo(..)
   , getSystemInfo
+  , x86Features
+  , hasSse
+  , hasSse2
+  , hasSse3
+  , hasPclmulqdq
+  , hasSsse3
+  , hasFma3
+  , hasCx16
+  , hasSse41
+  , hasSse42
+  , hasMovbe
+  , hasPopcnt
+  , hasAes
+  , hasAvx
+  , hasF16c
+  , hasRdrnd
   ) where
 
 import qualified Data.ByteString.Unsafe as B
