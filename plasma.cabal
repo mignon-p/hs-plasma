@@ -115,6 +115,7 @@ executable hs-plasma
 
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
+                     , plasma
 
   -- Directories containing source files.
   hs-source-dirs:      prog-src
