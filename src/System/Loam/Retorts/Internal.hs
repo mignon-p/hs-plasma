@@ -15,6 +15,7 @@ module System.Loam.Retorts.Internal
   , isSuccess
   , isFailure
   , getRetortInfo
+  , retortToErrno
   , retortToPlasmaException
   , throwRetort
   , throwRetort'
@@ -111,6 +112,17 @@ isSuccess (Retort r) = r >= 0
 isFailure :: Retort -> Bool
 isFailure (Retort r) = r < 0
 
+{-# INLINABLE retortToErrno #-}
+-- | Tests whether the 'Retort' encapsulates an @errno@ value from
+-- the C library.  If it is, returns the 'Errno'.  If not, returns
+-- 'Nothing'.
+retortToErrno :: Retort -> Maybe Errno
+retortToErrno (Retort r) =
+  let eno = c_retort_to_errno r
+  in if eno > 0
+     then Just (Errno eno)
+     else Nothing
+
 -- | Convert a 'Retort' into a 'PlasmaException'.
 retortToPlasmaException
   :: PlasmaExceptionType
@@ -184,10 +196,9 @@ throwRetort'
 throwRetort' et addn r erl
   | isSuccess r = return r
   | otherwise   = withFrozenCallStack $ do
-      let eno = c_retort_to_errno (unRetort r)
-      if eno > 0
-        then throwErrnoHelper addn (Errno eno) erl
-        else throwRetortHelper et addn r erl
+      case retortToErrno r of
+        Just eno -> throwErrnoHelper     addn eno erl
+        Nothing  -> throwRetortHelper et addn r   erl
 
 throwRetortHelper :: HasCallStack
                   => PlasmaExceptionType -- default exception type

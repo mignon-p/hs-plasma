@@ -14,6 +14,7 @@ module System.Loam.Retorts
   , isSuccess
   , isFailure
   , getRetortInfo
+  , retortToErrno
     -- * Exceptions
   , PlasmaException(..)     -- re-export from slaw package
   , displayPlasmaException  -- re-export from slaw package
