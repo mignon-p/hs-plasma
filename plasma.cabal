@@ -48,10 +48,12 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     System.Loam.Version
+  exposed-modules:     System.Loam.Retorts.Constants
+                     , System.Loam.Version
 
   -- Modules included in this library but not exported.
   other-modules:       System.Loam.Internal.Enums
+                     , System.Loam.Retorts.Internal.Descriptions
 
   -- LANGUAGE extensions enabled for all modules in this package.
   default-extensions:  BangPatterns
