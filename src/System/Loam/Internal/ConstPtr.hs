@@ -26,6 +26,8 @@ import Foreign.C.ConstPtr (ConstPtr(..))
 
 #else
 
+import Foreign.Storable (Storable(..))
+
 newtype ConstPtr a = ConstPtr { unConstPtr :: Ptr a }
                    deriving newtype (Storable, Show, Eq, Ord)
 
