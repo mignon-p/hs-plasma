@@ -52,7 +52,9 @@ library
                      , System.Loam.Version
 
   -- Modules included in this library but not exported.
-  other-modules:       System.Loam.Internal.Enums
+  other-modules:       System.Loam.Internal.ConstPtr
+                     , System.Loam.Internal.Enums
+                     , System.Loam.Retorts.Internal
                      , System.Loam.Retorts.Internal.Descriptions
 
   -- LANGUAGE extensions enabled for all modules in this package.
@@ -73,6 +75,7 @@ library
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
                      , bytestring           >= 0.11.3.0  && < 0.13
+                     , containers           >= 0.6.0.1   && < 0.8
                      , deepseq              >= 1.4.4.0   && < 1.6
                      , hashable             >= 1.4.0.0   && < 1.5
                      , slaw
