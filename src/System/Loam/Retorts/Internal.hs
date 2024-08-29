@@ -9,13 +9,13 @@ Portability : GHC
 
 module System.Loam.Retorts.Internal
   ( RetortInfo(..)
-  , RetortMap
-  , retortMap
-  , getRetortStringFromC
+  , getRetortInfo
+  , retortToPlasmaException
   ) where
 
 import Control.DeepSeq
 import qualified Data.ByteString.Unsafe   as B
+import Data.Default.Class
 import Data.Hashable
 import Data.Int
 import qualified Data.Map.Strict          as M
@@ -26,6 +26,7 @@ import qualified Data.Text.Encoding       as T
 import GHC.Generics (Generic)
 
 import Data.Slaw
+import Data.Slaw.Internal ((?>))
 import qualified System.Loam.Internal.ConstPtr as C
 -- import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.Descriptions
@@ -39,6 +40,13 @@ data RetortInfo = RetortInfo
   , riType :: Maybe PlasmaExceptionType
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
+instance Default RetortInfo where
+  def = RetortInfo
+        { riName = T.empty
+        , riDesc = T.empty
+        , riType = Nothing
+        }
+
 type RetortMap = M.Map Retort RetortInfo
 
 retortMap :: RetortMap
@@ -51,3 +59,44 @@ getRetortStringFromC (Retort r) = do
   if cs == C.nullConstPtr
     then return T.empty
     else T.decodeUtf8Lenient <$> B.unsafePackCString (C.unConstPtr cs)
+
+getRetortString :: Retort -> IO T.Text
+getRetortString r = do
+  txt <- getRetortStringFromC r
+  if T.null txt
+    then return $ T.pack $ "Retort " ++ show (unRetort r)
+    else return txt
+
+getRetortInfo :: Retort -> IO RetortInfo
+getRetortInfo r =
+  case r `M.lookup` retortMap of
+    Just ri -> return ri
+    Nothing -> mkRetortInfo <$> getRetortString r
+
+mkRetortInfo :: T.Text -> RetortInfo
+mkRetortInfo txt = RetortInfo
+  { riName = txt
+  , riDesc = T.empty
+  , riType = Nothing
+  }
+
+retortToPlasmaException :: PlasmaExceptionType -- default exception type
+                        -> Maybe String -- additional information/loc
+                        -> Retort
+                        -> Maybe ErrLocation -- file or pool
+                        -> IO PlasmaException
+retortToPlasmaException et addn r erl = do
+  ri <- getRetortInfo r
+  let desc = riDesc ri
+      s1   = case addn of
+               Nothing -> ""
+               Just s  -> s ++ ": "
+      s2   = T.unpack $ riName ri
+      s3   = if T.null desc
+             then ""
+             else " (" ++ T.unpack desc ++ ")"
+  return $ def { peType     = riType ri ?> et
+               , peRetort   = Just r
+               , peMessage  = concat [s1, s2, s3]
+               , peLocation = erl
+               }
