@@ -7,6 +7,9 @@ Maintainer  : code@funwithsoftware.org
 Portability : GHC
 -}
 
+-- TODO: Might want to just merge this into System.Loam.Retorts,
+-- if there aren't any functions we don't want to expose to the user.
+
 module System.Loam.Retorts.Internal
   ( RetortInfo(..)
   , isSuccess
@@ -44,10 +47,16 @@ foreign import capi "libLoam/c/ob-retorts.h ob_error_string_literal"
 foreign import capi unsafe "libLoam/c/ob-retorts.h ob_retort_to_errno"
     c_retort_to_errno :: Int64 -> CInt
 
+-- | Information about a particular 'Retort'.  Can be retrieved
+-- with 'getRetortInfo'.
 data RetortInfo = RetortInfo
   { riName :: T.Text
+    -- ^ Name of retort, such as @POOL_NO_SUCH_POOL@
   , riDesc :: T.Text
+    -- ^ Human-readable description of the retort
   , riType :: Maybe PlasmaExceptionType
+    -- ^ Optionally, the 'PlasmaExceptionType' that should be
+    -- associated with the retort
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance Default RetortInfo where
@@ -77,6 +86,10 @@ getRetortString r = do
     then return $ T.pack $ "Retort " ++ show (unRetort r)
     else return txt
 
+-- | Given a 'Retort', returns a 'RetortInfo' that describes the
+-- 'Retort'.  For unknown returns, returns a 'RetortInfo' where the
+-- 'riName' contains the numeric value of the retort, and 'riDesc'
+-- is the empty string, and 'riType' is 'Nothing'.
 getRetortInfo :: Retort -> IO RetortInfo
 getRetortInfo r =
   case r `M.lookup` retortMap of
@@ -87,18 +100,30 @@ mkRetortInfo :: T.Text -> RetortInfo
 mkRetortInfo txt = def { riName = txt }
 
 {-# INLINE isSuccess #-}
+-- | Returns 'True' if the retort is a success code; in other words,
+-- if it is greater than or equal to zero.
 isSuccess :: Retort -> Bool
 isSuccess (Retort r) = r >= 0
 
 {-# INLINE isFailure #-}
+-- | Returns 'True' if the retort is a failure code; in other words,
+-- if it is less than zero.
 isFailure :: Retort -> Bool
 isFailure (Retort r) = r < 0
 
-retortToPlasmaException :: PlasmaExceptionType -- default exception type
-                        -> Maybe String -- additional information/loc
-                        -> Retort
-                        -> Maybe ErrLocation -- file or pool
-                        -> IO PlasmaException
+-- | Convert a 'Retort' into a 'PlasmaException'.
+retortToPlasmaException
+  :: PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> IO PlasmaException
 retortToPlasmaException et addn r erl = do
   ri <- getRetortInfo r
   let desc = riDesc ri
@@ -115,22 +140,47 @@ retortToPlasmaException et addn r erl = do
                , peLocation = erl
                }
 
-throwRetort :: HasCallStack
-            => PlasmaExceptionType -- default exception type
-            -> Maybe String        -- additional information/loc
-            -> Retort
-            -> Maybe ErrLocation -- file or pool
-            -> IO ()             -- returns if retort is a success code
+-- | Given a 'Retort', throws an exception if the retort is a
+-- failure code (i. e. negative numerical value).  Returns normally
+-- if the retort is a success code.
+--
+-- If the retort encapsulates an @errno@ from the standard C
+-- library, throws an 'IOException'.  For any other failure
+-- retort, throws a 'PlasmaException'.
+throwRetort
+  :: HasCallStack
+  => PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> IO ()
+  -- ^ Returns @()@ if retort is a success code.
 throwRetort et addn r erl = withFrozenCallStack $ do
   throwRetort' et addn r erl
   return ()
 
-throwRetort' :: HasCallStack
-             => PlasmaExceptionType -- default exception type
-             -> Maybe String        -- additional information/loc
-             -> Retort
-             -> Maybe ErrLocation -- file or pool
-             -> IO Retort         -- returns if retort is a success code
+-- | Same as 'throwRetort', exception if the retort is a success
+-- code, it returns the retort instead of returning @()@.
+throwRetort'
+  :: HasCallStack
+  => PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> IO Retort
+  -- ^ Returns the retort if it is a success code.
 throwRetort' et addn r erl
   | isSuccess r = return r
   | otherwise   = withFrozenCallStack $ do
