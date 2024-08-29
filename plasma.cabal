@@ -48,7 +48,8 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     System.Loam.Retorts.Constants
+  exposed-modules:     System.Loam.Retorts
+                     , System.Loam.Retorts.Constants
                      , System.Loam.Version
 
   -- Modules included in this library but not exported.
