@@ -41,6 +41,8 @@ build-type:          Simple
 -- Extra files to be distributed with the package, such as examples or a
 -- README.
 extra-source-files:  CHANGELOG.md
+                   , stack.yaml
+                   , cbits/*.h
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
@@ -74,6 +76,10 @@ library
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
+
+  c-sources:           cbits/ze-hs-plasma.c
+
+  include-dirs:        cbits
 
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
