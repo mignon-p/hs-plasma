@@ -55,6 +55,7 @@ library
   -- Modules included in this library but not exported.
   other-modules:       System.Loam.Internal.ConstPtr
                      , System.Loam.Internal.Enums
+                     , System.Loam.Internal.Filename
                      , System.Loam.Retorts.Internal
                      , System.Loam.Retorts.Internal.Descriptions
 
@@ -79,6 +80,7 @@ library
                      , containers           >= 0.6.0.1   && < 0.8
                      , data-default-class   >= 0.1.2.0   && < 0.2
                      , deepseq              >= 1.4.4.0   && < 1.6
+                     , filepath             >= 1.4.300.1 && < 1.6
                      , hashable             >= 1.4.0.0   && < 1.5
                      , slaw
                      , text                 >= 1.2.3.1   && < 2.2
