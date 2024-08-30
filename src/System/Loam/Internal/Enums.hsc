@@ -12,6 +12,8 @@ module System.Loam.Internal.Enums
   , versionOfWhat2int
   , SystemInfo(..)
   , systemInfo2int
+  , StandardDir(..)
+  , standardDir2int
   , hasSse
   , hasSse2
   , hasSse3
@@ -36,6 +38,7 @@ import Data.Word
 import Foreign.C.Types
 import GHC.Generics (Generic)
 
+#include "libLoam/c/ob-dirs.h"
 #include "libLoam/c/ob-vers.h"
 
 data VersionOfWhat =
@@ -75,6 +78,32 @@ systemInfo2int SysNumCores          = #{const OB_SYSINFO_NUM_CORES}
 systemInfo2int SysCpuMhz            = #{const OB_SYSINFO_CPU_MHZ}
 systemInfo2int SysPhysicalMegabytes = #{const OB_SYSINFO_PHYSICAL_MEGABYTES}
 systemInfo2int SysSwapMegabytes     = #{const OB_SYSINFO_VIRTUAL_MEGABYTES}
+
+data StandardDir =
+    -- | Non-changing “resource” files like fonts, images, videos.
+    SharePath
+    -- | Configuration files that the user might edit (@layout.V@)
+  | EtcPath
+    -- | Files created automatically to hold state (pids, pools)
+  | VarPath
+    -- | Directory for creating temporary/scratch files.
+  | TmpDir
+    -- | Override the location for pools.
+  | PoolsDir
+    -- | Shouldn't be needed at runtime, but @yobuild@ is here.
+  | YobuildDir
+    -- | The @--prefix@ specified to “configure”
+  | PrefixDir
+  deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+standardDir2int :: StandardDir -> CInt
+standardDir2int SharePath  = #{const ob_share_path}
+standardDir2int EtcPath    = #{const ob_etc_path}
+standardDir2int VarPath    = #{const ob_var_path}
+standardDir2int TmpDir     = #{const ob_tmp_dir}
+standardDir2int PoolsDir   = #{const ob_pools_dir}
+standardDir2int YobuildDir = #{const ob_yobuild_dir}
+standardDir2int PrefixDir  = #{const ob_prefix_dir}
 
 hasSse, hasSse2, hasSse3, hasPclmulqdq, hasSsse3 :: Word64 -> Bool
 hasSse       = (`testBit` 25)
