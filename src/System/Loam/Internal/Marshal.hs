@@ -13,6 +13,7 @@ module System.Loam.Internal.Marshal
   , withLazyByteStringAsCStringLen
   , withReturnedSlaw
   , withReturnedByteString
+  , withReturnedRetort
   ) where
 
 import Control.Monad
@@ -27,6 +28,10 @@ import Foreign.Marshal.Alloc
 import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
+import GHC.Stack
+
+import System.Loam.Retorts
+import System.Loam.Retorts.Constants
 
 withLazyByteStringAsCString :: L.ByteString
                             -> (CString -> IO a)
@@ -112,3 +117,17 @@ withReturnedByteString f = alloca $ \lenPtr -> do
   if slawPtr == nullPtr || byteLen < 0
     then return Nothing
     else Just <$> B.unsafePackMallocCStringLen (slawPtr', byteLen')
+
+withReturnedRetort
+  :: HasCallStack
+  => PlasmaExceptionType
+  -> Maybe String
+  -> Maybe ErrLocation
+  -> (Ptr Int64 -> IO a)
+  -> IO a
+withReturnedRetort et addn erl f = alloca $ \tortPtr -> do
+  poke tortPtr $ unRetort OB_UNKNOWN_ERR
+  ret  <- f tortPtr
+  tort <- Retort <$> peek tortPtr
+  throwRetort et addn tort erl
+  return ret
