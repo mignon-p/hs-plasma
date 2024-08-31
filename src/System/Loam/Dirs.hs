@@ -16,7 +16,9 @@ module System.Loam.Dirs
   , searchStandardPath
   ) where
 
+import qualified Data.ByteString          as B
 import Data.Int
+import Data.List
 import qualified Data.Text                as T
 -- import Data.Word
 import Foreign.C.Types
@@ -43,10 +45,26 @@ foreign import capi "ze-hs-plasma.h ze_hs_plasma_search_standard_path"
       -> IO (Ptr ())
 
 getStandardPath :: Filename f => StandardDir -> IO (Maybe f)
-getStandardPath = undefined
+getStandardPath sd = do
+  bs <- getStandardPathBS sd
+  if B.null bs
+    then return Nothing
+    else return $ Just $ from8bitFn bs
 
 splitStandardPath :: Filename f => StandardDir -> IO [f]
-splitStandardPath = undefined
+splitStandardPath sd = do
+  bs <- getStandardPathBS sd
+  let dirs = if "Dir" `isSuffixOf` show sd
+             then [bs]
+             else B.split (fromIntegral c_path_char) bs
+  return $ map from8bitFn $ filter (not . B.null) dirs
+
+getStandardPathBS :: StandardDir -> IO B.ByteString
+getStandardPathBS sd = do
+  cs <- c_get_standard_path $ standardDir2int sd
+  if cs == C.nullConstPtr
+    then return B.empty
+    else B.packCString (C.unConstPtr cs)
 
 resolveStandardPath
   :: Filename f
