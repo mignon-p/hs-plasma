@@ -11,6 +11,7 @@ module System.Loam.Internal.Marshal
   ( withLazyByteStringAsCString
   , withLazyByteStringAsCStringNL
   , withLazyByteStringAsCStringLen
+  , withReturnedSlaw
   ) where
 
 import Control.Monad
@@ -18,6 +19,7 @@ import qualified Data.ByteString          as B
 import qualified Data.ByteString.Lazy     as L
 import qualified Data.ByteString.Unsafe   as B
 import Data.Char
+import Data.Int
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.Marshal.Alloc
@@ -83,3 +85,23 @@ endsWithNewline _ 0 = return False
 endsWithNewline buf pos = do
   lastByte <- peekByteOff buf (pos - 1)
   return (lastByte == newline)
+
+--
+
+withReturnedSlaw
+  :: (Ptr Int64 -> IO (Ptr ()))
+  -> IO (Maybe L.ByteString)
+withReturnedSlaw f = alloca $ \lenPtr -> do
+  poke lenPtr (-1)
+  slawPtr <- f lenPtr
+  byteLen <- peek lenPtr
+  if slawPtr == nullPtr || byteLen < 0
+    then return Nothing
+    else Just <$> mallocToLbs slawPtr byteLen
+
+mallocToLbs :: Ptr () -> Int64 -> IO L.ByteString
+mallocToLbs slawPtr byteLen = do
+  bs <- B.unsafePackMallocCStringLen ( castPtr slawPtr
+                                     , fromIntegral byteLen
+                                     )
+  return $ L.fromStrict bs
