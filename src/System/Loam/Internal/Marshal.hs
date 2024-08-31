@@ -12,6 +12,7 @@ module System.Loam.Internal.Marshal
   , withLazyByteStringAsCStringNL
   , withLazyByteStringAsCStringLen
   , withReturnedSlaw
+  , withReturnedByteString
   ) where
 
 import Control.Monad
@@ -91,17 +92,23 @@ endsWithNewline buf pos = do
 withReturnedSlaw
   :: (Ptr Int64 -> IO (Ptr ()))
   -> IO (Maybe L.ByteString)
-withReturnedSlaw f = alloca $ \lenPtr -> do
+withReturnedSlaw f = do
+  mbs <- withReturnedByteString f
+  case mbs of
+    Just bs
+      | B.null bs -> return Nothing
+      | otherwise -> return $ Just $ L.fromStrict bs
+    Nothing -> return Nothing
+
+withReturnedByteString
+  :: (Ptr Int64 -> IO (Ptr a))
+  -> IO (Maybe B.ByteString)
+withReturnedByteString f = alloca $ \lenPtr -> do
   poke lenPtr (-1)
   slawPtr <- f lenPtr
   byteLen <- peek lenPtr
+  let slawPtr' = castPtr      slawPtr
+      byteLen' = fromIntegral byteLen
   if slawPtr == nullPtr || byteLen < 0
     then return Nothing
-    else Just <$> mallocToLbs slawPtr byteLen
-
-mallocToLbs :: Ptr () -> Int64 -> IO L.ByteString
-mallocToLbs slawPtr byteLen = do
-  bs <- B.unsafePackMallocCStringLen ( castPtr slawPtr
-                                     , fromIntegral byteLen
-                                     )
-  return $ L.fromStrict bs
+    else Just <$> B.unsafePackMallocCStringLen (slawPtr', byteLen')
