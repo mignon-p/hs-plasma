@@ -1,5 +1,5 @@
 {-|
-Module      : System.Loam.Internal.StringMarshal
+Module      : System.Loam.Internal.Marshal
 Description : Functions for marshaling lazy ByteStrings
 Copyright   : © Mignon Pelletier, 2024
 License     : MIT
@@ -7,7 +7,7 @@ Maintainer  : code@funwithsoftware.org
 Portability : GHC
 -}
 
-module System.Loam.Internal.StringMarshal
+module System.Loam.Internal.Marshal
   ( withLazyByteStringAsCString
   , withLazyByteStringAsCStringNL
   , withLazyByteStringAsCStringLen

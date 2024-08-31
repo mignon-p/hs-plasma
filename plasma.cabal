@@ -59,7 +59,7 @@ library
   other-modules:       System.Loam.Internal.ConstPtr
                      , System.Loam.Internal.Enums
                      , System.Loam.Internal.Filename
-                     , System.Loam.Internal.StringMarshal
+                     , System.Loam.Internal.Marshal
                      , System.Loam.Retorts.Internal
                      , System.Loam.Retorts.Internal.Descriptions
 
