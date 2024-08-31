@@ -12,6 +12,7 @@ Portability : GHC
 
 module System.Loam.Internal.Filename
   ( Filename(..)
+  , fnAsErl
   ) where
 
 import Data.Bits
@@ -19,6 +20,7 @@ import qualified Data.ByteString          as B
 import qualified Data.ByteString.Builder  as R
 import qualified Data.ByteString.Lazy     as L
 import Data.Char
+import Data.Default.Class
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
 import qualified Data.Text.Encoding.Error as T
@@ -27,6 +29,7 @@ import qualified Data.Text.Lazy.Encoding  as LT
 import Data.Word
 import qualified System.OsPath            as O
 
+import Data.Slaw
 import Data.Slaw.Internal (FileClass(..))
 
 class FileClass a => Filename a where
@@ -76,3 +79,6 @@ le8to16 :: [Word8] -> [Word16]
 le8to16 (lo:hi:rest) = w16 : le8to16 rest
   where w16 = fromIntegral lo .|. (fromIntegral hi `shiftL` 8)
 le8to16 _ = []
+
+fnAsErl :: FileClass a => a -> ErrLocation
+fnAsErl fn = def { elSource = DsFile (fcName fn) }
