@@ -19,10 +19,12 @@ module System.Loam.Dirs
 import qualified Data.ByteString          as B
 import Data.Int
 import Data.List
+import Data.Maybe
 import qualified Data.Text                as T
 -- import Data.Word
 import Foreign.C.Types
 import Foreign.Ptr
+import GHC.Stack
 
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
@@ -67,17 +69,34 @@ getStandardPathBS sd = do
     else B.packCString (C.unConstPtr cs)
 
 resolveStandardPath
-  :: Filename f
+  :: (HasCallStack, Filename f)
   => StandardDir
   -> f
   -> T.Text
   -> IO (Maybe f)
-resolveStandardPath = undefined
+resolveStandardPath sd fn spec = withFrozenCallStack $ do
+  listToMaybe <$> searchStandardPath0 sd fn spec 1
 
 searchStandardPath
-  :: Filename f
+  :: (HasCallStack, Filename f)
   => StandardDir
   -> f
   -> T.Text
   -> IO [f]
-searchStandardPath = undefined
+searchStandardPath sd fn spec =
+  withFrozenCallStack $ searchStandardPath0 sd fn spec reasonableLimit
+  where
+    -- Limit the number of filenames returned, just in
+    -- case things get out of hand for some reason.
+    reasonableLimit = 1024
+
+searchStandardPath0
+  :: (HasCallStack, Filename f)
+  => StandardDir
+  -> f
+  -> T.Text
+  -> Int64
+  -> IO [f]
+searchStandardPath0 sd fn spec limit = do
+  undefined sd fn spec limit
+
