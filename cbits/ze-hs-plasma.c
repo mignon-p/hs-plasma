@@ -1,6 +1,12 @@
 #include <stdarg.h>
 #include "ze-hs-plasma.h"
 
+static inline slaw ret_slaw_len (slaw s, int64 *len)
+{
+    *len = slaw_len (s);
+    return s;
+}
+
 static ob_retort my_callback (const char *file, va_list vargies)
 {
     slabu *sb            = va_arg (vargies, slabu *);
@@ -24,10 +30,11 @@ static ob_retort my_callback (const char *file, va_list vargies)
 }
 
 slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
-                                        const char *filename,
-                                        const char *searchspec,
-                                        int64 max_to_return,
-                                        ob_retort *retort_ptr)
+                                        const char     *filename,
+                                        const char     *searchspec,
+                                        int64           max_to_return,
+                                        ob_retort      *retort_ptr,
+                                        int64          *len_ptr)
 {
     ob_retort tort = OB_UNKNOWN_ERR;
     slabu    *sb   = slabu_new ();
@@ -54,5 +61,5 @@ slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
  done:
     slabu_free (sb);
     *retort_ptr = tort;
-    return ret;
+    return ret_slaw_len (ret, len_ptr);
 }

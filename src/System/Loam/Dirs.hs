@@ -44,6 +44,7 @@ foreign import capi "ze-hs-plasma.h ze_hs_plasma_search_standard_path"
       -> C.ConstCString
       -> Int64
       -> Ptr Int64
+      -> Ptr Int64
       -> IO (Ptr ())
 
 getStandardPath :: Filename f => StandardDir -> IO (Maybe f)
