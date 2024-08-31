@@ -23,7 +23,7 @@ module System.Loam.Retorts.Internal
 
 import Control.DeepSeq
 import Control.Exception
-import qualified Data.ByteString.Unsafe   as B
+import qualified Data.ByteString          as B
 import Data.Default.Class
 import Data.Hashable
 import Data.Int
@@ -78,7 +78,7 @@ getRetortStringFromC (Retort r) = do
   cs <- c_error_string_literal r
   if cs == C.nullConstPtr
     then return T.empty
-    else T.decodeUtf8Lenient <$> B.unsafePackCString (C.unConstPtr cs)
+    else T.decodeUtf8Lenient <$> B.packCString (C.unConstPtr cs)
 
 getRetortString :: Retort -> IO T.Text
 getRetortString r = do
