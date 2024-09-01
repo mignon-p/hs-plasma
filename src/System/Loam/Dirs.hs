@@ -39,13 +39,13 @@ foreign import capi "libLoam/c/ob-dirs.h ob_get_standard_path"
 
 foreign import capi "ze-hs-plasma.h ze_hs_plasma_search_standard_path"
     c_search_standard_path
-      :: CInt
-      -> C.ConstCString
-      -> C.ConstCString
-      -> Int64
-      -> Ptr Int64
-      -> Ptr Int64
-      -> IO (Ptr ())
+      :: CInt           -- ob_standard_dir dir
+      -> C.ConstCString -- const char     *filename
+      -> C.ConstCString -- const char     *searchspec
+      -> Int64          -- int64           max_to_return
+      -> Ptr Int64      -- ob_retort      *retort_ptr
+      -> Ptr Int64      -- int64          *len_ptr
+      -> IO (Ptr ())    -- slaw            (return value)
 
 getStandardPath :: Filename f => StandardDir -> IO (Maybe f)
 getStandardPath sd = do
@@ -101,3 +101,15 @@ searchStandardPath0
 searchStandardPath0 sd fn spec limit = do
   undefined sd fn spec limit
 
+{-
+  let sd'   = standardDir2int sd
+      fn'   = to8bitFn        fn
+      spec' = T.encodeUtf8    spec
+      addn  = Just            "TODO"
+      erl   = Just $ fnAsErl  fn
+  useAsCString fn' $ \fnPtr -> do
+    useAsCString spec' $ \specPtr -> do
+      withReturnedSlaw $ \lenPtr -> do
+        withReturnedRetort EtOther addn erl $ \tortPtr -> do
+          c_search_standard_path sd' fn' spec' limit tortPtr lenPtr
+-}
