@@ -12,26 +12,31 @@ module System.Loam.Internal.Marshal
   , withLazyByteStringAsCStringNL
   , withLazyByteStringAsCStringLen
   , withReturnedSlaw
-  , withReturnedByteString
   , withReturnedRetort
   ) where
 
 import Control.Monad
 import qualified Data.ByteString          as B
+import qualified Data.ByteString.Internal as B
 import qualified Data.ByteString.Lazy     as L
 import qualified Data.ByteString.Unsafe   as B
 import Data.Char
 import Data.Int
 import Foreign.C.String
 import Foreign.C.Types
+import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
 import GHC.Stack
 
+import Data.Slaw
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
+
+foreign import capi unsafe "libPlasma/c/slaw.h &slaw_free"
+  finalizerSlaw :: FinalizerPtr ()
 
 withLazyByteStringAsCString :: L.ByteString
                             -> (CString -> IO a)
@@ -95,28 +100,37 @@ endsWithNewline buf pos = do
 --
 
 withReturnedSlaw
-  :: (Ptr Int64 -> IO (Ptr ()))
-  -> IO (Maybe L.ByteString)
-withReturnedSlaw f = do
-  mbs <- withReturnedByteString f
+  :: ErrLocation
+  -> (Ptr Int64 -> IO (Ptr ()))
+  -> IO (Maybe Slaw)
+withReturnedSlaw erl f = do
+  mbs <- withReturnedSlaw0 f
   case mbs of
     Just bs
-      | B.null bs -> return Nothing
-      | otherwise -> return $ Just $ L.fromStrict bs
+      | B.null bs -> do
+          let msg =
+                "Corrupt/unrecognized slaw (could not determine length)"
+          return $ Just $ SlawError msg erl
+      | otherwise -> do
+          let lbs  = L.fromStrict bs
+          return $ Just $ decodeSlaw' nativeByteOrder erl lbs
     Nothing -> return Nothing
 
-withReturnedByteString
-  :: (Ptr Int64 -> IO (Ptr a))
+withReturnedSlaw0
+  :: (Ptr Int64 -> IO (Ptr ()))
   -> IO (Maybe B.ByteString)
-withReturnedByteString f = alloca $ \lenPtr -> do
+withReturnedSlaw0 f = alloca $ \lenPtr -> do
   poke lenPtr (-1)
   slawPtr <- f lenPtr
   byteLen <- peek lenPtr
-  let slawPtr' = castPtr      slawPtr
-      byteLen' = fromIntegral byteLen
   if slawPtr == nullPtr || byteLen < 0
     then return Nothing
-    else Just <$> B.unsafePackMallocCStringLen (slawPtr', byteLen')
+    else Just <$> unsafePackMallocSlaw (slawPtr, byteLen)
+
+unsafePackMallocSlaw :: (Ptr (), Int64) -> IO B.ByteString
+unsafePackMallocSlaw (ptr, len) = do
+  fp <- newForeignPtr finalizerSlaw ptr
+  return $ B.BS (castForeignPtr fp) (fromIntegral len)
 
 withReturnedRetort
   :: HasCallStack
