@@ -13,4 +13,6 @@ slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
                                         ob_retort      *retort_ptr,
                                         int64          *len_ptr);
 
+slaw ze_hs_plasma_spew_overview_to_string (bslaw s, int64 *len_ptr);
+
 #endif /* ZE_HS_PLASMA_H_EF95EBA1 */

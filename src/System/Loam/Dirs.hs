@@ -102,8 +102,8 @@ searchStandardPath0
   -> Int64
   -> IO [f]
 searchStandardPath0 wh sd fn spec limit = do
-  slaw <- searchStandardPath1 wh sd fn spec limit
-  case fmap ŝee slaw of
+  mslaw <- searchStandardPath1 wh sd fn spec limit
+  case fmap ŝee mslaw of
     Nothing            -> return [] -- I don't think this can happen?
     Just (Left  exc  ) -> throwIO exc
     Just (Right bsLst) ->

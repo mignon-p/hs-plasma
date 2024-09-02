@@ -3,6 +3,8 @@ import qualified Data.ByteString          as B
 import qualified Data.Text                as T
 import Text.Printf
 
+import Data.Slaw
+import Data.Slaw.Extras
 import System.Loam.Dirs
 import System.Loam.Rand
 import System.Loam.Util
@@ -56,3 +58,10 @@ main = do
   randBytes <- trulyRandom 8
   let randBytesStr = show $ B.unpack randBytes
   putStrLn $ printf "%-20s = %s" ("randBytes" :: String) randBytesStr
+
+  putStrLn ""
+  putStrLn "spewOverview:"
+
+  let mySlaw = SlawList ["Hello, World!", 37619]
+  mySlawTxt <- spewOverview mySlaw
+  putStrLn $ T.unpack mySlawTxt

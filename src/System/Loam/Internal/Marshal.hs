@@ -11,6 +11,9 @@ module System.Loam.Internal.Marshal
   ( withLazyByteStringAsCString
   , withLazyByteStringAsCStringNL
   , withLazyByteStringAsCStringLen
+    --
+  , withSlaw
+    --
   , withReturnedSlaw
   , withReturnedRetort
   ) where
@@ -32,6 +35,7 @@ import Foreign.Storable
 import GHC.Stack
 
 import Data.Slaw
+import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 
@@ -96,6 +100,13 @@ endsWithNewline _ 0 = return False
 endsWithNewline buf pos = do
   lastByte <- peekByteOff buf (pos - 1)
   return (lastByte == newline)
+
+--
+
+withSlaw :: Slaw -> (C.ConstPtr () -> IO a) -> IO a
+withSlaw slaw func = do
+  let lbs = encodeSlaw nativeByteOrder slaw
+  withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
 
 --
 

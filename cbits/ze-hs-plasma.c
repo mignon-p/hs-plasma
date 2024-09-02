@@ -63,3 +63,9 @@ slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
     *retort_ptr = tort;
     return ret_slaw_len (ret, len_ptr);
 }
+
+slaw ze_hs_plasma_spew_overview_to_string (bslaw s, int64 *len_ptr)
+{
+    slaw ret = slaw_spew_overview_to_string (s);
+    return ret_slaw_len (ret, len_ptr);
+}
