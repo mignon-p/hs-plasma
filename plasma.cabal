@@ -53,6 +53,7 @@ library
   exposed-modules:     System.Loam.Dirs
                      , System.Loam.Retorts
                      , System.Loam.Retorts.Constants
+                     , System.Loam.Util
                      , System.Loam.Version
 
   -- Modules included in this library but not exported.
@@ -144,6 +145,7 @@ executable hs-plasma
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
                      , plasma
+                     , text                 >= 1.2.3.1   && < 2.2
 
   -- Directories containing source files.
   hs-source-dirs:      prog-src

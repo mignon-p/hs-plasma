@@ -1,7 +1,9 @@
 import Control.Monad
+import qualified Data.Text                as T
 import Text.Printf
 
 import System.Loam.Dirs
+import System.Loam.Util
 import System.Loam.Version
 
 main :: IO ()
@@ -31,3 +33,18 @@ main = do
     fns <- searchStandardPath sd "example" "c"
     forM_ fns $ \fn -> do
       putStrLn $ printf "%-20s = %s" (show sd) (fn :: String)
+
+  putStrLn ""
+
+  uuid     <- generateUuid
+  userName <- getUserName
+  progName <- getProgName
+  setProgName "banana"
+  banana   <- getProgName
+
+  forM_ [ ("uuid",     uuid)
+        , ("userName", userName)
+        , ("progName", progName)
+        , ("banana",   banana)
+        ] $ \(name, txt) -> do
+    putStrLn $ printf "%-20s = %s" (name :: String) (T.unpack txt)
