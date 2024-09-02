@@ -1,8 +1,10 @@
 import Control.Monad
+import qualified Data.ByteString          as B
 import qualified Data.Text                as T
 import Text.Printf
 
 import System.Loam.Dirs
+import System.Loam.Rand
 import System.Loam.Util
 import System.Loam.Version
 
@@ -48,3 +50,9 @@ main = do
         , ("banana",   banana)
         ] $ \(name, txt) -> do
     putStrLn $ printf "%-20s = %s" (name :: String) (T.unpack txt)
+
+  putStrLn ""
+
+  randBytes <- trulyRandom 8
+  let randBytesStr = show $ B.unpack randBytes
+  putStrLn $ printf "%-20s = %s" ("randBytes" :: String) randBytesStr

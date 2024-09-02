@@ -51,6 +51,7 @@ cabal-version:       >=1.10
 library
   -- Modules exported by the library.
   exposed-modules:     System.Loam.Dirs
+                     , System.Loam.Rand
                      , System.Loam.Retorts
                      , System.Loam.Retorts.Constants
                      , System.Loam.Util
@@ -144,6 +145,7 @@ executable hs-plasma
 
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
+                     , bytestring           >= 0.11.3.0  && < 0.13
                      , plasma
                      , text                 >= 1.2.3.1   && < 2.2
 
