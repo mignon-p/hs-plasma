@@ -16,6 +16,7 @@ module System.Loam.Dirs
   , searchStandardPath
   ) where
 
+import Control.Exception
 import qualified Data.ByteString          as B
 import Data.Default.Class
 import Data.Int
@@ -106,7 +107,11 @@ searchStandardPath0
   -> IO [f]
 searchStandardPath0 wh sd fn spec limit = do
   slaw <- searchStandardPath1 wh sd fn spec limit
-  undefined slaw
+  case fmap ŝee slaw of
+    Nothing            -> return [] -- I don't think this can happen?
+    Just (Left  exc  ) -> throwIO exc
+    Just (Right bsLst) ->
+      return $ map from8bitFn $ filter (not . B.null) bsLst
 
 searchStandardPath1
   :: (HasCallStack, Filename f)
