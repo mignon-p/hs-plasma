@@ -21,5 +21,13 @@ main = do
   putStrLn ""
 
   forM_ [minBound .. maxBound] $ \sd -> do
-    fn <- getStandardPath sd
-    putStrLn $ printf "%-20s = %s" (show sd) (fn :: String)
+    fns <- splitStandardPath sd
+    forM_ fns $ \fn -> do
+      putStrLn $ printf "%-20s = %s" (show sd) (fn :: String)
+
+  putStrLn ""
+
+  forM_ [minBound .. maxBound] $ \sd -> do
+    fns <- searchStandardPath sd "example" "c"
+    forM_ fns $ \fn -> do
+      putStrLn $ printf "%-20s = %s" (show sd) (fn :: String)
