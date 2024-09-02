@@ -10,6 +10,8 @@ import System.Loam.Rand
 import System.Loam.Util
 import System.Loam.Version
 
+import Comprehensive
+
 main :: IO ()
 main = do
   w <- x86Features
@@ -60,8 +62,18 @@ main = do
   putStrLn $ printf "%-20s = %s" ("randBytes" :: String) randBytesStr
 
   putStrLn ""
-  putStrLn "spewOverview:"
+  putStrLn "spewOverview"
+  putStrLn "============"
+  putStrLn ""
 
   let mySlaw = SlawList ["Hello, World!", 37619]
   mySlawTxt <- spewOverview mySlaw
   putStrLn $ T.unpack mySlawTxt
+
+  putStrLn ""
+  putStrLn "comprehensiveProtein"
+  putStrLn "===================="
+  putStrLn ""
+
+  comprehensiveTxt <- spewOverview comprehensiveProtein
+  putStrLn $ T.unpack comprehensiveTxt

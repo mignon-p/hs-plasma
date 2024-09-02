@@ -128,7 +128,7 @@ executable hs-plasma
   main-is:             hs-plasma.hs
 
   -- Modules included in this executable, other than Main.
-  -- other-modules:
+  other-modules:       Comprehensive
 
   -- LANGUAGE extensions enabled for all modules in this package.
   default-extensions:  BangPatterns
@@ -150,6 +150,7 @@ executable hs-plasma
                      , plasma
                      , slaw
                      , text                 >= 1.2.3.1   && < 2.2
+                     , vector               >= 0.12.0.3  && < 0.14
 
   -- Directories containing source files.
   hs-source-dirs:      prog-src
