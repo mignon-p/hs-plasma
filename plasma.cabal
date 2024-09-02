@@ -101,9 +101,13 @@ library
 
   -- extra-lib-dirs-static: /opt/plasma/lib
 
-  extra-libraries:     Loam
+  -- Ugh, order is important!  Loam must come after Plasma,
+  -- since Plasma calls functions in Loam.
+  extra-libraries:     Plasma
+                     , Loam
 
   -- extra-libraries-static: Loam
+  --                       , Plasma
 
   -- Directories containing source files.
   hs-source-dirs:      src
