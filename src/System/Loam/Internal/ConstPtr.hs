@@ -15,8 +15,10 @@ module System.Loam.Internal.ConstPtr
   ( ConstPtr(..)
   , ConstCString
   , nullConstPtr
+  , useAsConstCString
   ) where
 
+import qualified Data.ByteString          as B
 import Foreign.C.Types (CChar(..))
 import Foreign.Ptr
 
@@ -37,3 +39,9 @@ type ConstCString = ConstPtr CChar
 
 nullConstPtr :: ConstPtr a
 nullConstPtr = ConstPtr nullPtr
+
+useAsConstCString
+  :: B.ByteString
+  -> (ConstCString -> IO a)
+  -> IO a
+useAsConstCString bs f = B.useAsCString bs (f . ConstPtr)
