@@ -51,12 +51,8 @@ foreign import capi "ze-hs-plasma.h ze_hs_plasma_search_standard_path"
       -> Ptr Int64      -- int64          *len_ptr
       -> IO (Ptr ())    -- slaw            (return value)
 
-getStandardPath :: Filename f => StandardDir -> IO (Maybe f)
-getStandardPath sd = do
-  bs <- getStandardPathBS sd
-  if B.null bs
-    then return Nothing
-    else return $ Just $ from8bitFn bs
+getStandardPath :: Filename f => StandardDir -> IO f
+getStandardPath sd = from8bitFn <$> getStandardPathBS sd
 
 splitStandardPath :: Filename f => StandardDir -> IO [f]
 splitStandardPath sd = do

@@ -21,8 +21,5 @@ main = do
   putStrLn ""
 
   forM_ [minBound .. maxBound] $ \sd -> do
-    mFn <- getStandardPath sd
-    let fn = case mFn of
-               Nothing -> "<Nothing>" :: String
-               Just fn' -> fn'
-    putStrLn $ printf "%-20s = %s" (show sd) fn
+    fn <- getStandardPath sd
+    putStrLn $ printf "%-20s = %s" (show sd) (fn :: String)
