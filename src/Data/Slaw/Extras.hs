@@ -88,7 +88,7 @@ fixAddrs (orig, nBytes) =
   let origLines = LT.lines orig
       eths      = map (parseSpewLine . LT.toStrict) origLines
       parsed    = rights eths
-      maxStr    = printf "%x" nBytes
+      maxStr    = printf "%x" (nBytes - 1)
       nDigs     = length (maxStr :: String)
   in case parsed of
        []     -> orig
