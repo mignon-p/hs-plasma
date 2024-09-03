@@ -83,14 +83,24 @@ main = do
 
   putStrLn ""
 
+  let piDouble = pi :: Double
+      piFloat  = pi :: Float
+      piHalf   = toFloat16 piFloat
+
   let nilTxt  = spewOverview SlawNil
       trueTxt = spewOverview $ SlawBool True
       strTxt  = spewOverview "wee"
       symTxt  = spewOverview $ SlawSymbol 12345
+      pi64Txt = spewOverview $ š piDouble
+      pi32Txt = spewOverview $ š piFloat
+      pi16Txt = spewOverview $ š piHalf
 
   forM_ [ ("nil",  nilTxt)
         , ("true", trueTxt)
         , ("str",  strTxt)
         , ("sym",  symTxt)
+        , ("pi64", pi64Txt)
+        , ("pi32", pi32Txt)
+        , ("pi16", pi16Txt)
         ] $ \(name, txt) -> do
     putStrLn $ printf "%-20s = %s" (name :: String) (LT.unpack txt)
