@@ -59,7 +59,8 @@ library
                      , System.Loam.Version
 
   -- Modules included in this library but not exported.
-  other-modules:       System.Loam.Internal.ConstPtr
+  other-modules:       Data.Slaw.Extras.Internal.SpewParser
+                     , System.Loam.Internal.ConstPtr
                      , System.Loam.Internal.Enums
                      , System.Loam.Internal.Filename
                      , System.Loam.Internal.Marshal
@@ -87,6 +88,7 @@ library
 
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
+                     , attoparsec           >= 0.14.4    && < 0.15
                      , bytestring           >= 0.11.3.0  && < 0.13
                      , containers           >= 0.6.0.1   && < 0.8
                      , data-default-class   >= 0.1.2.0   && < 0.2

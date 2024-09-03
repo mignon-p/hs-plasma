@@ -1,6 +1,7 @@
 import Control.Monad
 import qualified Data.ByteString          as B
 import qualified Data.Text                as T
+import qualified Data.Text.Lazy           as LT
 import Text.Printf
 
 import Data.Slaw
@@ -67,8 +68,8 @@ main = do
   putStrLn ""
 
   let mySlaw = SlawList ["Hello, World!", 37619]
-  mySlawTxt <- spewOverview mySlaw
-  putStrLn $ T.unpack mySlawTxt
+      mySlawTxt = spewOverview mySlaw
+  putStrLn $ LT.unpack mySlawTxt
 
 {-
   putStrLn ""
@@ -76,20 +77,20 @@ main = do
   putStrLn "===================="
   putStrLn ""
 
-  comprehensiveTxt <- spewOverview comprehensiveProtein
-  putStrLn $ T.unpack comprehensiveTxt
+  let comprehensiveTxt = spewOverview comprehensiveProtein
+  putStrLn $ LT.unpack comprehensiveTxt
 -}
 
   putStrLn ""
 
-  nilTxt  <- spewOverview SlawNil
-  trueTxt <- spewOverview $ SlawBool True
-  strTxt  <- spewOverview "wee"
-  symTxt  <- spewOverview $ SlawSymbol 12345
+  let nilTxt  = spewOverview SlawNil
+      trueTxt = spewOverview $ SlawBool True
+      strTxt  = spewOverview "wee"
+      symTxt  = spewOverview $ SlawSymbol 12345
 
   forM_ [ ("nil",  nilTxt)
         , ("true", trueTxt)
         , ("str",  strTxt)
         , ("sym",  symTxt)
         ] $ \(name, txt) -> do
-    putStrLn $ printf "%-20s = %s" (name :: String) (T.unpack txt)
+    putStrLn $ printf "%-20s = %s" (name :: String) (LT.unpack txt)
