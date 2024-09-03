@@ -20,7 +20,7 @@ import qualified Data.Text                     as T
 -- import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
 import qualified Data.Text.Lazy.Builder        as R
-import qualified Data.Text.Lazy.Builder.Int    as R
+-- import qualified Data.Text.Lazy.Builder.Int    as R
 import Data.Word
 -- import Foreign.C.String
 -- import Foreign.C.Types
@@ -28,6 +28,7 @@ import Data.Word
 import Foreign.Ptr
 import GHC.Stack
 import System.IO.Unsafe
+import Text.Printf
 
 import Data.Slaw
 import Data.Slaw.Extras.Internal.SpewParser
@@ -94,9 +95,10 @@ fixAddrs orig =
 refmtLine :: Word64 -> R.Builder -> Either T.Text SpewLine -> R.Builder
 refmtLine _      nl (Left  txt) = nl <> R.fromText txt
 refmtLine loAddr nl (Right sl ) =
-  mconcat [ nl
-          , slPrefix sl
-          , R.hexadecimal (slAddr sl - loAddr)
-          , slSuffix sl
-          ]
-
+  let offset = slAddr sl - loAddr
+      hexStr = printf "%04x" offset
+  in mconcat [ nl
+             , slPrefix sl
+             , R.fromString hexStr
+             , slSuffix sl
+             ]
