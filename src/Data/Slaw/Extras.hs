@@ -13,14 +13,15 @@ module Data.Slaw.Extras
 
 import Control.Exception
 -- import qualified Data.ByteString               as B
+import qualified Data.ByteString.Builder       as R
 import Data.Default.Class
 import Data.Either
 import Data.Int
 import qualified Data.Text                     as T
 -- import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
-import qualified Data.Text.Lazy.Builder        as R
--- import qualified Data.Text.Lazy.Builder.Int    as R
+import qualified Data.Text.Lazy.Builder        as RT
+-- import qualified Data.Text.Lazy.Builder.Int    as RT
 import Data.Word
 -- import Foreign.C.String
 -- import Foreign.C.Types
@@ -32,6 +33,7 @@ import Text.Printf
 
 import Data.Slaw
 import Data.Slaw.Extras.Internal.SpewParser
+import Data.Slaw.Internal
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Marshal
 -- import System.Loam.Retorts
@@ -46,16 +48,18 @@ spewOverview :: HasCallStack => Slaw -> LT.Text
 spewOverview =
   fixAddrs . unsafePerformIO . withFrozenCallStack . spewOverview0
 
-spewOverview0 :: HasCallStack => Slaw -> IO LT.Text
+spewOverview0 :: HasCallStack => Slaw -> IO (LT.Text, Word64)
 spewOverview0 slaw = do
-  let slawErl = def { elSource = DsOther sErlStr }
-      sErlStr = "<internal:spewOverview>"
-  mslaw <- withSlaw slaw $ \slawPtr -> do
+  let slawErl            = def { elSource = DsOther sErlStr }
+      sErlStr            = "<internal:spewOverview>"
+      (slawBld, byteLen) = encodeSlawToBuilderAndLen nativeByteOrder slaw
+      binSlaw            = R.toLazyByteString slawBld
+  mslaw <- withBinarySlaw binSlaw $ \slawPtr -> do
     withReturnedSlaw slawErl $ \lenPtr -> do
       c_spew_overview_to_string slawPtr lenPtr
   case fmap ŝee mslaw of
     Just (Left  exc) -> throwIO exc
-    Just (Right txt) -> return txt
+    Just (Right txt) -> return (txt, byteLen)
     Nothing -> do
       let msg = "slaw_spew_overview_to_string unexpectedly returned NULL"
       throwIO $ def { peType      = EtOther
@@ -79,26 +83,33 @@ spewOverview0 slaw = do
 -- into offsets (from the beginning of the slaw), which are
 -- actually useful.
 
-fixAddrs :: LT.Text -> LT.Text
-fixAddrs orig =
+fixAddrs :: (LT.Text, Word64) -> LT.Text
+fixAddrs (orig, nBytes) =
   let origLines = LT.lines orig
       eths      = map (parseSpewLine . LT.toStrict) origLines
       parsed    = rights eths
+      maxStr    = printf "%x" nBytes
+      nDigs     = length (maxStr :: String)
   in case parsed of
        []     -> orig
        (lo:_) ->
          let loAddr   = slAddr lo
-             newlines = mempty : repeat (R.singleton '\n')
-             builders = zipWith (refmtLine loAddr) newlines eths
-         in R.toLazyText $ mconcat builders
+             newlines = mempty : repeat (RT.singleton '\n')
+             builders = zipWith (refmtLine loAddr nDigs) newlines eths
+         in RT.toLazyText $ mconcat builders
 
-refmtLine :: Word64 -> R.Builder -> Either T.Text SpewLine -> R.Builder
-refmtLine _      nl (Left  txt) = nl <> R.fromText txt
-refmtLine loAddr nl (Right sl ) =
+refmtLine
+  :: Word64     -- lowest address
+  -> Int        -- number of hex digits to use for offset
+  -> RT.Builder -- optional newline to go before this line
+  -> Either T.Text SpewLine
+  -> RT.Builder
+refmtLine _      _     nl (Left  txt) = nl <> RT.fromText txt
+refmtLine loAddr nDigs nl (Right sl ) =
   let offset = slAddr sl - loAddr
-      hexStr = printf "%04x" offset
+      hexStr = printf "%0*x" nDigs offset
   in mconcat [ nl
              , slPrefix sl
-             , R.fromString hexStr
+             , RT.fromString hexStr
              , slSuffix sl
              ]

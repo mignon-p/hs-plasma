@@ -13,6 +13,7 @@ module System.Loam.Internal.Marshal
   , withLazyByteStringAsCStringLen
     --
   , withSlaw
+  , withBinarySlaw
     --
   , withReturnedSlaw
   , withReturnedRetort
@@ -106,6 +107,10 @@ endsWithNewline buf pos = do
 withSlaw :: Slaw -> (C.ConstPtr () -> IO a) -> IO a
 withSlaw slaw func = do
   let lbs = encodeSlaw nativeByteOrder slaw
+  withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
+
+withBinarySlaw :: BinarySlaw -> (C.ConstPtr () -> IO a) -> IO a
+withBinarySlaw lbs func =
   withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
 
 --
