@@ -10,7 +10,7 @@ import System.Loam.Rand
 import System.Loam.Util
 import System.Loam.Version
 
-import Comprehensive
+-- import Comprehensive
 
 main :: IO ()
 main = do
@@ -70,6 +70,7 @@ main = do
   mySlawTxt <- spewOverview mySlaw
   putStrLn $ T.unpack mySlawTxt
 
+{-
   putStrLn ""
   putStrLn "comprehensiveProtein"
   putStrLn "===================="
@@ -77,3 +78,18 @@ main = do
 
   comprehensiveTxt <- spewOverview comprehensiveProtein
   putStrLn $ T.unpack comprehensiveTxt
+-}
+
+  putStrLn ""
+
+  nilTxt  <- spewOverview SlawNil
+  trueTxt <- spewOverview $ SlawBool True
+  strTxt  <- spewOverview "wee"
+  symTxt  <- spewOverview $ SlawSymbol 12345
+
+  forM_ [ ("nil",  nilTxt)
+        , ("true", trueTxt)
+        , ("str",  strTxt)
+        , ("sym",  symTxt)
+        ] $ \(name, txt) -> do
+    putStrLn $ printf "%-20s = %s" (name :: String) (T.unpack txt)
