@@ -83,6 +83,8 @@ library
   -- other-extensions:
 
   c-sources:           cbits/ze-hs-plasma.c
+                     , cbits/ze-hs-retorts.c
+                     , cbits/ze-hs-slawio.c
 
   include-dirs:        cbits
 
