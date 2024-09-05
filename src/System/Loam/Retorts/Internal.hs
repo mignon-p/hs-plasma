@@ -37,7 +37,7 @@ import GHC.Generics (Generic)
 import GHC.Stack
 
 import Data.Slaw
-import Data.Slaw.Internal ((?>))
+import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 -- import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.Descriptions

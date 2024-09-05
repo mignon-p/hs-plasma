@@ -33,7 +33,7 @@ import Text.Printf
 
 import Data.Slaw
 import Data.Slaw.Extras.Internal.SpewParser
-import Data.Slaw.Internal
+-- import Data.Slaw.Internal
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Marshal
 -- import System.Loam.Retorts
