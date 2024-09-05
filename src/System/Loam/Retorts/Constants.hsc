@@ -91,12 +91,32 @@ module System.Loam.Retorts.Constants
   , pattern POOL_TLS_ERROR
   , pattern POOL_NOT_A_GREENHOUSE_SERVER
   , pattern POOL_CREATED
+  , pattern ZE_HS_IOE_ALREADY_EXISTS
+  , pattern ZE_HS_IOE_ALREADY_IN_USE
+  , pattern ZE_HS_IOE_DOES_NOT_EXIST
+  , pattern ZE_HS_IOE_EOF
+  , pattern ZE_HS_IOE_FULL
+  , pattern ZE_HS_IOE_HARDWARE_FAULT
+  , pattern ZE_HS_IOE_ILLEGAL_OPERATION
+  , pattern ZE_HS_IOE_INAPPROPRIATE_TYPE
+  , pattern ZE_HS_IOE_INTERRUPTED
+  , pattern ZE_HS_IOE_INVALID_ARGUMENT
+  , pattern ZE_HS_IOE_PERMISSION
+  , pattern ZE_HS_IOE_PROTOCOL_ERROR
+  , pattern ZE_HS_IOE_RESOURCE_VANISHED
+  , pattern ZE_HS_IOE_SYSTEM_ERROR
+  , pattern ZE_HS_IOE_TIMEOUT
+  , pattern ZE_HS_IOE_UNKNOWN
+  , pattern ZE_HS_IOE_UNSATISFIED_CONSTRAINTS
+  , pattern ZE_HS_IOE_UNSUPPORTED_OPERATION
+  , pattern ZE_HS_IOE_USER
   ) where
 
 import Data.Slaw (Retort(..))
 
 #include "libLoam/c/ob-retorts.h"
 #include "libPlasma/c/plasma-retorts.h"
+#include "ze-hs-retorts.h"
 
 -- | The canonical success code, which conveys no further
 -- information.
@@ -454,3 +474,92 @@ pattern POOL_NOT_A_GREENHOUSE_SERVER =
 -- | A pool was successfully created.
 pattern POOL_CREATED         :: Retort
 pattern POOL_CREATED         =  Retort (#{const POOL_CREATED})
+
+-- | Already exists.
+pattern ZE_HS_IOE_ALREADY_EXISTS :: Retort
+pattern ZE_HS_IOE_ALREADY_EXISTS =
+  Retort (#{const ZE_HS_IOE_ALREADY_EXISTS})
+
+-- | Resource busy.
+pattern ZE_HS_IOE_ALREADY_IN_USE :: Retort
+pattern ZE_HS_IOE_ALREADY_IN_USE =
+  Retort (#{const ZE_HS_IOE_ALREADY_IN_USE})
+
+-- | Does not exist.
+pattern ZE_HS_IOE_DOES_NOT_EXIST :: Retort
+pattern ZE_HS_IOE_DOES_NOT_EXIST =
+  Retort (#{const ZE_HS_IOE_DOES_NOT_EXIST})
+
+-- | End of file.
+pattern ZE_HS_IOE_EOF        :: Retort
+pattern ZE_HS_IOE_EOF        =  Retort (#{const ZE_HS_IOE_EOF})
+
+-- | Resource exhausted.
+pattern ZE_HS_IOE_FULL       :: Retort
+pattern ZE_HS_IOE_FULL       =  Retort (#{const ZE_HS_IOE_FULL})
+
+-- | Hardware fault.
+pattern ZE_HS_IOE_HARDWARE_FAULT :: Retort
+pattern ZE_HS_IOE_HARDWARE_FAULT =
+  Retort (#{const ZE_HS_IOE_HARDWARE_FAULT})
+
+-- | Illegal operation.
+pattern ZE_HS_IOE_ILLEGAL_OPERATION :: Retort
+pattern ZE_HS_IOE_ILLEGAL_OPERATION =
+  Retort (#{const ZE_HS_IOE_ILLEGAL_OPERATION})
+
+-- | Inappropriate type.
+pattern ZE_HS_IOE_INAPPROPRIATE_TYPE :: Retort
+pattern ZE_HS_IOE_INAPPROPRIATE_TYPE =
+  Retort (#{const ZE_HS_IOE_INAPPROPRIATE_TYPE})
+
+-- | Interrupted.
+pattern ZE_HS_IOE_INTERRUPTED :: Retort
+pattern ZE_HS_IOE_INTERRUPTED =
+  Retort (#{const ZE_HS_IOE_INTERRUPTED})
+
+-- | Invalid argument.
+pattern ZE_HS_IOE_INVALID_ARGUMENT :: Retort
+pattern ZE_HS_IOE_INVALID_ARGUMENT =
+  Retort (#{const ZE_HS_IOE_INVALID_ARGUMENT})
+
+-- | Permission denied.
+pattern ZE_HS_IOE_PERMISSION :: Retort
+pattern ZE_HS_IOE_PERMISSION =  Retort (#{const ZE_HS_IOE_PERMISSION})
+
+-- | Protocol error.
+pattern ZE_HS_IOE_PROTOCOL_ERROR :: Retort
+pattern ZE_HS_IOE_PROTOCOL_ERROR =
+  Retort (#{const ZE_HS_IOE_PROTOCOL_ERROR})
+
+-- | Resource vanished.
+pattern ZE_HS_IOE_RESOURCE_VANISHED :: Retort
+pattern ZE_HS_IOE_RESOURCE_VANISHED =
+  Retort (#{const ZE_HS_IOE_RESOURCE_VANISHED})
+
+-- | System error.
+pattern ZE_HS_IOE_SYSTEM_ERROR :: Retort
+pattern ZE_HS_IOE_SYSTEM_ERROR =
+  Retort (#{const ZE_HS_IOE_SYSTEM_ERROR})
+
+-- | Timeout.
+pattern ZE_HS_IOE_TIMEOUT    :: Retort
+pattern ZE_HS_IOE_TIMEOUT    =  Retort (#{const ZE_HS_IOE_TIMEOUT})
+
+-- | Unspecified error.
+pattern ZE_HS_IOE_UNKNOWN    :: Retort
+pattern ZE_HS_IOE_UNKNOWN    =  Retort (#{const ZE_HS_IOE_UNKNOWN})
+
+-- | Unsatisfied constraints.
+pattern ZE_HS_IOE_UNSATISFIED_CONSTRAINTS :: Retort
+pattern ZE_HS_IOE_UNSATISFIED_CONSTRAINTS =
+  Retort (#{const ZE_HS_IOE_UNSATISFIED_CONSTRAINTS})
+
+-- | Unsupported operation.
+pattern ZE_HS_IOE_UNSUPPORTED_OPERATION :: Retort
+pattern ZE_HS_IOE_UNSUPPORTED_OPERATION =
+  Retort (#{const ZE_HS_IOE_UNSUPPORTED_OPERATION})
+
+-- | User error.
+pattern ZE_HS_IOE_USER       :: Retort
+pattern ZE_HS_IOE_USER       =  Retort (#{const ZE_HS_IOE_USER})

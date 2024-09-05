@@ -434,4 +434,99 @@ tortTuples =
     , "A pool was successfully created"
     , Just EtPools
     )
+  , ( ZE_HS_IOE_ALREADY_EXISTS
+    , "ZE_HS_IOE_ALREADY_EXISTS"
+    , "already exists"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_ALREADY_IN_USE
+    , "ZE_HS_IOE_ALREADY_IN_USE"
+    , "resource busy"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_DOES_NOT_EXIST
+    , "ZE_HS_IOE_DOES_NOT_EXIST"
+    , "does not exist"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_EOF
+    , "ZE_HS_IOE_EOF"
+    , "end of file"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_FULL
+    , "ZE_HS_IOE_FULL"
+    , "resource exhausted"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_HARDWARE_FAULT
+    , "ZE_HS_IOE_HARDWARE_FAULT"
+    , "hardware fault"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_ILLEGAL_OPERATION
+    , "ZE_HS_IOE_ILLEGAL_OPERATION"
+    , "illegal operation"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_INAPPROPRIATE_TYPE
+    , "ZE_HS_IOE_INAPPROPRIATE_TYPE"
+    , "inappropriate type"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_INTERRUPTED
+    , "ZE_HS_IOE_INTERRUPTED"
+    , "interrupted"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_INVALID_ARGUMENT
+    , "ZE_HS_IOE_INVALID_ARGUMENT"
+    , "invalid argument"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_PERMISSION
+    , "ZE_HS_IOE_PERMISSION"
+    , "permission denied"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_PROTOCOL_ERROR
+    , "ZE_HS_IOE_PROTOCOL_ERROR"
+    , "protocol error"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_RESOURCE_VANISHED
+    , "ZE_HS_IOE_RESOURCE_VANISHED"
+    , "resource vanished"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_SYSTEM_ERROR
+    , "ZE_HS_IOE_SYSTEM_ERROR"
+    , "system error"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_TIMEOUT
+    , "ZE_HS_IOE_TIMEOUT"
+    , "timeout"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_UNKNOWN
+    , "ZE_HS_IOE_UNKNOWN"
+    , "unspecified error"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_UNSATISFIED_CONSTRAINTS
+    , "ZE_HS_IOE_UNSATISFIED_CONSTRAINTS"
+    , "unsatisfied constraints"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_UNSUPPORTED_OPERATION
+    , "ZE_HS_IOE_UNSUPPORTED_OPERATION"
+    , "unsupported operation"
+    , Nothing
+    )
+  , ( ZE_HS_IOE_USER
+    , "ZE_HS_IOE_USER"
+    , "user error"
+    , Nothing
+    )
   ]
