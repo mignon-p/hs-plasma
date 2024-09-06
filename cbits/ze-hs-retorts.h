@@ -29,6 +29,8 @@
 #define ZE_HS_IOE_UNSATISFIED_CONSTRAINTS -(OB_RETORTS_HASKELL_FIRST + 17)
 #define ZE_HS_IOE_UNSUPPORTED_OPERATION   -(OB_RETORTS_HASKELL_FIRST + 18)
 
+#define ZE_HS_ALREADY_CLOSED              -(OB_RETORTS_HASKELL_FIRST + 100)
+
 const char *ze_hs_ioe_error_string (ob_retort err);
 
 #endif /* ZE_HS_RETORTS_H_9E5E6DE4 */
