@@ -51,6 +51,7 @@ cabal-version:       >=1.10
 library
   -- Modules exported by the library.
   exposed-modules:     Data.Slaw.Extras
+                     , Data.Slaw.IO.Yaml
                      , System.Loam.Dirs
                      , System.Loam.Rand
                      , System.Loam.Retorts
