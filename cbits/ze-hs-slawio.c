@@ -1,11 +1,56 @@
 #include <stdlib.h>
 #include <HsFFI.h>
 
+#include "libLoam/c/ob-atomic.h"
 #include "libLoam/c/ob-attrs.h"
 #include "libLoam/c/ob-util.h"
 
 #include "ze-hs-slawio.h"
 #include "ze-hs-retorts.h"
+
+static ze_hs_cleanup *cleanup_head;
+
+static void enqueue_cleanup (ze_hs_cleanup *cu)
+{
+    ze_hs_cleanup *head;
+
+    do {
+        head = ob_atomic_pointer_ref (&cleanup_head);
+        ob_atomic_pointer_set (&cu->next, head);
+    } while (! ob_atomic_pointer_compare_and_swap (&cleanup_head,
+                                                   head, cu));
+}
+
+static void execute_cleanup (ze_hs_cleanup *cu)
+{
+    while (cu) {
+        ze_hs_cleanup *next = cu->next;
+        cu->func ((void *) cu);
+        free (cu);
+        cu = next;
+    }
+}
+
+static void check_cleanup (void)
+{
+    ze_hs_cleanup *head;
+
+    do {
+        head = ob_atomic_pointer_ref (&cleanup_head);
+    } while (! ob_atomic_pointer_compare_and_swap (&cleanup_head,
+                                                   head, NULL));
+
+    execute_cleanup (head);
+}
+
+static void submit_cleanup (ze_hs_cleanup *cu)
+{
+    if (cu->arg) {
+        enqueue_cleanup (cu);
+    } else {
+        free (cu);
+    }
+}
 
 static ob_retort read_handle_read (void   *cookie,
                                    byte   *buffer,
@@ -53,6 +98,8 @@ ze_hs_input *ze_hs_open_yaml_input (ze_hs_read_func rf,
     ob_retort         tort = OB_UNKNOWN_ERR;
     slaw_read_handler h;
 
+    check_cleanup();
+
     OB_CLEAR (h);
     h.read   = read_handle_read;
     h.close  = read_handle_close;
@@ -88,6 +135,8 @@ ze_hs_output *ze_hs_open_yaml_output (ze_hs_write_func wf,
     ze_hs_output     *out  = NULL;
     ob_retort         tort = OB_UNKNOWN_ERR;
     slaw_write_handler h;
+
+    check_cleanup();
 
     OB_CLEAR (h);
     h.write  = write_handle_write;
@@ -126,6 +175,8 @@ slaw ze_hs_read_input (ze_hs_input *inp,
     slaw_input si   = inp->si;
     slaw       ret  = NULL;
 
+    check_cleanup();
+
     if (si) {
         tort = slaw_input_read (si, &ret);
     }
@@ -140,6 +191,8 @@ ob_retort ze_hs_close_input (ze_hs_input *inp)
     ob_retort  tort = OB_OK;
     slaw_input si   = inp->si;
 
+    check_cleanup();
+
     if (si) {
         tort    = slaw_input_close (si);
         inp->si = NULL;
@@ -148,17 +201,18 @@ ob_retort ze_hs_close_input (ze_hs_input *inp)
     return tort;
 }
 
-// FIXME: can't call back into Haskell from finalizer
 void ze_hs_finalize_input (ze_hs_input *inp)
 {
-    ze_hs_close_input (inp);
-    free (inp);
+    inp->cu.func = (ze_hs_cleanup_func) ze_hs_close_input;
+    submit_cleanup (&inp->cu);
 }
 
 ob_retort ze_hs_write_output (ze_hs_output *out, bslaw s)
 {
     ob_retort   tort = ZE_HS_ALREADY_CLOSED;
     slaw_output so   = out->so;
+
+    check_cleanup();
 
     if (so) {
         tort = slaw_output_write (so, s);
@@ -172,6 +226,8 @@ ob_retort ze_hs_close_output (ze_hs_output *out)
     ob_retort   tort = OB_OK;
     slaw_output so   = out->so;
 
+    check_cleanup();
+
     if (so) {
         tort    = slaw_output_close (so);
         out->so = NULL;
@@ -180,11 +236,10 @@ ob_retort ze_hs_close_output (ze_hs_output *out)
     return tort;
 }
 
-// FIXME: can't call back into Haskell from finalizer
 void ze_hs_finalize_output (ze_hs_output *out)
 {
-    ze_hs_close_output (out);
-    free (out);
+    out->cu.func = (ze_hs_cleanup_func) ze_hs_close_output;
+    submit_cleanup (&out->cu);
 }
 
 /* We need to arrange for libLoam to be told about our error codes... */
