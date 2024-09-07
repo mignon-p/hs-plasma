@@ -60,6 +60,7 @@ library
 
   -- Modules included in this library but not exported.
   other-modules:       Data.Slaw.Extras.Internal.SpewParser
+                     , Data.Slaw.IO.Internal.Options
                      , System.Loam.Internal.ConstPtr
                      , System.Loam.Internal.Enums
                      , System.Loam.Internal.Filename
