@@ -22,8 +22,8 @@ module Data.Slaw.IO.Yaml
 -- import Control.Exception
 -- import Control.Monad
 -- import qualified Data.ByteString         as B
--- import qualified Data.ByteString.Builder as R
--- import qualified Data.ByteString.Lazy    as L
+import qualified Data.ByteString.Builder as R
+import qualified Data.ByteString.Lazy    as L
 -- import Data.Default.Class
 -- import Data.Word
 import GHC.Stack
@@ -67,17 +67,42 @@ writeYamlSlawFile fname opts ss = do
 
 --
 
+fileMagicLBS :: L.ByteString
+fileMagicLBS = R.toLazyByteString $ R.word32BE fileMagic
+
 openSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
               => a -- ^ name (or handle) of file to open
               -> b -- ^ options map/protein (currently none)
               -> IO SlawInputStream
-openSlawInput = undefined
+openSlawInput file opts = withFrozenCallStack $ do
+  eth  <- fcOpenReadOrMap file
+  rdr  <- makeFileReader  eth
+  hdr4 <- peekBytes rdr 4
+  if hdr4 == fileMagicLBS
+    then openBinarySlawInput1 (fcName file) rdr opts
+    else openYamlSlawInput1   (fcName file) rdr opts
+
+--
 
 openYamlSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
                   => a -- ^ name (or handle) of file to open
                   -> b -- ^ options map/protein (currently none)
                   -> IO SlawInputStream
-openYamlSlawInput = undefined
+openYamlSlawInput file opts = withFrozenCallStack $ do
+  let nam = fcName file
+  eth <- fcOpenReadOrMap file
+  rdr <- makeFileReader eth
+  openYamlSlawInput1 nam rdr opts
+
+openYamlSlawInput1
+  :: (HasCallStack, ToSlaw b)
+  => String
+  -> FileReader
+  -> b
+  -> IO SlawInputStream
+openYamlSlawInput1 = undefined
+
+--
 
 openYamlSlawOutput :: (FileClass a, ToSlaw b)
                    => a -- ^ name (or handle) of file to open
