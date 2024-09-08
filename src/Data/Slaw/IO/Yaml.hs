@@ -25,13 +25,52 @@ module Data.Slaw.IO.Yaml
 import qualified Data.ByteString.Builder as R
 import qualified Data.ByteString.Lazy    as L
 -- import Data.Default.Class
--- import Data.Word
+import Data.Int
+import Data.Word
+import Foreign.C.Types
+import Foreign.Ptr
 import GHC.Stack
 -- import System.IO
 
 import Data.Slaw
 import Data.Slaw.Internal
 -- import Data.Slaw.Util
+import qualified System.Loam.Internal.ConstPtr as C
+
+--
+
+type ReadFunc = CChar -> Ptr Word8 -> CSize -> Ptr CSize -> Int64
+type ReadPtr  = FunPtr ReadFunc
+
+type WriteFunc = CChar -> C.ConstPtr Word8 -> CSize -> Int64
+type WritePtr  = FunPtr WriteFunc
+
+type InputPtr     = Ptr ()
+type OutputPtr    = Ptr ()
+type SlawPtr      = Ptr ()
+type ConstSlawPtr = C.ConstPtr ()
+
+foreign import ccall "wrapper" createReadPtr :: ReadFunc -> IO ReadPtr
+
+foreign import ccall "wrapper" createWritePtr :: WriteFunc -> IO WritePtr
+
+foreign import capi "ze-hs-slawio.h ze_hs_read_input"
+    c_read_input :: InputPtr -> Ptr Int64 -> Ptr Int64 -> IO SlawPtr
+
+foreign import capi "ze-hs-slawio.h ze_hs_close_input"
+    c_close_input :: InputPtr -> IO Int64
+
+foreign import capi "ze-hs-slawio.h &ze_hs_finalize_input"
+    c_finalize_input :: FunPtr (InputPtr -> IO ())
+
+foreign import capi "ze-hs-slawio.h ze_hs_write_output"
+    c_write_output :: OutputPtr -> ConstSlawPtr -> IO Int64
+
+foreign import capi "ze-hs-slawio.h ze_hs_close_output"
+    c_close_output :: OutputPtr -> IO Int64
+
+foreign import capi "ze-hs-slawio.h &ze_hs_finalize_output"
+    c_finalize_output :: FunPtr (OutputPtr -> IO ())
 
 --
 
