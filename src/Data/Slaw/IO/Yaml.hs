@@ -24,13 +24,15 @@ import Control.Exception
 -- import qualified Data.ByteString         as B
 import qualified Data.ByteString.Builder as R
 import qualified Data.ByteString.Lazy    as L
+import Data.Char
 -- import Data.Default.Class
 import Data.Int
 import Data.Word
 import Foreign.C.Types
 import Foreign.Ptr
+import Foreign.Storable
 import GHC.Stack
--- import System.IO
+import System.IO
 import System.IO.Error
 
 import Data.Slaw
@@ -39,13 +41,14 @@ import Data.Slaw.Internal
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
+import System.Loam.Internal.Marshal
 
 --
 
-type ReadFunc = CChar -> Ptr Word8 -> CSize -> Ptr CSize -> Int64
+type ReadFunc = CChar -> Ptr Word8 -> CSize -> Ptr CSize -> IO Int64
 type ReadPtr  = FunPtr ReadFunc
 
-type WriteFunc = CChar -> C.ConstPtr Word8 -> CSize -> Int64
+type WriteFunc = CChar -> C.ConstPtr Word8 -> CSize -> IO Int64
 type WritePtr  = FunPtr WriteFunc
 
 type InputPtr     = Ptr ()
@@ -136,12 +139,67 @@ openSlawInput file opts = withFrozenCallStack $ do
 
 --
 
-wrapIOE :: IO () -> IO Int64
+data YInput = YInput
+  { yinName   :: String
+  , yinReader :: !FileReader
+  }
+
+data YOutput = YOutput
+  { youtName   :: String
+  , youtHandle :: !Handle
+  }
+
+wrapIOE :: IO Retort -> IO Int64
 wrapIOE func = do
   eth <- try func
   case eth of
-    Left  ioe -> return $ unRetort $ ioetToRetort $ ioeGetErrorType ioe
-    Right ()  -> return $ unRetort OB_OK
+    Left  ioe  -> return $ unRetort $ ioetToRetort $ ioeGetErrorType ioe
+    Right tort -> return $ unRetort tort
+
+yInputReadFunc :: YInput -> ReadFunc
+yInputReadFunc yin op bytePtr sizeIn sizeOutPtr = do
+  let op' = chr $ fromIntegral op
+  wrapIOE $ yInputReadFunc' yin op' bytePtr sizeIn sizeOutPtr
+
+yInputReadFunc'
+  :: YInput
+  -> Char
+  -> Ptr Word8
+  -> CSize
+  -> Ptr CSize
+  -> IO Retort
+yInputReadFunc' yin 'r' bytePtr sizeIn sizeOutPtr = do
+  lbs <- readBytes (yinReader yin) (fromIntegral sizeIn)
+  let sizeOut = fromIntegral (L.length lbs) `min` sizeIn
+  copyLazyByteStringToBuffer lbs bytePtr (fromIntegral sizeOut)
+  poke sizeOutPtr sizeOut
+  return OB_OK
+yInputReadFunc' yin 'c' _ _ _ = do
+  closeFileReader (yinReader yin)
+  return OB_OK
+yInputReadFunc' _ _ _ _ _ = return ZE_HS_INTERNAL_ERROR
+
+yOutputWriteFunc :: YOutput -> WriteFunc
+yOutputWriteFunc yout op bytePtr size = do
+  let op' = chr $ fromIntegral op
+  wrapIOE $ yOutputWriteFunc' yout op' bytePtr size
+
+yOutputWriteFunc'
+  :: YOutput
+  -> Char
+  -> C.ConstPtr Word8
+  -> CSize
+  -> IO Retort
+yOutputWriteFunc' yout 'w' bytePtr size = do
+  hPutBuf (youtHandle yout) (C.unConstPtr bytePtr) (fromIntegral size)
+  return OB_OK
+yOutputWriteFunc' yout 'f' _ _ = do
+  hFlush (youtHandle yout)
+  return OB_OK
+yOutputWriteFunc' yout 'c' _ _ = do
+  hClose (youtHandle yout)
+  return OB_OK
+yOutputWriteFunc' _ _ _ _ = return ZE_HS_INTERNAL_ERROR
 
 --
 
