@@ -92,6 +92,7 @@ module System.Loam.Retorts.Constants
   , pattern POOL_NOT_A_GREENHOUSE_SERVER
   , pattern POOL_CREATED
   , pattern ZE_HS_ALREADY_CLOSED
+  , pattern ZE_HS_INTERNAL_ERROR
   , pattern ZE_HS_IOE_ALREADY_EXISTS
   , pattern ZE_HS_IOE_ALREADY_IN_USE
   , pattern ZE_HS_IOE_DOES_NOT_EXIST
@@ -479,6 +480,10 @@ pattern POOL_CREATED         =  Retort (#{const POOL_CREATED})
 -- | Already closed.
 pattern ZE_HS_ALREADY_CLOSED :: Retort
 pattern ZE_HS_ALREADY_CLOSED =  Retort (#{const ZE_HS_ALREADY_CLOSED})
+
+-- | Internal error.
+pattern ZE_HS_INTERNAL_ERROR :: Retort
+pattern ZE_HS_INTERNAL_ERROR =  Retort (#{const ZE_HS_INTERNAL_ERROR})
 
 -- | Already exists.
 pattern ZE_HS_IOE_ALREADY_EXISTS :: Retort

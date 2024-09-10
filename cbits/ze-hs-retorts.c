@@ -10,6 +10,7 @@ const char *ze_hs_ioe_error_string (ob_retort err)
 
     switch (err) {
         E (ZE_HS_ALREADY_CLOSED,              "already closed");
+        E (ZE_HS_INTERNAL_ERROR,              "internal error");
         E (ZE_HS_IOE_ALREADY_EXISTS,          "already exists");
         E (ZE_HS_IOE_ALREADY_IN_USE,          "resource busy");
         E (ZE_HS_IOE_DOES_NOT_EXIST,          "does not exist");

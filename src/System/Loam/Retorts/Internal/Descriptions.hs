@@ -439,6 +439,11 @@ tortTuples =
     , "already closed"
     , Nothing
     )
+  , ( ZE_HS_INTERNAL_ERROR
+    , "ZE_HS_INTERNAL_ERROR"
+    , "internal error"
+    , Nothing
+    )
   , ( ZE_HS_IOE_ALREADY_EXISTS
     , "ZE_HS_IOE_ALREADY_EXISTS"
     , "already exists"
