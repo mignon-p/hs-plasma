@@ -91,6 +91,7 @@ module System.Loam.Retorts.Constants
   , pattern POOL_TLS_ERROR
   , pattern POOL_NOT_A_GREENHOUSE_SERVER
   , pattern POOL_CREATED
+  , pattern ZE_HS_ALREADY_CLOSED
   , pattern ZE_HS_IOE_ALREADY_EXISTS
   , pattern ZE_HS_IOE_ALREADY_IN_USE
   , pattern ZE_HS_IOE_DOES_NOT_EXIST
@@ -474,6 +475,10 @@ pattern POOL_NOT_A_GREENHOUSE_SERVER =
 -- | A pool was successfully created.
 pattern POOL_CREATED         :: Retort
 pattern POOL_CREATED         =  Retort (#{const POOL_CREATED})
+
+-- | Already closed.
+pattern ZE_HS_ALREADY_CLOSED :: Retort
+pattern ZE_HS_ALREADY_CLOSED =  Retort (#{const ZE_HS_ALREADY_CLOSED})
 
 -- | Already exists.
 pattern ZE_HS_IOE_ALREADY_EXISTS :: Retort

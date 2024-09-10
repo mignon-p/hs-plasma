@@ -434,6 +434,11 @@ tortTuples =
     , "A pool was successfully created"
     , Just EtPools
     )
+  , ( ZE_HS_ALREADY_CLOSED
+    , "ZE_HS_ALREADY_CLOSED"
+    , "already closed"
+    , Nothing
+    )
   , ( ZE_HS_IOE_ALREADY_EXISTS
     , "ZE_HS_IOE_ALREADY_EXISTS"
     , "already exists"
