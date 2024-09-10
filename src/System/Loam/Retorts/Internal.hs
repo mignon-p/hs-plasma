@@ -35,12 +35,14 @@ import Foreign.C.Error
 -- import Foreign.Ptr
 import GHC.Generics (Generic)
 import GHC.Stack
+import System.IO.Error
 
 import Data.Slaw
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 -- import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.Descriptions
+import System.Loam.Retorts.Internal.IoeRetorts
 
 foreign import capi "libLoam/c/ob-retorts.h ob_error_string_literal"
     c_error_string_literal :: Int64 -> IO C.ConstCString
@@ -196,9 +198,10 @@ throwRetort'
 throwRetort' et addn r erl
   | isSuccess r = return r
   | otherwise   = withFrozenCallStack $ do
-      case retortToErrno r of
-        Just eno -> throwErrnoHelper     addn eno erl
-        Nothing  -> throwRetortHelper et addn r   erl
+      case (retortToIoet r, retortToErrno r) of
+        (Just ioet, _) -> throwIoetHelper      addn ioet erl
+        (_,  Just eno) -> throwErrnoHelper     addn eno  erl
+        _              -> throwRetortHelper et addn r    erl
 
 throwRetortHelper :: HasCallStack
                   => PlasmaExceptionType -- default exception type
@@ -224,6 +227,22 @@ throwErrnoHelper addn eno erl = do
                 Just (ErrLocation DsNone _) -> Nothing
                 Just erl'                -> Just $ displayErrLocation erl'
       ioe   = errnoToIOError loc eno Nothing fname
+  throwIO ioe
+
+throwIoetHelper :: HasCallStack
+                => Maybe String        -- additional information/loc
+                -> IOErrorType
+                -> Maybe ErrLocation
+                -> IO a
+throwIoetHelper addn ioet erl = do
+  let loc   = case addn of
+                Just loc' -> loc'
+                Nothing   -> locFromStack $ getCallStack callStack
+      fname = case erl of
+                Nothing                     -> Nothing
+                Just (ErrLocation DsNone _) -> Nothing
+                Just erl'                -> Just $ displayErrLocation erl'
+      ioe   = mkIOError ioet loc Nothing fname
   throwIO ioe
 
 isInternal :: String -> Bool
