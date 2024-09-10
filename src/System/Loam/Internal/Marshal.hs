@@ -12,6 +12,8 @@ module System.Loam.Internal.Marshal
   , withLazyByteStringAsCStringNL
   , withLazyByteStringAsCStringLen
     --
+  , copyLazyByteStringToBuffer
+    --
   , withSlaw
   , withBinarySlaw
     --
@@ -26,6 +28,7 @@ import qualified Data.ByteString.Lazy     as L
 import qualified Data.ByteString.Unsafe   as B
 import Data.Char
 import Data.Int
+import Data.Word
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
@@ -101,6 +104,21 @@ endsWithNewline _ 0 = return False
 endsWithNewline buf pos = do
   lastByte <- peekByteOff buf (pos - 1)
   return (lastByte == newline)
+
+--
+
+copyLazyByteStringToBuffer :: L.ByteString -> Ptr Word8 -> Int -> IO ()
+copyLazyByteStringToBuffer lbs bufPtr bufSize =
+  copyLbs1 (L.toChunks lbs) (castPtr bufPtr) bufSize
+
+copyLbs1 :: [B.ByteString] -> Ptr CChar -> Int -> IO ()
+copyLbs1 (bs:rest) bufPtr bufSize
+  | bufSize > 0 = do
+      let cpyLen = B.length bs `min` bufSize
+      B.unsafeUseAsCString bs $ \srcPtr -> do
+        copyBytes bufPtr srcPtr cpyLen
+      copyLbs1 rest (bufPtr `plusPtr` cpyLen) (bufSize - cpyLen)
+copyLbs1 _ _ _ = return ()
 
 --
 
