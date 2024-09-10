@@ -128,6 +128,7 @@ library
   ghc-options:         -Wall
                        -Wno-unused-do-bind
                        -Wno-incomplete-uni-patterns
+                       -Wno-unused-top-binds
 
 
 executable hs-plasma

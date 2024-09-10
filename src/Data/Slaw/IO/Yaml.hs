@@ -19,7 +19,7 @@ module Data.Slaw.IO.Yaml
   , writeYamlSlawFile
   ) where
 
--- import Control.Exception
+import Control.Exception
 -- import Control.Monad
 -- import qualified Data.ByteString         as B
 import qualified Data.ByteString.Builder as R
@@ -31,11 +31,14 @@ import Foreign.C.Types
 import Foreign.Ptr
 import GHC.Stack
 -- import System.IO
+import System.IO.Error
 
 import Data.Slaw
 import Data.Slaw.Internal
 -- import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Retorts.Constants
+import System.Loam.Retorts.Internal.IoeRetorts
 
 --
 
@@ -54,6 +57,11 @@ foreign import ccall "wrapper" createReadPtr :: ReadFunc -> IO ReadPtr
 
 foreign import ccall "wrapper" createWritePtr :: WriteFunc -> IO WritePtr
 
+--
+
+foreign import capi "ze-hs-slawio.h ze_hs_open_yaml_input"
+    c_open_yaml_input :: ReadPtr -> Ptr Int64 -> InputPtr
+
 foreign import capi "ze-hs-slawio.h ze_hs_read_input"
     c_read_input :: InputPtr -> Ptr Int64 -> Ptr Int64 -> IO SlawPtr
 
@@ -62,6 +70,11 @@ foreign import capi "ze-hs-slawio.h ze_hs_close_input"
 
 foreign import capi "ze-hs-slawio.h &ze_hs_finalize_input"
     c_finalize_input :: FunPtr (InputPtr -> IO ())
+
+--
+
+foreign import capi "ze-hs-slawio.h ze_hs_open_yaml_output"
+    c_open_yaml_output :: WritePtr -> ConstSlawPtr -> Ptr Int64 -> OutputPtr
 
 foreign import capi "ze-hs-slawio.h ze_hs_write_output"
     c_write_output :: OutputPtr -> ConstSlawPtr -> IO Int64
@@ -120,6 +133,15 @@ openSlawInput file opts = withFrozenCallStack $ do
   if hdr4 == fileMagicLBS
     then openBinarySlawInput1 (fcName file) rdr opts
     else openYamlSlawInput1   (fcName file) rdr opts
+
+--
+
+wrapIOE :: IO () -> IO Int64
+wrapIOE func = do
+  eth <- try func
+  case eth of
+    Left  ioe -> return $ unRetort $ ioetToRetort $ ioeGetErrorType ioe
+    Right ()  -> return $ unRetort OB_OK
 
 --
 
