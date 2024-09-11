@@ -27,6 +27,8 @@ module System.Loam.Retorts
   , retortToPlasmaException
   , throwRetort
   , throwRetort'
+  , throwRetortCS
+  , throwRetortCS'
   ) where
 
 import Data.Slaw

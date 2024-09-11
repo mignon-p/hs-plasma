@@ -19,6 +19,8 @@ module System.Loam.Retorts.Internal
   , retortToPlasmaException
   , throwRetort
   , throwRetort'
+  , throwRetortCS
+  , throwRetortCS'
   ) where
 
 import Control.DeepSeq
@@ -175,11 +177,30 @@ throwRetort
   -- ^ Optionally, the file or pool associated with the error.
   -> IO ()
   -- ^ Returns @()@ if retort is a success code.
-throwRetort et addn r erl = withFrozenCallStack $ do
-  throwRetort' et addn r erl
+throwRetort et addn r erl = throwRetortCS et addn r erl callStack
+
+-- | Same as 'throwRetort', except it takes the 'CallStack'
+-- as an explicit argument, instead of an implicit one.
+throwRetortCS
+  :: PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> CallStack
+  -- ^ The callstack.
+  -> IO ()
+  -- ^ Returns @()@ if retort is a success code.
+throwRetortCS et addn r erl cs = do
+  throwRetortCS' et addn r erl cs
   return ()
 
--- | Same as 'throwRetort', exception if the retort is a success
+-- | Same as 'throwRetort', except if the retort is a success
 -- code, it returns the retort instead of returning @()@.
 throwRetort'
   :: HasCallStack
@@ -195,33 +216,53 @@ throwRetort'
   -- ^ Optionally, the file or pool associated with the error.
   -> IO Retort
   -- ^ Returns the retort if it is a success code.
-throwRetort' et addn r erl
-  | isSuccess r = return r
-  | otherwise   = withFrozenCallStack $ do
-      case (retortToIoet r, retortToErrno r) of
-        (Just ioet, _) -> throwIoetHelper      addn ioet erl
-        (_,  Just eno) -> throwErrnoHelper     addn eno  erl
-        _              -> throwRetortHelper et addn r    erl
+throwRetort' et addn r erl = throwRetortCS' et addn r erl callStack
 
-throwRetortHelper :: HasCallStack
-                  => PlasmaExceptionType -- default exception type
+-- | Same as 'throwRetortCS', except if the retort is a success
+-- code, it returns the retort instead of returning @()@.
+throwRetortCS'
+  :: HasCallStack
+  => PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> CallStack
+  -- ^ The callstack.
+  -> IO Retort
+  -- ^ Returns the retort if it is a success code.
+throwRetortCS' et addn r erl cs
+  | isSuccess r = return r
+  | otherwise   = do
+      case (retortToIoet r, retortToErrno r) of
+        (Just ioet, _) -> throwIoetHelper      addn ioet erl cs
+        (_,  Just eno) -> throwErrnoHelper     addn eno  erl cs
+        _              -> throwRetortHelper et addn r    erl cs
+
+throwRetortHelper :: PlasmaExceptionType -- default exception type
                   -> Maybe String        -- additional information/loc
                   -> Retort
                   -> Maybe ErrLocation   -- file or pool
+                  -> CallStack
                   -> IO a
-throwRetortHelper et addn r erl = do
+throwRetortHelper et addn r erl cs = do
   pe <- retortToPlasmaException et addn r erl
-  throwIO $ pe { peCallstack = Just callStack }
+  throwIO $ pe { peCallstack = Just cs }
 
-throwErrnoHelper :: HasCallStack
-                 => Maybe String        -- additional information/loc
+throwErrnoHelper :: Maybe String        -- additional information/loc
                  -> Errno
                  -> Maybe ErrLocation
+                 -> CallStack
                  -> IO a
-throwErrnoHelper addn eno erl = do
+throwErrnoHelper addn eno erl cs = do
   let loc   = case addn of
                 Just loc' -> loc'
-                Nothing   -> locFromStack $ getCallStack callStack
+                Nothing   -> locFromStack $ getCallStack cs
       fname = case erl of
                 Nothing                     -> Nothing
                 Just (ErrLocation DsNone _) -> Nothing
@@ -229,15 +270,15 @@ throwErrnoHelper addn eno erl = do
       ioe   = errnoToIOError loc eno Nothing fname
   throwIO ioe
 
-throwIoetHelper :: HasCallStack
-                => Maybe String        -- additional information/loc
+throwIoetHelper :: Maybe String        -- additional information/loc
                 -> IOErrorType
                 -> Maybe ErrLocation
+                -> CallStack
                 -> IO a
-throwIoetHelper addn ioet erl = do
+throwIoetHelper addn ioet erl cs = do
   let loc   = case addn of
                 Just loc' -> loc'
-                Nothing   -> locFromStack $ getCallStack callStack
+                Nothing   -> locFromStack $ getCallStack cs
       fname = case erl of
                 Nothing                     -> Nothing
                 Just (ErrLocation DsNone _) -> Nothing

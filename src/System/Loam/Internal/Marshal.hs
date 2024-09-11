@@ -19,6 +19,7 @@ module System.Loam.Internal.Marshal
     --
   , withReturnedSlaw
   , withReturnedRetort
+  , withReturnedRetortCS
   ) where
 
 import Control.Monad
@@ -173,9 +174,19 @@ withReturnedRetort
   -> Maybe ErrLocation
   -> (Ptr Int64 -> IO a)
   -> IO a
-withReturnedRetort et addn erl f = alloca $ \tortPtr -> do
+withReturnedRetort et addn erl =
+  withReturnedRetortCS et addn erl callStack
+
+withReturnedRetortCS
+  :: PlasmaExceptionType
+  -> Maybe String
+  -> Maybe ErrLocation
+  -> CallStack
+  -> (Ptr Int64 -> IO a)
+  -> IO a
+withReturnedRetortCS et addn erl cs f = alloca $ \tortPtr -> do
   poke tortPtr $ unRetort OB_UNKNOWN_ERR
   ret  <- f tortPtr
   tort <- Retort <$> peek tortPtr
-  throwRetort et addn tort erl
+  throwRetortCS et addn tort erl cs
   return ret
