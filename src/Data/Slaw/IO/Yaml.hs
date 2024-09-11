@@ -27,6 +27,7 @@ import qualified Data.ByteString.Lazy    as L
 import Data.Char
 import Data.Default.Class
 import Data.Int
+import Data.IORef
 import Data.Word
 import Foreign.C.Types
 import Foreign.Ptr
@@ -141,13 +142,15 @@ openSlawInput file opts = withFrozenCallStack $ do
 --
 
 data YInput = YInput
-  { yinName   :: String
-  , yinReader :: !FileReader
+  { yinName       :: String
+  , yinReader     :: !FileReader
+  , yinLastOffset :: !(IORef (Maybe Integer))
   }
 
 data YInput2 = YInput2
   { yinErl :: Maybe ErrLocation
-  , yinPtr :: InputPtr
+  , yinPtr :: !InputPtr
+  , yinYin :: !YInput
   }
 
 wrapIOE :: IO Retort -> IO Int64
@@ -170,7 +173,10 @@ yInputReadFunc'
   -> Ptr CSize
   -> IO Retort
 yInputReadFunc' yin 'r' bytePtr sizeIn sizeOutPtr = do
-  lbs <- readBytes (yinReader yin) (fromIntegral sizeIn)
+  let rdr = yinReader yin
+  lastOff <- getOffset rdr
+  writeIORef (yinLastOffset yin) (Just lastOff)
+  lbs     <- readBytes rdr (fromIntegral sizeIn)
   let sizeOut = fromIntegral (L.length lbs) `min` sizeIn
   copyLazyByteStringToBuffer lbs bytePtr (fromIntegral sizeOut)
   poke sizeOutPtr sizeOut
@@ -186,13 +192,21 @@ makeInputFunc yin = createReadPtr (yInputReadFunc yin)
 --
 
 data YOutput = YOutput
-  { youtName   :: String
-  , youtHandle :: !Handle
+  { youtName        :: String
+  , youtHandle      :: !Handle
+  , youtShouldClose :: !Bool
+  , youtOffsets     :: !(IORef YOutOffsets)
+  }
+
+data YOutOffsets = YOutOffsets
+  { yooCurrentOffset :: {-# UNPACK #-} !Word64
+  , yooLastOffset    :: {-# UNPACK #-} !Word64
   }
 
 data YOutput2 = YOutput2
-  { youtErl :: Maybe ErrLocation
-  , youtPtr :: OutputPtr
+  { youtErl  :: Maybe ErrLocation
+  , youtPtr  :: !OutputPtr
+  , youtYout :: !YOutput
   }
 
 yOutputWriteFunc :: YOutput -> WriteFunc
@@ -207,15 +221,26 @@ yOutputWriteFunc'
   -> CSize
   -> IO Retort
 yOutputWriteFunc' yout 'w' bytePtr size = do
+  modifyIORef' (youtOffsets yout) (advanceOffset $ fromIntegral size)
   hPutBuf (youtHandle yout) (C.unConstPtr bytePtr) (fromIntegral size)
   return OB_OK
 yOutputWriteFunc' yout 'f' _ _ = do
   hFlush (youtHandle yout)
   return OB_OK
 yOutputWriteFunc' yout 'c' _ _ = do
-  hClose (youtHandle yout)
+  let h = youtHandle yout
+  if youtShouldClose yout
+    then hClose h
+    else hFlush h
   return OB_OK
 yOutputWriteFunc' _ _ _ _ = return ZE_HS_INTERNAL_ERROR
+
+advanceOffset :: Word64 -> YOutOffsets -> YOutOffsets
+advanceOffset !size yoo =
+  let o = yooCurrentOffset yoo
+  in YOutOffsets { yooCurrentOffset = (o + size)
+                 , yooLastOffset    = o
+                 }
 
 makeOutputFunc :: YOutput -> IO WritePtr
 makeOutputFunc yout = createWritePtr (yOutputWriteFunc yout)
@@ -240,12 +265,19 @@ openYamlSlawInput1
   -> b      -- options (ignored)
   -> IO SlawInputStream
 openYamlSlawInput1 addn nam rdr _ = do
-  let yin = YInput nam rdr
+  offRef <- newIORef Nothing
+  let yin = YInput { yinName       = nam
+                   , yinReader     = rdr
+                   , yinLastOffset = offRef
+                   }
       erl = Just $ def { elSource = DsFile nam }
   iPtr <- withReturnedRetort EtSlawIO (Just addn) erl $ \tortPtr -> do
     readPtr <- makeInputFunc yin
     c_open_yaml_input readPtr tortPtr
-  let yin2 = YInput2 erl iPtr
+  let yin2 = YInput2 { yinErl = erl
+                     , yinPtr = iPtr
+                     , yinYin = yin
+                     }
   return $ SlawInputStream { siName   = nam
                            , siRead'  = yiRead  yin2
                            , siClose' = yiClose yin2
