@@ -25,7 +25,7 @@ import Control.Exception
 import qualified Data.ByteString.Builder as R
 import qualified Data.ByteString.Lazy    as L
 import Data.Char
--- import Data.Default.Class
+import Data.Default.Class
 import Data.Int
 import Data.Word
 import Foreign.C.Types
@@ -63,7 +63,7 @@ foreign import ccall "wrapper" createWritePtr :: WriteFunc -> IO WritePtr
 --
 
 foreign import capi "ze-hs-slawio.h ze_hs_open_yaml_input"
-    c_open_yaml_input :: ReadPtr -> Ptr Int64 -> InputPtr
+    c_open_yaml_input :: ReadPtr -> Ptr Int64 -> IO InputPtr
 
 foreign import capi "ze-hs-slawio.h ze_hs_read_input"
     c_read_input :: InputPtr -> Ptr Int64 -> Ptr Int64 -> IO SlawPtr
@@ -77,7 +77,7 @@ foreign import capi "ze-hs-slawio.h &ze_hs_finalize_input"
 --
 
 foreign import capi "ze-hs-slawio.h ze_hs_open_yaml_output"
-    c_open_yaml_output :: WritePtr -> ConstSlawPtr -> Ptr Int64 -> OutputPtr
+    c_open_yaml_output :: WritePtr -> ConstSlawPtr -> Ptr Int64 -> IO OutputPtr
 
 foreign import capi "ze-hs-slawio.h ze_hs_write_output"
     c_write_output :: OutputPtr -> ConstSlawPtr -> IO Int64
@@ -135,7 +135,7 @@ openSlawInput file opts = withFrozenCallStack $ do
   hdr4 <- peekBytes rdr 4
   if hdr4 == fileMagicLBS
     then openBinarySlawInput1 (fcName file) rdr opts
-    else openYamlSlawInput1   (fcName file) rdr opts
+    else openYamlSlawInput1   "openSlawInput" (fcName file) rdr opts
 
 --
 
@@ -144,9 +144,9 @@ data YInput = YInput
   , yinReader :: !FileReader
   }
 
-data YOutput = YOutput
-  { youtName   :: String
-  , youtHandle :: !Handle
+data YInput2 = YInput2
+  { yinErl :: Maybe ErrLocation
+  , yinPtr :: InputPtr
   }
 
 wrapIOE :: IO Retort -> IO Int64
@@ -179,6 +179,21 @@ yInputReadFunc' yin 'c' _ _ _ = do
   return OB_OK
 yInputReadFunc' _ _ _ _ _ = return ZE_HS_INTERNAL_ERROR
 
+makeInputFunc :: YInput -> IO ReadPtr
+makeInputFunc yin = createReadPtr (yInputReadFunc yin)
+
+--
+
+data YOutput = YOutput
+  { youtName   :: String
+  , youtHandle :: !Handle
+  }
+
+data YOutput2 = YOutput2
+  { youtErl :: Maybe ErrLocation
+  , youtPtr :: OutputPtr
+  }
+
 yOutputWriteFunc :: YOutput -> WriteFunc
 yOutputWriteFunc yout op bytePtr size = do
   let op' = chr $ fromIntegral op
@@ -201,6 +216,9 @@ yOutputWriteFunc' yout 'c' _ _ = do
   return OB_OK
 yOutputWriteFunc' _ _ _ _ = return ZE_HS_INTERNAL_ERROR
 
+makeOutputFunc :: YOutput -> IO WritePtr
+makeOutputFunc yout = createWritePtr (yOutputWriteFunc yout)
+
 --
 
 openYamlSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
@@ -211,15 +229,32 @@ openYamlSlawInput file opts = withFrozenCallStack $ do
   let nam = fcName file
   eth <- fcOpenReadOrMap file
   rdr <- makeFileReader eth
-  openYamlSlawInput1 nam rdr opts
+  openYamlSlawInput1 "openYamlSlawInput" nam rdr opts
 
 openYamlSlawInput1
   :: (HasCallStack, ToSlaw b)
-  => String
+  => String -- location name
+  -> String -- file name
   -> FileReader
-  -> b
+  -> b      -- options (ignored)
   -> IO SlawInputStream
-openYamlSlawInput1 = undefined
+openYamlSlawInput1 addn nam rdr _ = do
+  let yin = YInput nam rdr
+      erl = Just $ def { elSource = DsFile nam }
+  iPtr <- withReturnedRetort EtSlawIO (Just addn) erl $ \tortPtr -> do
+    readPtr <- makeInputFunc yin
+    c_open_yaml_input readPtr tortPtr
+  let yin2 = YInput2 erl iPtr
+  return $ SlawInputStream { siName  = nam
+                           , siRead' = yRead  yin2
+                           , siClose = yClose yin2
+                           }
+
+yRead :: YInput2 -> CallStack -> IO (Maybe Slaw)
+yRead = undefined
+
+yClose :: YInput2 -> IO ()
+yClose = undefined
 
 --
 
