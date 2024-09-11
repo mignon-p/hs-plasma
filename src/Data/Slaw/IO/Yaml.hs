@@ -37,6 +37,7 @@ import System.IO.Error
 
 import Data.Slaw
 import Data.Slaw.Internal
+import Data.Slaw.IO
 -- import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts.Constants
@@ -245,16 +246,16 @@ openYamlSlawInput1 addn nam rdr _ = do
     readPtr <- makeInputFunc yin
     c_open_yaml_input readPtr tortPtr
   let yin2 = YInput2 erl iPtr
-  return $ SlawInputStream { siName  = nam
-                           , siRead' = yRead  yin2
-                           , siClose = yClose yin2
+  return $ SlawInputStream { siName   = nam
+                           , siRead'  = yiRead  yin2
+                           , siClose' = yiClose yin2
                            }
 
-yRead :: YInput2 -> CallStack -> IO (Maybe Slaw)
-yRead = undefined
+yiRead :: YInput2 -> CallStack -> IO (Maybe Slaw)
+yiRead = undefined
 
-yClose :: YInput2 -> IO ()
-yClose = undefined
+yiClose :: YInput2 -> CallStack -> IO ()
+yiClose = undefined
 
 --
 
