@@ -42,6 +42,7 @@ import Data.Slaw.Internal
 import Data.Slaw.IO
 -- import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 import System.Loam.Internal.Marshal
@@ -290,10 +291,37 @@ openYamlSlawInput1 addn nam rdr _ = do
                            }
 
 yiRead :: YInput2 -> CallStack -> IO (Maybe Slaw)
-yiRead = undefined
+yiRead y2 cs = do
+  let addn = Just    "siRead"
+      yin  = yinYin  y2
+      nam  = yinName yin
+  moff <- readIORef (yinLastOffset yin)
+  let erl = ErrLocation { elSource = DsFile nam
+                        , elOffset = fmap fromInteger moff
+                        }
+  withForeignPtr (yinPtr y2) $ \iPtr -> do
+    withReturnedSlaw erl $ \lenPtr -> do
+      withReturnedRetortCS EtSlawIO addn (Just erl) cs $ \tortPtr -> do
+        slawPtr <- c_read_input iPtr tortPtr lenPtr
+        tort    <- peek tortPtr
+        case Retort tort of
+          SLAW_END_OF_FILE -> do
+            poke tortPtr (unRetort OB_OK)
+            return nullPtr
+          _                -> return slawPtr
 
 yiClose :: YInput2 -> CallStack -> IO ()
-yiClose = undefined
+yiClose y2 cs = do
+  let addn = Just    "siClose"
+      yin  = yinYin  y2
+      nam  = yinName yin
+  moff <- readIORef (yinLastOffset yin)
+  let erl = ErrLocation { elSource = DsFile nam
+                        , elOffset = fmap fromInteger moff
+                        }
+  withForeignPtr (yinPtr y2) $ \iPtr -> do
+    tort <- c_close_input iPtr
+    throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
 
 --
 
