@@ -115,6 +115,7 @@ library
   -- since Plasma calls functions in Loam.
   extra-libraries:     Plasma
                      , Loam
+                     , yaml
 
   -- extra-libraries-static: Loam
   --                       , Plasma

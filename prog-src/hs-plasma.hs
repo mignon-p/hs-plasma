@@ -6,6 +6,8 @@ import Text.Printf
 
 import Data.Slaw
 import Data.Slaw.Extras
+-- import Data.Slaw.IO
+import Data.Slaw.IO.Yaml
 import System.Loam.Dirs
 import System.Loam.Rand
 import System.Loam.Util
@@ -104,3 +106,8 @@ main = do
         , ("pi16", pi16Txt)
         ] $ \(name, txt) -> do
     putStrLn $ printf "%-20s = %s" (name :: String) (LT.unpack txt)
+
+  slawx <- readYamlSlawFile ("test-files/example.yaml" :: String) ()
+  forM_ slawx $ \slaw -> do
+    putStrLn ""
+    putStrLn $ LT.unpack $ spewOverview slaw
