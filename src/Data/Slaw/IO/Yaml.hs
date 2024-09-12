@@ -374,10 +374,25 @@ yoErl yo = do
                        }
 
 yoWrite :: YOutput2 -> CallStack -> Slaw -> IO ()
-yoWrite = undefined
+yoWrite y2 cs slaw = do
+  let addn = Just     "soWrite"
+      yout = youtYout y2
+  erl <- yoErl yout
+  withForeignPtr (youtPtr y2) $ \oPtr -> do
+    withSlaw slaw $ \slawPtr -> do
+      tort <- c_write_output oPtr slawPtr
+      throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
 
+-- Currently, YAML output auto-flushes after each slaw.
+-- There's no way to flush manually, so ignore.
 yoFlush :: YOutput2 -> CallStack -> IO ()
-yoFlush = undefined
+yoFlush _ _ = return ()
 
 yoClose :: YOutput2 -> CallStack -> IO ()
-yoClose = undefined
+yoClose y2 cs = do
+  let addn = Just     "soClose"
+      yout = youtYout y2
+  erl <- yoErl yout
+  withForeignPtr (youtPtr y2) $ \oPtr -> do
+    tort <- c_close_output oPtr
+    throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs

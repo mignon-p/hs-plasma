@@ -2,11 +2,12 @@ import Control.Monad
 import qualified Data.ByteString          as B
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
+import System.IO
 import Text.Printf
 
 import Data.Slaw
 import Data.Slaw.Extras
--- import Data.Slaw.IO
+import Data.Slaw.IO
 import Data.Slaw.IO.Yaml
 import System.Loam.Dirs
 import System.Loam.Rand
@@ -111,3 +112,7 @@ main = do
   forM_ slawx $ \slaw -> do
     putStrLn ""
     putStrLn $ LT.unpack $ spewOverview slaw
+
+  putStrLn ""
+
+  writeYamlSlawFile (NoClose stdout) () [mySlaw]
