@@ -30,6 +30,7 @@ import Data.Int
 import Data.IORef
 import Data.Word
 import Foreign.C.Types
+import Foreign.ForeignPtr
 import Foreign.Ptr
 import Foreign.Storable
 import GHC.Stack
@@ -55,6 +56,10 @@ type WritePtr  = FunPtr WriteFunc
 
 type InputPtr     = Ptr ()
 type OutputPtr    = Ptr ()
+
+type InputFPtr    = ForeignPtr ()
+type OutputFPtr   = ForeignPtr ()
+
 type SlawPtr      = Ptr ()
 type ConstSlawPtr = C.ConstPtr ()
 
@@ -149,7 +154,7 @@ data YInput = YInput
 
 data YInput2 = YInput2
   { yinErl :: Maybe ErrLocation
-  , yinPtr :: !InputPtr
+  , yinPtr :: !InputFPtr
   , yinYin :: !YInput
   }
 
@@ -205,7 +210,7 @@ data YOutOffsets = YOutOffsets
 
 data YOutput2 = YOutput2
   { youtErl  :: Maybe ErrLocation
-  , youtPtr  :: !OutputPtr
+  , youtPtr  :: !OutputFPtr
   , youtYout :: !YOutput
   }
 
@@ -274,8 +279,9 @@ openYamlSlawInput1 addn nam rdr _ = do
   iPtr <- withReturnedRetort EtSlawIO (Just addn) erl $ \tortPtr -> do
     readPtr <- makeInputFunc yin
     c_open_yaml_input readPtr tortPtr
+  iFPtr <- newForeignPtr c_finalize_input iPtr
   let yin2 = YInput2 { yinErl = erl
-                     , yinPtr = iPtr
+                     , yinPtr = iFPtr
                      , yinYin = yin
                      }
   return $ SlawInputStream { siName   = nam
