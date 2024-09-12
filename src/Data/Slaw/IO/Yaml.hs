@@ -11,19 +11,26 @@ module Data.Slaw.IO.Yaml
   ( -- * Reading slawx from a file (YAML or binary)
     openSlawInput
   , readSlawFile
+    -- * Writing slawx to a file (YAML or binary)
+  , openSlawOutput
+  , writeSlawFile
     -- * Reading slawx from a YAML file
   , openYamlSlawInput
   , readYamlSlawFile
     -- * Writing slawx to a YAML file
   , openYamlSlawOutput
   , writeYamlSlawFile
+    -- * Options
+  , WriteYamlOptions(..) -- re-export
   ) where
 
+import Control.Applicative
 import Control.Exception
 -- import Control.Monad
--- import qualified Data.ByteString         as B
-import qualified Data.ByteString.Builder as R
-import qualified Data.ByteString.Lazy    as L
+-- import qualified Data.ByteString               as B
+import qualified Data.ByteString.Builder       as R
+import qualified Data.ByteString.Lazy          as L
+import qualified Data.ByteString.Lazy.Char8    as L8
 import Data.Char
 import Data.Default.Class
 import Data.Int
@@ -40,7 +47,9 @@ import System.IO.Error
 import Data.Slaw
 import Data.Slaw.Internal
 import Data.Slaw.IO
--- import Data.Slaw.Util
+import Data.Slaw.IO.Internal.Options
+import Data.Slaw.Path
+import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
@@ -98,6 +107,11 @@ foreign import capi "ze-hs-slawio.h &ze_hs_finalize_output"
 
 --
 
+-- | Convenience function to read all the slawx from a file.
+-- Automatically detects whether the file is binary or YAML.
+-- It opens a stream, reads all the slawx from the stream,
+-- and then closes the stream.  The slawx that were read are returned
+-- as a list.
 readSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
              => a -- ^ name (or handle) of file to read
              -> b -- ^ options map/protein (currently none)
@@ -108,6 +122,10 @@ readSlawFile fname opts = withFrozenCallStack $ do
   siClose sis
   return ss
 
+-- | Convenience function to read all the slawx from a YAML
+-- file.  It opens a stream, reads all the slawx from the stream,
+-- and then closes the stream.  The slawx that were read are returned
+-- as a list.
 readYamlSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
                  => a -- ^ name (or handle) of file to read
                  -> b -- ^ options map/protein (currently none)
@@ -118,13 +136,33 @@ readYamlSlawFile fname opts = withFrozenCallStack $ do
   siClose sis
   return ss
 
-writeYamlSlawFile :: (FileClass a, ToSlaw b)
-                  => a -- ^ name (or handle) of file to write
-                  -> b -- ^ options map/protein
+-- | Convenience function to write a YAML slaw file all at once.
+-- It opens a stream, writes all the slawx to the stream,
+-- and then closes the stream.
+writeYamlSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
+                  => a      -- ^ name (or handle) of file to write
+                  -> b      -- ^ options map/protein
                   -> [Slaw] -- ^ slawx to write to file
                   -> IO ()
-writeYamlSlawFile fname opts ss = do
+writeYamlSlawFile fname opts ss = withFrozenCallStack $ do
   sos <- openYamlSlawOutput fname opts
+  mapM_ (soWrite sos) ss
+  soClose sos
+
+-- | Convenience function to write a slaw file all at once.
+-- It opens a stream, writes all the slawx to the stream,
+-- and then closes the stream.
+--
+-- See 'openSlawOutput' for how it chooses to write either
+-- a binary or YAML slaw file, depending on the options map
+-- or the file extension.
+writeSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
+              => a      -- ^ name (or handle) of file to write
+              -> b      -- ^ options map/protein
+              -> [Slaw] -- ^ slawx to write to file
+              -> IO ()
+writeSlawFile fname opts ss = withFrozenCallStack $ do
+  sos <- openSlawOutput fname opts
   mapM_ (soWrite sos) ss
   soClose sos
 
@@ -133,6 +171,13 @@ writeYamlSlawFile fname opts ss = do
 fileMagicLBS :: L.ByteString
 fileMagicLBS = R.toLazyByteString $ R.word32BE fileMagic
 
+-- | Opens a 'SlawInputStream' for reading slawx from a file.
+-- Automatically detects whether the file is binary or YAML.
+-- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+--
+-- Does not currently take any options, so the second argument is
+-- placeholder which is just ignored.  The easiest thing to do
+-- is just pass in @()@.
 openSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
               => a -- ^ name (or handle) of file to open
               -> b -- ^ options map/protein (currently none)
@@ -251,6 +296,12 @@ makeOutputFunc yout = createWritePtr (yOutputWriteFunc yout)
 
 --
 
+-- | Opens a 'SlawInputStream' for reading slawx from a YAML file.
+-- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+--
+-- Does not currently take any options, so the second argument is
+-- placeholder which is just ignored.  The easiest thing to do
+-- is just pass in @()@.
 openYamlSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
                   => a -- ^ name (or handle) of file to open
                   -> b -- ^ options map/protein (currently none)
@@ -322,6 +373,13 @@ yiClose y2 cs = do
 
 --
 
+-- | Opens a 'SlawOutputStream' for writing slawx to a YAML file.
+-- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+--
+-- The second argument is a map or protein which specifies options.
+-- The easiest thing is to pass in 'WriteYamlOptions' if you want
+-- to specify any non-default options, or just pass @()@ to use
+-- the defaults.
 openYamlSlawOutput :: (HasCallStack, FileClass a, ToSlaw b)
                    => a -- ^ name (or handle) of file to open
                    -> b -- ^ options map/protein
@@ -396,3 +454,51 @@ yoClose y2 cs = do
   withForeignPtr (youtPtr y2) $ \oPtr -> do
     tort <- c_close_output oPtr
     throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+
+--
+
+formatFromName :: String -> Maybe FileFormat
+formatFromName nam =
+  let ext = L8.takeWhileEnd (/= '.') $ toUtf8 nam
+  in stringToEnum extStrings ext
+
+extStrings :: EnumStrings FileFormat
+extStrings = makeEnumStrings
+  [ ("slaw bin",     BinaryFile)
+  , ("yaml txt pro", YamlFile)
+  ]
+
+-- | Opens a 'SlawOutputStream' for writing slawx to a file.
+-- Can write either a binary or YAML file, depending on the options
+-- given, or the file extension.
+-- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+--
+-- The second argument is a map or protein which specifies options.
+-- If the map has a key named @format@, with a value of @binary@
+-- or @yaml@, then that determines the format used to write the file.
+--
+-- If the format is not specified in the options, then the file
+-- extension is checked.  An extension of @.slaw@ or @.bin@
+-- indicates a binary file, and @.yaml@, @.txt@, or @.pro@
+-- indicates a YAML file.  If all else fails, a default is
+-- used.  (Currently YAML, but subject to change.)
+--
+-- The easiest thing is to pass in 'WriteBinaryOptions' for the
+-- second argument if you want a binary file, or 'WriteYamlOptions'
+-- if you want a YAML file.  Or just pass @()@ to use the
+-- file extension.
+openSlawOutput :: (HasCallStack, FileClass a, ToSlaw b)
+               => a -- ^ name (or handle) of file to open
+               -> b -- ^ options map/protein
+               -> IO SlawOutputStream
+openSlawOutput file opts = do
+  let opts' = coerceToMap    (š opts)
+      nam   = fcName         file
+      ff1   = opts'       !? kFormat
+      ff2   = formatFromName nam
+      ff    = (ff1 <|> ff2) ?> YamlFile
+  case ff of
+    YamlFile ->
+      openYamlSlawOutput1 "openSlawOutput" file opts' callStack
+    BinaryFile ->
+      openBinarySlawOutput file opts'
