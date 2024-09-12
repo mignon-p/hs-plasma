@@ -20,6 +20,9 @@ module Data.Slaw.IO.Yaml
     -- * Writing slawx to a YAML file
   , openYamlSlawOutput
   , writeYamlSlawFile
+    -- * Slawx to/from YAML-encoded strings
+  , slawFromYamlString
+  , slawToYamlString
     -- * Options
   , WriteYamlOptions(..) -- re-export
   ) where
@@ -35,6 +38,7 @@ import Data.Char
 import Data.Default.Class
 import Data.Int
 import Data.IORef
+import qualified Data.Text.Lazy                as LT
 import Data.Word
 import Foreign.C.Types
 import Foreign.ForeignPtr
@@ -502,3 +506,24 @@ openSlawOutput file opts = do
       openYamlSlawOutput1 "openSlawOutput" file opts' callStack
     BinaryFile ->
       openBinarySlawOutput file opts'
+
+--
+
+slawFromYamlString
+  :: (HasCallStack, ToSlaw b)
+  => LT.Text -- ^ string to read YAML from
+  -> b       -- ^ options map/protein (currently none)
+  -> IO [Slaw]
+slawFromYamlString txt opts = withFrozenCallStack $ do
+  rdr <- makeFileReaderLazyBS $ toUtf8 txt
+  sis <- openYamlSlawInput1 "slawFromYamlString" "<string>" rdr opts
+  ss  <- readAllSlawx sis
+  siClose sis
+  return ss
+
+slawToYamlString
+  :: (HasCallStack, ToSlaw b)
+  => [Slaw] -- ^ slawx to write to string
+  -> b      -- ^ options map/protein
+  -> IO LT.Text
+slawToYamlString = undefined
