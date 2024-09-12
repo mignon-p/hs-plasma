@@ -154,8 +154,7 @@ data YInput = YInput
   }
 
 data YInput2 = YInput2
-  { yinErl :: Maybe ErrLocation
-  , yinPtr :: !InputFPtr
+  { yinPtr :: !InputFPtr
   , yinYin :: !YInput
   }
 
@@ -210,8 +209,7 @@ data YOutOffsets = YOutOffsets
   }
 
 data YOutput2 = YOutput2
-  { youtErl  :: Maybe ErrLocation
-  , youtPtr  :: !OutputFPtr
+  { youtPtr  :: !OutputFPtr
   , youtYout :: !YOutput
   }
 
@@ -281,8 +279,7 @@ openYamlSlawInput1 addn nam rdr _ = do
     readPtr <- makeInputFunc yin
     c_open_yaml_input readPtr tortPtr
   iFPtr <- newForeignPtr c_finalize_input iPtr
-  let yin2 = YInput2 { yinErl = erl
-                     , yinPtr = iFPtr
+  let yin2 = YInput2 { yinPtr = iFPtr
                      , yinYin = yin
                      }
   return $ SlawInputStream { siName   = nam
