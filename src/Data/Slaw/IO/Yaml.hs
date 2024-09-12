@@ -322,8 +322,62 @@ yiClose y2 cs = do
 
 --
 
-openYamlSlawOutput :: (FileClass a, ToSlaw b)
+openYamlSlawOutput :: (HasCallStack, FileClass a, ToSlaw b)
                    => a -- ^ name (or handle) of file to open
                    -> b -- ^ options map/protein
                    -> IO SlawOutputStream
-openYamlSlawOutput = undefined
+openYamlSlawOutput file opts =
+  openYamlSlawOutput1 "openYamlSlawOutput" file (š opts) callStack
+
+openYamlSlawOutput1 :: FileClass a
+                    => String -- ^ location name
+                    -> a      -- ^ name (or handle) of file to open
+                    -> Slaw   -- ^ options map/protein
+                    -> CallStack
+                    -> IO SlawOutputStream
+openYamlSlawOutput1 addn file opts cs = do
+  let nam   = fcName file
+      addn' = Just addn
+  (h, shouldClose) <- fcOpenWrite file
+  offRef           <- newIORef $ YOutOffsets 0 0
+  let yout = YOutput { youtName        = nam
+                     , youtHandle      = h
+                     , youtShouldClose = shouldClose
+                     , youtOffsets     = offRef
+                     }
+      erl  = Just $ def { elSource = DsFile nam }
+  oPtr <- withReturnedRetortCS EtSlawIO addn' erl cs $ \tortPtr -> do
+    withSlaw opts $ \slawPtr -> do
+      writePtr <- makeOutputFunc yout
+      c_open_yaml_output writePtr slawPtr tortPtr
+  oFPtr <- newForeignPtr c_finalize_output oPtr
+  let yout2 = YOutput2 { youtPtr  = oFPtr
+                       , youtYout = yout
+                       }
+  return $ SlawOutputStream { soName = nam
+                            , soWrite' = yoWrite yout2
+                            , soFlush' = yoFlush yout2
+                            , soClose' = yoClose yout2
+                            }
+
+yoErl :: YOutput -> IO ErrLocation
+yoErl yo = do
+  yoffs <- readIORef (youtOffsets yo)
+  let nam     = youtName yo
+      curOff  = yooCurrentOffset yoffs
+      lastOff = yooLastOffset yoffs
+      o       = if curOff == 0
+                then Nothing
+                else Just lastOff
+  return $ ErrLocation { elSource = DsFile nam
+                       , elOffset = o
+                       }
+
+yoWrite :: YOutput2 -> CallStack -> Slaw -> IO ()
+yoWrite = undefined
+
+yoFlush :: YOutput2 -> CallStack -> IO ()
+yoFlush = undefined
+
+yoClose :: YOutput2 -> CallStack -> IO ()
+yoClose = undefined
