@@ -23,6 +23,8 @@ module Data.Slaw.IO.Yaml
     -- * Slawx to/from YAML-encoded strings
   , slawFromYamlString
   , slawToYamlString
+  , slawFromYamlStringIO
+  , slawToYamlStringIO
     -- * Options
   , WriteYamlOptions(..) -- re-export
   ) where
@@ -514,22 +516,39 @@ openSlawOutput file opts = do
 
 --
 
+-- | Reads zero or more slawx from a string containing YAML.
+-- If an error occurs, may throw 'PlasmaException'.
+--
+-- Does not currently take any options, so the second argument is
+-- placeholder which is just ignored.  The easiest thing to do
+-- is just pass in @()@.
 slawFromYamlString
   :: (HasCallStack, ToSlaw b)
   => LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
   -> [Slaw]
-slawFromYamlString txt opts =
-  withFrozenCallStack $ unsafePerformIO $ slawFromYamlStringIO txt opts
+slawFromYamlString txt opts = withFrozenCallStack $ unsafePerformIO $ do
+  slawFromYamlStringIO' "slawFromYamlString" txt opts
 
+-- | Like 'slawFromYamlString', but runs in the IO monad, to
+-- allow more control over when exceptions are thrown.
 slawFromYamlStringIO
   :: (HasCallStack, ToSlaw b)
   => LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
   -> IO [Slaw]
-slawFromYamlStringIO txt opts = do
+slawFromYamlStringIO txt opts = withFrozenCallStack $ do
+  slawFromYamlStringIO' "slawFromYamlStringIO" txt opts
+
+slawFromYamlStringIO'
+  :: (HasCallStack, ToSlaw b)
+  => String  -- ^ function name
+  -> LT.Text -- ^ string to read YAML from
+  -> b       -- ^ options map/protein (currently none)
+  -> IO [Slaw]
+slawFromYamlStringIO' nam txt opts = do
   rdr <- makeFileReaderLazyBS $ toUtf8 txt
-  sis <- openYamlSlawInput1 "slawFromYamlString" "<string>" rdr opts
+  sis <- openYamlSlawInput1 nam "<string>" rdr opts
   ss  <- readAllSlawx sis
   siClose sis
   return ss
@@ -579,22 +598,40 @@ yStrWriteFunc' _ _ _ _ = return OB_OK
 makeStrFunc :: YStrOut1 -> IO WritePtr
 makeStrFunc y1 = createWritePtr (yStrWriteFunc y1)
 
+-- | Writes zero or more slawx as YAML into a string, and returns
+-- that string.
+-- If an error occurs, may throw 'PlasmaException'.
+--
+-- The second argument is a map or protein which specifies options.
+-- The easiest thing is to pass in 'WriteYamlOptions' if you want
+-- to specify any non-default options, or just pass @()@ to use
+-- the defaults.
 slawToYamlString
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
   -> b      -- ^ options map/protein
   -> LT.Text
-slawToYamlString ss opts =
-  withFrozenCallStack $ unsafePerformIO $ slawToYamlStringIO ss opts
+slawToYamlString ss opts = withFrozenCallStack $ unsafePerformIO $ do
+  slawToYamlStringIO' "slawToYamlString" ss opts
 
+-- | Like 'slawToYamlString', but runs in the IO monad, to
+-- allow more control over when exceptions are thrown.
 slawToYamlStringIO
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
   -> b      -- ^ options map/protein
   -> IO LT.Text
-slawToYamlStringIO ss opts = do
-  let addn = "slawToYamlString"
-      nam  = "<string>"
+slawToYamlStringIO ss opts = withFrozenCallStack $ do
+  slawToYamlStringIO' "slawToYamlStringIO" ss opts
+
+slawToYamlStringIO'
+  :: (HasCallStack, ToSlaw b)
+  => String -- ^ function name
+  -> [Slaw] -- ^ slawx to write to string
+  -> b      -- ^ options map/protein
+  -> IO LT.Text
+slawToYamlStringIO' addn ss opts = do
+  let nam  = "<string>"
   (sos, y1) <- slawOpenYamlString addn nam (š opts) callStack
   mapM_ (soWrite sos) ss
   soClose sos
