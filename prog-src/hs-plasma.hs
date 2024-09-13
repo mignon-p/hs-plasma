@@ -122,3 +122,8 @@ main = do
   forM_ ySlaw $ \slaw -> do
     putStrLn ""
     putStrLn $ LT.unpack $ spewOverview slaw
+
+  putStrLn ""
+
+  ltxtYaml <- slawToYamlString (mySlaw : ySlaw) ()
+  putStrLn $ LT.unpack ltxtYaml

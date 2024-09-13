@@ -30,7 +30,7 @@ module Data.Slaw.IO.Yaml
 import Control.Applicative
 import Control.Exception
 -- import Control.Monad
--- import qualified Data.ByteString               as B
+import qualified Data.ByteString               as B
 import qualified Data.ByteString.Builder       as R
 import qualified Data.ByteString.Lazy          as L
 import qualified Data.ByteString.Lazy.Char8    as L8
@@ -426,14 +426,18 @@ yoErl :: YOutput -> IO ErrLocation
 yoErl yo = do
   yoffs <- readIORef (youtOffsets yo)
   let nam     = youtName yo
-      curOff  = yooCurrentOffset yoffs
-      lastOff = yooLastOffset yoffs
+  return $ mkErl (DsFile nam) yoffs
+
+mkErl :: DataSource -> YOutOffsets -> ErrLocation
+mkErl ds yoffs =
+  let curOff  = yooCurrentOffset yoffs
+      lastOff = yooLastOffset    yoffs
       o       = if curOff == 0
                 then Nothing
                 else Just lastOff
-  return $ ErrLocation { elSource = DsFile nam
-                       , elOffset = o
-                       }
+  in ErrLocation { elSource = ds
+                 , elOffset = o
+                 }
 
 yoWrite :: YOutput2 -> CallStack -> Slaw -> IO ()
 yoWrite y2 cs slaw = do
@@ -521,9 +525,125 @@ slawFromYamlString txt opts = withFrozenCallStack $ do
   siClose sis
   return ss
 
+--
+
+data YStrOut0 = YStrOut0
+  { yStr0Str :: ![B.ByteString]
+  , yStr0Off :: !YOutOffsets
+  }
+
+data YStrOut1 = YStrOut1
+  { yStr1Ref  :: !(IORef YStrOut0)
+  , yStr1Name :: !DataSource
+  , yStr1Addn :: String
+  }
+
+data YStrOut2 = YStrOut2
+  { yStr2Ptr :: !OutputFPtr
+  , yStr2Out :: !YStrOut1
+  }
+
+yStrWriteFunc :: YStrOut1 -> WriteFunc
+yStrWriteFunc y1 op bytePtr size = do
+  let op' = chr $ fromIntegral op
+  wrapIOE $ yStrWriteFunc' y1 op' bytePtr size
+
+yStrWriteFunc'
+  :: YStrOut1
+  -> Char
+  -> C.ConstPtr Word8
+  -> CSize
+  -> IO Retort
+yStrWriteFunc' y1 'w' bytePtr size = do
+  let ref  = yStr1Ref y1
+  y0 <- readIORef ref
+  let off' = advanceOffset (fromIntegral size) $ yStr0Off y0
+      csl  = (castPtr (C.unConstPtr bytePtr), fromIntegral size)
+  buf <- B.packCStringLen csl
+  let y0' = YStrOut0 { yStr0Str = buf : yStr0Str y0
+                     , yStr0Off = off'
+                     }
+  writeIORef ref y0'
+  return OB_OK
+yStrWriteFunc' _ _ _ _ = return OB_OK
+
+makeStrFunc :: YStrOut1 -> IO WritePtr
+makeStrFunc y1 = createWritePtr (yStrWriteFunc y1)
+
 slawToYamlString
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
   -> b      -- ^ options map/protein
   -> IO LT.Text
-slawToYamlString = undefined
+slawToYamlString ss opts = withFrozenCallStack $ do
+  let addn = "slawToYamlString"
+      nam  = "<string>"
+  (sos, y1) <- slawOpenYamlString addn nam (š opts) callStack
+  mapM_ (soWrite sos) ss
+  soClose sos
+  y0 <- readIORef $ yStr1Ref y1
+  let lbs = L.fromChunks $ reverse $ yStr0Str y0
+  return $ fromUtf8 lbs
+
+slawOpenYamlString
+  :: HasCallStack
+  => String -- ^ original function name
+  -> String -- ^ (fake) filename
+  -> Slaw   -- ^ options map/protein
+  -> CallStack
+  -> IO (SlawOutputStream, YStrOut1)
+slawOpenYamlString addn nam opts cs = do
+  ref <- newIORef $ YStrOut0 { yStr0Str = []
+                             , yStr0Off = YOutOffsets 0 0
+                             }
+  let y1    = YStrOut1 { yStr1Ref  = ref
+                       , yStr1Name = ds
+                       , yStr1Addn = addn
+                       }
+      ds    = DsOther nam
+      erl   = Just $ def { elSource = ds }
+      addn' = Just addn
+  oPtr <- withReturnedRetortCS EtSlawIO addn' erl cs $ \tortPtr -> do
+    withSlaw opts $ \slawPtr -> do
+      writePtr <- makeStrFunc y1
+      c_open_yaml_output writePtr slawPtr tortPtr
+  oFPtr <- newForeignPtr c_finalize_output oPtr
+  let y2 = YStrOut2 { yStr2Ptr = oFPtr
+                    , yStr2Out = y1
+                    }
+  return ( SlawOutputStream { soName   = nam
+                            , soWrite' = ysWrite y2
+                            , soFlush' = ysFlush y2
+                            , soClose' = ysClose y2
+                            }
+         , y1
+         )
+
+ysErl :: YStrOut1 -> IO ErrLocation
+ysErl y1 = do
+  y0 <- readIORef (yStr1Ref y1)
+  let ds    = yStr1Name y1
+      yoffs = yStr0Off  y0
+  return $ mkErl ds yoffs
+
+ysWrite :: YStrOut2 -> CallStack -> Slaw -> IO ()
+ysWrite y2 cs slaw = do
+  let y1   = yStr2Out y2
+      addn = Just $ yStr1Addn y1
+  erl <- ysErl y1
+  withForeignPtr (yStr2Ptr y2) $ \oPtr -> do
+    withSlaw slaw $ \slawPtr -> do
+      tort <- c_write_output oPtr slawPtr
+      throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+
+ysFlush :: YStrOut2 -> CallStack -> IO ()
+ysFlush _ _ = return ()
+
+ysClose :: YStrOut2 -> CallStack -> IO ()
+ysClose y2 cs = do
+  let y1   = yStr2Out y2
+      addn = Just $ yStr1Addn y1
+  erl <- ysErl y1
+  withForeignPtr (yStr2Ptr y2) $ \oPtr -> do
+    tort <- c_close_output oPtr
+    throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
