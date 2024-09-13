@@ -47,6 +47,7 @@ import Foreign.Storable
 import GHC.Stack
 import System.IO
 import System.IO.Error
+import System.IO.Unsafe
 
 import Data.Slaw
 import Data.Slaw.Internal
@@ -517,8 +518,16 @@ slawFromYamlString
   :: (HasCallStack, ToSlaw b)
   => LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
+  -> [Slaw]
+slawFromYamlString txt opts =
+  withFrozenCallStack $ unsafePerformIO $ slawFromYamlStringIO txt opts
+
+slawFromYamlStringIO
+  :: (HasCallStack, ToSlaw b)
+  => LT.Text -- ^ string to read YAML from
+  -> b       -- ^ options map/protein (currently none)
   -> IO [Slaw]
-slawFromYamlString txt opts = withFrozenCallStack $ do
+slawFromYamlStringIO txt opts = do
   rdr <- makeFileReaderLazyBS $ toUtf8 txt
   sis <- openYamlSlawInput1 "slawFromYamlString" "<string>" rdr opts
   ss  <- readAllSlawx sis
@@ -574,8 +583,16 @@ slawToYamlString
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
   -> b      -- ^ options map/protein
+  -> LT.Text
+slawToYamlString ss opts =
+  withFrozenCallStack $ unsafePerformIO $ slawToYamlStringIO ss opts
+
+slawToYamlStringIO
+  :: (HasCallStack, ToSlaw b)
+  => [Slaw] -- ^ slawx to write to string
+  -> b      -- ^ options map/protein
   -> IO LT.Text
-slawToYamlString ss opts = withFrozenCallStack $ do
+slawToYamlStringIO ss opts = do
   let addn = "slawToYamlString"
       nam  = "<string>"
   (sos, y1) <- slawOpenYamlString addn nam (š opts) callStack
