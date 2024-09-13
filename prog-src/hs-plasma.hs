@@ -117,13 +117,13 @@ main = do
 
   writeYamlSlawFile (NoClose stdout) () [mySlaw]
 
-  let yStr = "{\"Jenny\": 8675309}"
-  ySlaw <- slawFromYamlString yStr ()
+  let yStr  = "{\"Jenny\": 8675309}"
+      ySlaw = slawFromYamlString yStr ()
   forM_ ySlaw $ \slaw -> do
     putStrLn ""
     putStrLn $ LT.unpack $ spewOverview slaw
 
   putStrLn ""
 
-  ltxtYaml <- slawToYamlString (mySlaw : ySlaw) ()
+  let ltxtYaml = slawToYamlString (mySlaw : ySlaw) ()
   putStrLn $ LT.unpack ltxtYaml
