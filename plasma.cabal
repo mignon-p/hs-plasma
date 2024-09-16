@@ -56,6 +56,7 @@ library
                      , System.Loam.Rand
                      , System.Loam.Retorts
                      , System.Loam.Retorts.Constants
+                     , System.Loam.Time
                      , System.Loam.Util
                      , System.Loam.Version
 

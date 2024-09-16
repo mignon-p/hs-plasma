@@ -11,6 +11,7 @@ import Data.Slaw.IO
 import Data.Slaw.IO.Yaml
 import System.Loam.Dirs
 import System.Loam.Rand
+import System.Loam.Time
 import System.Loam.Util
 import System.Loam.Version
 
@@ -127,3 +128,14 @@ main = do
 
   let ltxtYaml = slawToYamlString (mySlaw : ySlaw) ()
   putStrLn $ LT.unpack ltxtYaml
+
+  -- putStrLn ""
+
+  curTime  <- currentTime
+  monoTime <- monotonicTime
+  let fmtTime = formatTime curTime
+
+  putStrLn $ "currentTime:   " ++ show curTime
+  putStrLn $ "monotonicTime: " ++ show monoTime
+  putStrLn $ "formatTime:    " ++ T.unpack fmtTime
+  putStrLn $ "parseTime:     " ++ show (parseTime fmtTime)
