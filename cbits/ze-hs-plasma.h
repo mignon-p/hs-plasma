@@ -15,4 +15,8 @@ slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
 
 slaw ze_hs_plasma_spew_overview_to_string (bslaw s, int64 *len_ptr);
 
+OB_HOT unt64 ze_hs_jenkins_hash64 (const void *key,
+                                   size_t      length,
+                                   unt64       seed);
+
 #endif /* ZE_HS_PLASMA_H_EF95EBA1 */

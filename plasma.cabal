@@ -53,6 +53,7 @@ library
   exposed-modules:     Data.Slaw.Extras
                      , Data.Slaw.IO.Yaml
                      , System.Loam.Dirs
+                     , System.Loam.Hash
                      , System.Loam.Rand
                      , System.Loam.Retorts
                      , System.Loam.Retorts.Constants

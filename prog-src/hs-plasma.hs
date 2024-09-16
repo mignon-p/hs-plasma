@@ -9,7 +9,9 @@ import Data.Slaw
 import Data.Slaw.Extras
 import Data.Slaw.IO
 import Data.Slaw.IO.Yaml
+import Data.Slaw.Util
 import System.Loam.Dirs
+import System.Loam.Hash
 import System.Loam.Rand
 import System.Loam.Time
 import System.Loam.Util
@@ -139,3 +141,31 @@ main = do
   putStrLn $ "monotonicTime: " ++ show monoTime
   putStrLn $ "formatTime:    " ++ T.unpack fmtTime
   putStrLn $ "parseTime:     " ++ show (parseTime fmtTime)
+
+  putStrLn ""
+
+  let myBs  = toByteString $ toUtf8 ("ρρρ your boat" :: String)
+      s32   = 0xC0DE_BABE
+      s64   = 0xDEFACED_BAD_FACADE
+      jh32  = jenkinsHash32       s32      myBs
+      jh64  = jenkinsHash64       s64      myBs
+      c64   = cityHash64                   myBs
+      c64s  = cityHash64withSeed  s64      myBs
+      c64s2 = cityHash64withSeeds s64 h64x myBs
+      h64   = hashWord64          s64
+      h32   = hashWord32          s32
+      h64x  = hash2xWord64        s64 (fromIntegral s32)
+
+  forM_ [ ("jh32",  jh32)
+        , ("h32",   h32)
+        ] $ \(name, w32) -> do
+    putStrLn $ printf "%-20s = 0x%08x" (name :: String) w32
+
+  forM_ [ ("jh64",  jh64)
+        , ("c64",   c64)
+        , ("c64s",  c64s)
+        , ("c64s2", c64s2)
+        , ("h64",   h64)
+        , ("h64x",  h64x)
+        ] $ \(name, w64) -> do
+    putStrLn $ printf "%-20s = 0x%016x" (name :: String) w64

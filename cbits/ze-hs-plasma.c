@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include "ze-hs-plasma.h"
+#include "libLoam/c/ob-hash.h"
 
 static inline slaw ret_slaw_len (slaw s, int64 *len)
 {
@@ -68,4 +69,23 @@ slaw ze_hs_plasma_spew_overview_to_string (bslaw s, int64 *len_ptr)
 {
     slaw ret = slaw_spew_overview_to_string (s);
     return ret_slaw_len (ret, len_ptr);
+}
+
+unt64 ze_hs_jenkins_hash64 (const void *key,
+                            size_t      length,
+                            unt64       seed)
+{
+    unt32 io1, io2;
+    unt64 ret;
+
+    io1 = (unt32)(seed >> 32);
+    io2 = (unt32) seed;
+
+    ob_jenkins_hash2 (key, length, &io1, &io2);
+
+    ret = io1;
+    ret <<= 32;
+    ret |= io2;
+
+    return ret;
 }
