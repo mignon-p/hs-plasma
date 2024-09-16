@@ -221,8 +221,7 @@ throwRetort' et addn r erl = throwRetortCS' et addn r erl callStack
 -- | Same as 'throwRetortCS', except if the retort is a success
 -- code, it returns the retort instead of returning @()@.
 throwRetortCS'
-  :: HasCallStack
-  => PlasmaExceptionType
+  :: PlasmaExceptionType
   -- ^ Default exception type; used if 'riType' is 'Nothing'.
   -- If unsure, just pass in 'EtOther'.
   -> Maybe String
