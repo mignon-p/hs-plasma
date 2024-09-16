@@ -14,11 +14,16 @@ Portability : GHC
 module System.Loam.Internal.ConstPtr
   ( ConstPtr(..)
   , ConstCString
+  , ConstCStringLen
   , nullConstPtr
+  , castConstPtr
   , useAsConstCString
+  , useAsConstCStringLen
   ) where
 
+import Data.Bifunctor
 import qualified Data.ByteString          as B
+import qualified Data.ByteString.Unsafe   as B
 import Foreign.C.Types (CChar(..))
 import Foreign.Ptr
 
@@ -35,13 +40,24 @@ newtype ConstPtr a = ConstPtr { unConstPtr :: Ptr a }
 
 #endif
 
-type ConstCString = ConstPtr CChar
+type ConstCString    = ConstPtr CChar
+type ConstCStringLen = (ConstCString, Int)
 
 nullConstPtr :: ConstPtr a
 nullConstPtr = ConstPtr nullPtr
+
+castConstPtr :: ConstPtr a -> ConstPtr b
+castConstPtr = ConstPtr . castPtr . unConstPtr
 
 useAsConstCString
   :: B.ByteString
   -> (ConstCString -> IO a)
   -> IO a
 useAsConstCString bs f = B.useAsCString bs (f . ConstPtr)
+
+useAsConstCStringLen
+  :: B.ByteString
+  -> (ConstCStringLen -> IO a)
+  -> IO a
+useAsConstCStringLen bs f =
+  B.unsafeUseAsCStringLen bs (f . first ConstPtr)
