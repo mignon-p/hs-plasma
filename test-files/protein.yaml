@@ -1,0 +1,636 @@
+# bin2yaml - g-speak  (unknown), libYaml 0.2.2
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- :mouse
+- :usb
+- :0x347689
+- :down
+ingests:
+- !cons
+  hello: world
+- !cons
+  a nested protein: !protein
+    descrips:
+    - :mouse
+    - :usb
+    - :0x347689
+    - :down
+    ingests:
+    - !cons
+      hello: world
+- !cons
+  Address:
+  - !u16 923
+  - E.
+  - !u8 3
+  - rd St. Unit
+  - !u8 111
+  - !cons
+    Los Angeles: CA
+  - !u32 90013
+  - !array [!u16 213, !u16 683, !u16 8863]
+- !cons
+  ' the final frontier': !cons
+    NCC: !i16 -1701
+- !cons
+  a large block of text: |
+    -- Description: Proteins, Pools, & Slaw --
+
+    This text describes initial libPlasma components used for exchange of
+    data within and between computing processes.
+
+    A "process," in our usage, means a computer program executing for a
+    period of time. This execution may be interrupted by pauses or
+    transfers between processors or machines, so that a process is
+    possibly suspended indefinitely and "serialized" or "marshaled" to
+    disk, across a memory bus, or over a network.
+
+    The present work's context is a new programming environment that
+    permits (indeed: encourages) large scale multi-process
+    interoperation. Existing programming environments do not fully support
+    multi-cpu and cross-network execution, or flexible sharing of data
+    between large numbers of computing processes.
+
+    In pursuit of this goal we have designed and implemented several
+    constructs that together enable
+
+     - Efficient exchange of data between large numbers of processes
+     - Flexible data "typing" and structure, so that widely varying kinds
+       and uses of data are supported
+     - Flexible mechanisms for data exchange (local memory, disk,
+       network, etc.), all driven by substantially similar APIs.
+     - Data exchange between processes written in different programming
+       languages
+     - Automatic maintenance of data caching and aggregate state
+
+    The principal constructs include slawx (plural of "slaw"), a mechanism
+    for efficient, platform-independent data representation and access;
+    proteins, a data encapsulation and transport scheme (whose payload is
+    generally and ideally slawx); and pools, which provide structured yet
+    flexible aggregation, ordering, filtering, and distribution of
+    proteins -- within a process, among local processes, across a network
+    between remote or distributed processes, and via 'longer term'
+    (e.g. on-disk) storage.
+
+
+    - Proteins -
+
+    The "protein" is a new mechanism for encapsulating data that needs to
+    be shared between processes (or moved across a bus or network).
+
+    A protein is a structured record format and an associated set of
+    methods for manipulating records (putting data in, taking data out,
+    querying the format and existence of data). Proteins are designed to
+    be used via code written in a variety of computer languages; to be the
+    basic building block for "pools", described below; and to be natively
+    able to move between processors and across networks while maintaining
+    intact the data they contain.
+
+    One immediate -- and important -- use of proteins is as an improved
+    mechanism for transport and manipulation of user interface "events."
+    Today's mainstream, user-facing computing platforms (OS X, Microsoft
+    Windows, X Windows) provide facilities for transmitting user interface
+    event data between processes. But these existing mechanisms all suffer
+    from several major design shortcomings that make it difficult to build
+    multi-process and multi-machine applications, and that force users
+    working in more than one programming language to jump through
+    frustrating hoops. Existing event frameworks are
+
+     - strongly typed, which makes them inflexible, privileges the
+       assumptions of the systems vendor over the application programmer,
+       and forms a mis-match with the facilities of increasingly popular
+       dynamic languages (such as Ruby, Python and Perl)
+     - point-to-point, which makes coordinating the activity of more than
+       a few distinct processes difficult or impossible
+     - strongly dependent on particular local, in-memory data structures,
+       which renders them unsuited for on-disk storage or transmission
+       across a network
+
+    In contrast, proteins are untyped (but provide a powerful and flexible
+    pattern-matching facility, on top of which "type-like" functionality
+    is implemented); are inherently multi-point (although point-to-point
+    forms are easily implemented as a subset of multi-point transmission);
+    and define a "universal" record format that does not differ (or
+    differs only in the types of optional optimizations that are
+    performed) between in-memory, on-disk, and on-the-wire (network)
+    formats.
+
+    A protein is a linear sequence of bytes. Within these bytes are
+    encapsulated a "descrips" list -- an arbitrarily elaborate but
+    efficiently filterable per-protein description -- and a set of
+    key-value pairs called "ingests" -- the actual "contents" of the
+    protein.
+
+    A minimal (and read-only) protein implementation might define the
+    following behaviors in one or more programming languages:
+
+     - query the length in bytes of a protein
+     - query the number of descrips entries
+     - query the number of ingests
+     - retrieve a descrip entry by index number
+     - retrieve an ingest by index number
+
+    In addition, most implementations also define basic methods allowing
+    proteins to be constructed and filled with data, helper-methods that
+    make common tasks easier for programmers, and hooks for creating
+    optimizations:
+
+     - create a new protein
+     - append a series of descrips entries
+     - append an ingest
+     - query the presence of a matching descrip
+     - query the presence of a matching ingest key
+     - retrieve an ingest value given a key
+     - pattern match across descrips
+     - delete one or more descrips
+     - delete one or more ingests
+     - embed non-structured metadata near the beginning of a protein
+
+    Proteins' concern with key-value pairs, as well as some core ideas
+    about network-friendly and multi-point data interchange, are shared
+    with earlier systems that privilege the concept of "tuples" (examples
+    include Linda and Jini). Proteins differ from tuple-oriented systems
+    in several major ways, including the use of the descrips list to
+    provide a standard, optimizable pattern matching substrate; and the
+    rigorous specification of a record format appropriate for a variety of
+    storage and language constructs (along with several particular
+    implementations of "interfaces" to that record format).
+
+    Following is a somewhat detailed account of proteins' present
+    specification. Note that the specification is still subject to
+    occasional adjustments and improvements; the account is presented here
+    merely by way of illustrating the system's character.
+
+    The first four or eight bytes of a protein specify the protein's
+    length, which must be a multiple of 16 bytes. This 16-byte
+    granularity ensures that byte- and bus-alignment efficiencies are
+    achievable on contemporary hardware. A protein that is not naturally
+    "quad-word aligned" must be padded with arbritrary bytes so that its
+    length is a multiple of 16 bytes.
+
+    The length portion of a protein has the following format: 32 bits
+    specifying length, in big-endian format, with the four lowest-order
+    bits serving as flags to indicate macro-level protein structure
+    characteristics; followed by 32 further bits if the protein's length
+    is greater than 2^32 bytes.
+
+    The 16-byte-alignment proviso means that the lowest order bits of the
+    first four bytes are available as flags. And so the first three
+    low-order bit flags indicate whether the protein's length can be
+    expressed in the first four bytes or requires eight; whether the
+    protein uses big-endian or little-endian byte ordering; and whether
+    the protein employs standard or non-standard structure. The fourth
+    flag bit is reserved for future use.
+
+    If the eight-byte length flag bit is set, the length of the protein is
+    calculated by reading the next four bytes and using them as the
+    high-order bytes of a big-endian, eight-byte integer (with the four
+    bytes already read supplying the low-order portion).
+
+    If the little-endian flag is set, all binary numerical data in the
+    protein is to be interpreted as little-endian (otherwise,
+    big-endian). If the non-standard flag bit is set, the remainder of the
+    protein does not conform to the standard structure to be described
+    below.
+
+    We will not further discuss non-standard protein structures, except to
+    say that there are various methods for describing and synchronizing on
+    non-standard protein formats available to a systems programmer using
+    proteins and pools, and that these methods can be useful when space or
+    compute cycles are constrained. For example, the shortest protein is
+    -- by definition -- sixteen bytes. A standard-format protein cannot
+    fit any actual payload data into those sixteen bytes (the lion's share
+    of which is already relegated to describing the location of the
+    protein's component parts). But a non-standard format protein could
+    conceivably use 12 of its 16 bytes for data. And two applications
+    exchanging proteins could mutually decide that any 16-byte-long
+    proteins that they emit always contain 12 bytes representing, for
+    example, 12 8-bit sensor values from a real-time analog-to-digital
+    convertor.
+
+    The remainder of this section describes a standard protein's layout.
+
+    Immediately following the length header, two more variable-length
+    integer numbers appear. These numbers specify offsets to,
+    respectively, the first element in the descrips list and the first
+    key-value pair. The byte order of each quad of these numbers is
+    specified by the protein's endianness flag bit. For each, the most
+    significant bit of the first four bytes determines whether the number
+    is four or eight bytes wide. If the msb is set, the first four bytes
+    are the most significant bytes of a double-word (eight byte)
+    number. We will refer to this as "offset form".
+
+    The presence of these two offsets at the beginning of a protein allows
+    for several useful optimizations.
+
+    Most proteins will not be so large as to require eight-byte lengths or
+    pointers, so in general the length (with flags) and two offset numbers
+    will occupy only the first three bytes of a protein. On many hardware
+    architectures, a fetch or read of a certain number of bytes beyond the
+    first is "free" (16 bytes, for example, take exactly the same number
+    of clock cycles to pull across the Cell processor's main bus as a
+    single byte).
+
+    In many instances it is useful to allow implementation- or
+    context-specific caching or metadata inside a protein. The use of
+    offsets allows for a flexibly-sized "hole" to be created near the
+    beginning of the protein, into which such metadata may be slotted. An
+    implementation that can make use of eight bytes of metadata gets those
+    bytes for free on many architectures with every fetch of the length
+    header for a protein.
+
+    Use of separate offsets pointing to descrips and pairs allows descrips
+    and pairs to be handled by different code paths, making possible
+    particular optimizations relating to, for example, descrips
+    pattern-matching and protein assembly.
+
+    The descrips offset specifies the number of bytes between the
+    beginning of the protein and the first descrip entry. Each descrip
+    entry consists of an offset (in offset form, of course) to the next
+    descrip entry, followed by a variable-width length field (again in
+    offset format), followed by a "slaw" (discussed separately, below). If
+    there are no further descrips, the offset is, by rule, four bytes of
+    zeros. Otherwise, the offset specifies the number of bytes between the
+    beginning of this descrip entry and the next one. The length field
+    specifies the length of the slaw, in bytes.
+
+    In most proteins, each descrip is a string, formatted in the slaw
+    string fashion: a four-byte length/type header with the most
+    significant bit set and only the lower 30 bits used to specify length,
+    followed by the header's indicated number of data bytes. As usual, the
+    length header takes its endianness from the protein. Bytes are assumed
+    to encode UTF-8 characters (and thus -- nota bene -- the number of
+    characters is not necessarily the same as the number of bytes).
+
+    The duplication of length data in both the protein descrip entry
+    length field and the slaw string header is a candidate for
+    optimization.
+
+    The ingests offset specifies the number of bytes between the beginning
+    of the protein and the first ingest entry. Each ingest entry consists
+    of an offset (in offset form) to the next ingest entry, followed again
+    by a length field and a slaw. The ingest offset is functionally
+    identical to the descrip offset, except that it points to the next
+    ingest entry rather than to the next descrip entry.
+
+    In most proteins, every ingest is of the slaw cons type (a two-value
+    list, generally used as a key/value pair). The slaw cons record
+    consists of a four-byte length/type header with the second most
+    significant bit set and only the lower 30 bits used to specify length;
+    a four-byte offset to the start of the value (second) element; the
+    four-byte length of the key element; the slaw record for the key
+    element; the four-byte length of the value element; and finally the
+    slaw record for the value element.
+
+    Generally, the cons key is a slaw string. The duplication of data
+    across the several protein and slaw cons length and offsets field
+    provides yet more opportunity for refinement and optimization.
+
+
+    - Slawx -
+
+    The construct used to embed typed data inside proteins, as described
+    above, is a tagged byte-sequence specification and abstraction called
+    a "slaw." (Plural: slawx.)
+
+    A slaw is a linear sequence of bytes representing a piece of (possibly
+    aggregate) typed data, and is associated with
+    programming-language-specific APIs that allow slawx to be created,
+    modified and moved around between memory spaces, storage media, and
+    machines. The slaw type scheme is intended to be extensible and as
+    lightweight as possible, and to be a common substrate that can be
+    used from any programming language.
+
+    The desire to build an efficient, large-scale inter-process
+    communication mechanism is the driver of the slaw design. Modern
+    programming languages provide sophisticated data structures and type
+    facilities that work beautifully in process-specific memory layouts,
+    but these data representations invariably break down when data needs
+    to be moved between processes or stored on disk. The slaw architecture
+    is, first, a substantially efficient, multi-platform friendly,
+    low-level data model for inter-process communication.
+
+    But even more importantly, slawx are designed to influence -- together
+    with proteins -- the development of future computing hardware
+    (microprocessors, memory controllers, disk controllers). A few
+    specific additions to, say, the instruction sets of commonly available
+    microprocessors would make it possible for slawx to become as
+    efficient even for single-process, in-memory data layout as the schema
+    used in most programming languages.
+
+    Every slaw consists of a variable-length type header followed by a
+    type-specific data layout. In the current implementation, which
+    supports full slaw functionality in C, C++ and Ruby, types are
+    indicated by a universal integer defined in system header files
+    accessible from each language. More sophisticated and flexible type
+    resolution functionality is anticipated: for example, indirect typing
+    via universal object IDs and network lookup.
+
+    Basic slaw functionality includes API facilities to
+
+     - create a new slaw of a specific type
+     - "create" (build a language-specific reference to) a slaw from
+       bytes on disk or in memory
+     - embed data within a slaw in type-specific fashion
+     - retrieve data from within a slaw
+     - clone (shallow-copy) a slaw
+     - copy (deep-copy) a slaw
+     - translate the endianness of all data within a slaw
+
+    Every species of slaw is required to implement the above behaviors.
+
+    Our slaw implementation allows slaw records to be used as objects in
+    language-friendly fashion from both Ruby and C++. A suite of utilities
+    external to the C++ compiler sanity-check slaw byte layout, create
+    header files and macros specific to individual slaw types, and
+    auto-generate bindings for Ruby. As a result, well-designed slaw types
+    are quite efficient even when used from within a single process. Any
+    slaw anywhere in a process's accessible memory can be addressed
+    without a copy or "deserialization" step.
+
+
+    - Pools -
+
+    A "pool" is a repository for proteins, providing linear sequencing and
+    state caching; multi-process access; and a set of common, optimizable
+    filtering and pattern-matching behaviors.
+
+    Slawx provide the lowest-level of data definition for inter-process
+    exchange; proteins provide mid-level structure and hooks for querying
+    and filtering; and pools provide for high-level organization and
+    access semantics.
+
+    The pools API is designed to allow pools to be implemented in a
+    variety of ways, in order to account both for system-specific goals
+    and for the available capabilities of given hardware and network
+    architectures. The two fundamental system provisions upon which pools
+    depend are a storage facility and a means of inter-process
+    communication. In our extant systems we use a flexible combination of
+    shared memory, virtual memory, and disk for the former, and IPC queues
+    and TCP/IP sockets for the latter.
+
+    The most basic pool functionality is as follows:
+
+     - "participate in" a pool
+     - put a protein in a pool
+     - retrieve the next unseen protein from a pool
+     - "rewind" or "fast-forward" within a pool
+
+    A very simple pool implementation might provide only those four
+    methods. However, most real-world pools would also support (and
+    encourage):
+
+     - setting up a "streaming" pool call-back for a process
+     - selectively retrieving proteins that match particular patterns of
+       descrips or ingests keys
+     - scanning backward and forwards for proteins that match particular
+       patterns of descrips or ingests keys
+
+    Critical to the design of the pools architecture is the conception of
+    pools as maintaining state, so that individual processes can offload
+    much of the tedious bookkeeping common to multi-process program
+    code. A pool attempts to keep a large buffer of past proteins
+    available -- the Platonic pool is explicitly infinite -- so that
+    participating processes can scan both backwards and forwards in a pool
+    at will. The size of the buffer is implentation dependent, of course,
+    but in common usage it is often possible to keep proteins in a pool
+    for hours or days.
+
+    With so much data available to potentially legion pool participants,
+    pool behavior optimization becomes important. We have implemented a
+    number of optimized caching and storage schemes that make it possible
+    to accomodate tens of thousands of proteins in a pool and, and we use
+    careful connection pooling on the unix operating system to handle
+    hundreds of concurrent connections with relatively low overhead. As
+    with slawx, we expect eventually to implement many of these algorithms
+    in hardware, leading to further efficiency and scalability.
+
+    The most common "style" of pool usage in our programs hews to a
+    biological metaphor, in contrast to the mechanistic, point-to-point
+    approach taken by existing inter-process communication frameworks. The
+    name "protein" alludes to bilological inspiration: data proteins in
+    pools are available for flexible querying and pattern matching by a
+    large number of computational processes, as chemical proteins in a
+    living organism are available for pattern matching and filtering by
+    large numbers of cellular agents.
+
+    Two additional abstractions (currently implemented in both
+    C++ and Ruby) lean on the biological metaphor.
+
+    A process that participates in a pool generally creates a number of
+    "handlers," small bundles of code that associate "match conditions"
+    with "handle behaviors." By tying one or more handlers to a pool, a
+    process sets up flexible call-back triggers that are trivially able to
+    encapsulate state and react to new proteins.
+
+    A process that participates in several pools generally inherits from
+    an abstract "Golgi" class. The Golgi framework provides a number of
+    useful routines for managing multiple pools and handlers. The Golgi
+    class also encapsualates parent-child relationships, providing a
+    mechanism for "local" protein exchange that does not use a
+    pool.
+- !cons
+  some non-ASCII text from Wikipedia: |
+    There are three types of adjective:
+
+    1) 形容詞 keiyōshi, or i adjectives, which have a conjugating ending i
+       (い) (such as あつい atsui "to be hot") which can become past (あつ
+       かっ た atsukatta "it was hot"), or negative (あつくない atsuku nai
+       "it is not hot"). Note that nai is also an i adjective, which can
+       become past (あつくなかった atsuku nakatta "it was not hot").
+
+          暑い日 atsui hi "a hot day".
+
+    2) 形容動詞 keiyōdōshi, or na adjectives, which are followed by a form
+       of the copula, usually na. For example hen (strange)
+
+          変なひと hen na hito "a strange person".
+
+    3) 連体詞 rentaishi, also called true adjectives, such as ano "that"
+
+          あの山 ano yama "that mountain".
+- !cons
+  my six favorite unit vectors: !array
+  - !vector [!i8 1, !i8 0, !i8 0]
+  - !vector [!i8 0, !i8 1, !i8 0]
+  - !vector [!i8 0, !i8 0, !i8 1]
+  - !vector [!i8 -1, !i8 0, !i8 0]
+  - !vector [!i8 0, !i8 -1, !i8 0]
+  - !vector [!i8 0, !i8 0, !i8 -1]
+- !cons
+  pumpkin: !f32 3.1415927
+- !cons
+  pecan: !f64 3.1415926535897931
+- !cons
+  keepin' it real: !complex [!u32 1, !u32 0]
+- !cons
+  now here's something complex: !vector [!complex [!f64 1.2, !f64 3.3999999999999999],
+    !complex [!f64 5.5999999999999996, !f64 7.7999999999999998], !complex [
+      !f64 9, !f64 0.10000000000000001], !complex [!f64 0.01, !f64 3.1415926535897931]]
+- !cons
+  the largest integer: !u64 18446744073709551615
+- !cons
+  the smallest integer: !i64 -9223372036854775808
+- !cons
+  some strange consing: !cons
+    ? - ~
+      - ~
+      - ~
+      - ~
+      - ~
+    : !cons
+      ? !cons
+        a: b
+      : !cons
+        c: d
+- !cons
+  an empty list: []
+- !cons
+  ? aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  : This key is longer than 1024 characters, to test out the fact that implicit
+    keys cannot exceed 1024 characters, even if the key could otherwise
+    be implicit.  See http://yaml.org/spec/1.2/#id2597711 for more information.  So
+    that means that we should see a '?' in front of this key.  It looks
+    like libYaml adds the '?' for any key longer than 128 characters, even
+    though the spec says 1024.
+- !cons
+  ? aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  : !u32 1023
+- !cons
+  "\U0002517D is outside the Basic Multilingual Plane.": ~
+- !cons
+  $ ¢ ₥ £ ¥ € ₩: money
+- !cons
+  0-length array of int8: !empty/i8 ~
+- !cons
+  0-length array of unt64: !empty/u64 ~
+- !cons
+  0-length array of complex: !empty/complex/f32 ~
+- !cons
+  0-length array of 2-vectors: !empty/vector/2/f64 ~
+- !cons
+  0-length array of 3-vectors: !empty/vector/3/u8 ~
+- !cons
+  0-length array of 4-vectors: !empty/vector/4/f32 ~
+- !cons
+  0-length array of complex vectors: !empty/vector/4/complex/i16 ~
+- !cons
+  1-length array of int8: !array [!i8 0]
+- !cons
+  1-length array of unt64: !array [!u64 0]
+- !cons
+  1-length array of complex: !array
+  - !complex [!f32 0, !f32 0]
+- !cons
+  1-length array of 2-vectors: !array
+  - !vector [!f64 0, !f64 0]
+- !cons
+  1-length array of 3-vectors: !array
+  - !vector [!u8 0, !u8 0, !u8 0]
+- !cons
+  1-length array of 4-vectors: !array
+  - !vector [!f32 0, !f32 0, !f32 0, !f32 0]
+- !cons
+  1-length array of complex vectors: !array
+  - !vector [!complex [!i16 0, !i16 0], !complex [!i16 0, !i16 0], !complex [
+      !i16 0, !i16 0], !complex [!i16 0, !i16 0]]
+- !cons
+  a map of stuff: !!omap
+  - 'false': false
+  - protein with neither descrips nor ingests: !protein {}
+  - protein with no descrips: !protein
+      ingests: !f64 3.1415899999999999
+  - protein with no ingests: !protein
+      descrips: !u32 83880052
+  - 'true': true
+- !cons
+  HorriblyNestedLists:
+  - - - !empty/f64 ~
+      - !array [!f64 2]
+      - !array [!f64 1.4142135623730951, !f64 1.189207115002721]
+    - - !array [!f64 1.0905077326652577, !f64 1.0442737824274138, !f64 1.0218971486541166]
+      - !array [!f64 1.0108892860517005, !f64 1.0054299011128027, !f64 1.0027112750502025,
+        !f64 1.0013547198921082]
+      - !array [!f64 1.0006771306930664, !f64 1.0003385080526823, !f64 1.0001692397053021,
+        !f64 1.0000846162726942, !f64 1.0000423072413958]
+    - - !array [!f64 1.0000211533969647, !f64 1.0000105766425498, !f64 1.0000052883072919,
+        !f64 1.0000026441501502, !f64 1.0000013220742012, !f64 1.0000006610368821]
+      - !array [!f64 1.0000003305183864, !f64 1.0000001652591797, !f64 1.0000000826295865,
+        !f64 1.0000000413147925, !f64 1.000000020657396, !f64 1.0000000103286979,
+        !f64 1.0000000051643489]
+      - !array [!f64 1.0000000025821745, !f64 1.0000000012910872, !f64 1.0000000006455436,
+        !f64 1.0000000003227718, !f64 1.0000000001613858, !f64 1.0000000000806928,
+        !f64 1.0000000000403464, !f64 1.0000000000201732]
+  - - - !array [!f64 1.0000000000100866, !f64 1.0000000000050433, !f64 1.0000000000025215,
+        !f64 1.0000000000012608, !f64 1.0000000000006304, !f64 1.0000000000003151,
+        !f64 1.0000000000001574, !f64 1.0000000000000786, !f64 1.0000000000000393]
+      - !array [!f64 1.0000000000000195, !f64 1.0000000000000098, !f64 1.0000000000000049,
+        !f64 1.0000000000000024, !f64 1.0000000000000011, !f64 1.0000000000000004,
+        !f64 1.0000000000000002, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1]
+    - - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+    - - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1]
+  - - - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+    - - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1]
+    - - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1]
+      - !array [!f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1, !f64 1,
+        !f64 1, !f64 1, !f64 1]
+rude_data: !!binary |-
+  QlpoOTFBWSZTWVgfWjUAAE//gH/+wgBA93/YEAIIAD////BQA7gzPXddV062sDTSE0wpmkaTTaj1
+  BoAGg0NAANCZBMgFMhpoBoAaaAGmQCRETSnpMT0yITI00A0GJoM1GmgcwCYATAACYAAmAAJTSjSn
+  oE9NQbRDQwRiHoCYTAnf5ZcyS1b4CtVDHWZUlKSSiIPy6sbQmx0AiAJhJKiSuXLw+V8LocP3lYKO
+  4LeiO2kVvg7aw3VjbTYPxtMtNl4ALAQpbZ3X2/tLiy0NjDINelVpxQQBjlbOt4FyEUiAYOm2BTLJ
+  ZhNpu2fzXgIIf3Izjjmicvyc7S79927RXuiqzhsRuuzx06b3hhW51DpdP3SIc0NoPXbHkpePLG6j
+  6SOqKCSNYoK40N6ZBXSb720OC4UR+DSMUORArddc4qfze+bpCIN8QyZoMsXZoRLFIddYVhqq1RFl
+  SwW5lAERJuziIDZPHMPzDUB7w9n4Cd64st0i0YSgHSpWTuR22YoFUxsME7CBgSBg/PvLTS4d2VGk
+  qA+dDeZAGyeOtQzXWPBA6zYJaPEpXtAe1lGQyWTa6phUIF1QnRuYrs5SGDXKHqI8AgLSbwiF4Nc/
+  t9PSPqHKThd08+iTDUFUH2jUn4MGevZs7tmJQMh8gWEbq1IcbIrAdb7Di4925U7LkdrDWNkrvGht
+  sJNDRkOD0OgdOTQYjJQqoPKuiJ5ZZ0TRxnTsJGkOssrEjGXlLbzVFFjOCngI3oNRjjqV1NetoNE5
+  9FBowaydsKkxJMUPWK1dWvEXN3ioU6ZBIEAQmjhSRk+cHc2aUKtUSuMMXBwYScl6uM8Cdt8ALily
+  ZL2CapCQDSDN6BbX3gMSRbNUvQZh8RbEiuKugKjeiAWyp1MqXVRa07RsrESDIohhHDXTKoy5EWth
+  aKKjq3ZsKsG0fF32xrt3Ri47nRO8NnqEkaFqJlUgyxBgK4pnN1RZYHIXSFccvXRa5RvAJaS62kst
+  JQQMwUPNm2ZJG1RDjFtqNq053AJeiqMzUiBoQ7SKLrk6uOTQUtIsbRyhYPhkbP1LLNUDmpTNUG4Z
+  UGZArLORhzEXAeJw4nk27xCjK0SaK1fQCpDdiWKimQT9KWTUCk92TajgqhZNEw+cXMFkg3IoatlP
+  9O1Z3LoAZi6PgysbhCD5MTaG67FCBBLQxtktJJQkdLUpppoaELNauTCYb8yMwuP+LuSKcKEgsD60
+  ag==
+...

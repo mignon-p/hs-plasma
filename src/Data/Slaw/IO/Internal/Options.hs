@@ -93,9 +93,7 @@ data WriteYamlOptions = WriteYamlOptions
     -- [default]: 'True'
   , wyoOrderedMaps      :: Maybe Bool
     -- | If 'True', starts the file with a comment which includes
-    -- the g-speak and libYaml version numbers, and a mode comment
-    -- to prevent emacs from going into idlwave-mode for files with
-    -- a .pro extension.
+    -- the g-speak and libYaml version numbers.
     --
     -- [key]: @comment@
     --

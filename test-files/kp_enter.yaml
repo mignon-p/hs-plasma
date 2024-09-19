@@ -1,0 +1,39 @@
+# bin2yaml - g-speak  (unknown), libYaml 0.2.2
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- ob-event
+- blurt
+- appear
+ingests: !!omap
+- continuum-id: !i64 -1
+- timestamp: !f64 6.9531674141058984e-310
+- provenance: !badutf8 |-
+    a2V5Ym9hcmQvbGludXgta2V5LWRvd24gW41d
+- process-id: 
+- space-cntx: 
+- genus: 
+- utterance: !badutf8 |-
+    jQ==
+- repeat-ordinal: !i64 0
+...
+%YAML 1.1
+%TAG ! tag:oblong.com,2009:slaw/
+--- !protein
+descrips:
+- ob-event
+- blurt
+- vanish
+ingests: !!omap
+- continuum-id: !i64 -1
+- timestamp: !f64 6.9531674141058984e-310
+- provenance: !badutf8 |-
+    a2V5Ym9hcmQvbGludXgta2V5LXVwIFuNXQ==
+- process-id: 
+- space-cntx: 
+- genus: 
+- utterance: !badutf8 |-
+    jQ==
+- repeat-ordinal: !i64 0
+...
