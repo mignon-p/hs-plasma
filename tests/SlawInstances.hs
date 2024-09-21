@@ -28,6 +28,9 @@ decrease factor x = floor (factor * fromIntegral x)
 arbHalf :: Arbitrary a => Gen a
 arbHalf = scale (decrease 0.4) arbitrary
 
+uniqMap :: [(Slaw, Slaw)] -> Slaw
+uniqMap = SlawMap . removeDups
+
 slawString :: Gen Slaw
 slawString = do
   str <- U.string
@@ -84,14 +87,14 @@ depth1 = frequency
   [ (5,  SlawCons <$> depth0 <*> depth0)
   , (10, SlawList <$> listOf depth0)
   , (1,  return $ SlawList $ replicate 100 SlawNil)
-  , (3,  SlawMap  <$> listOf shallowPair)
+  , (3,  uniqMap  <$> listOf shallowPair)
   ]
 
 deepSlaw :: Gen Slaw
 deepSlaw = frequency
   [ (2, SlawCons <$> arbHalf <*> arbHalf)
   , (2, SlawList <$> listOf arbHalf)
-  , (1, SlawMap  <$> listOf deepPair)
+  , (1, uniqMap  <$> listOf deepPair)
   , (2, slawProtein)
   ]
 
@@ -115,7 +118,7 @@ slawProtein = do
   return $ SlawProtein des ing $ L.pack $ map fromIntegral rude
 
 stringMap :: Gen Slaw
-stringMap = SlawMap <$> listOf stringEntry
+stringMap = uniqMap <$> listOf stringEntry
 
 stringEntry :: Gen (Slaw, Slaw)
 stringEntry = do
