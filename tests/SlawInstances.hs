@@ -19,6 +19,7 @@ import qualified Data.Vector.Storable    as S
 import Test.QuickCheck
 -- import Test.QuickCheck.Gen
 import qualified Test.QuickCheck.Unicode as U
+import Text.Printf
 
 import Data.Slaw
 
@@ -48,6 +49,18 @@ numericFormat = do
                          , nfComplex = isComplex
                          }
 
+flt32 :: Gen Float
+flt32 = do
+  x <- arbitrary
+  let str = printf "%.6g" (x :: Float)
+  return $ read str
+
+flt64 :: Gen Double
+flt64 = do
+  x <- arbitrary
+  let str = printf "%.15g" (x :: Double)
+  return $ read str
+
 numericData :: Int -> Gen NumericData
 numericData len = oneof
   [
@@ -59,8 +72,8 @@ numericData len = oneof
   ,     (NumUnt16   . S.fromList) <$> vectorOf len arbitrary
   ,     (NumUnt32   . S.fromList) <$> vectorOf len arbitrary
   ,     (NumUnt64   . S.fromList) <$> vectorOf len arbitrary
-  ,     (NumFloat32 . S.fromList) <$> vectorOf len arbitrary
-  ,     (NumFloat64 . S.fromList) <$> vectorOf len arbitrary
+  ,     (NumFloat32 . S.fromList) <$> vectorOf len flt32
+  ,     (NumFloat64 . S.fromList) <$> vectorOf len flt64
   ]
 
 slawNumeric :: Gen Slaw
