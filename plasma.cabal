@@ -54,6 +54,7 @@ library
                      , Data.Slaw.IO.Yaml
                      , System.Loam.Dirs
                      , System.Loam.Hash
+                     , System.Loam.Log
                      , System.Loam.Rand
                      , System.Loam.Retorts
                      , System.Loam.Retorts.Constants
