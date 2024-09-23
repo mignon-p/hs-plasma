@@ -17,12 +17,21 @@ module System.Loam.Log
   , logExcCode
   , logExcMsg
   , logExc
+    --
+  , lvBug
+  , lvError
+  , lvDeprecation
+  , lvWarn
+  , lvInfo
+  , lvDebug
   ) where
 
 import Control.Applicative
 -- import Control.DeepSeq
 import Control.Exception
+import Control.Monad
 import Data.Bits
+import Data.Char
 -- import Data.Default.Class
 import Data.Hashable
 import Data.Int
@@ -30,19 +39,37 @@ import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
 import Data.Typeable
 import Data.Word
+import Foreign.C.String
+import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.ForeignPtr.Unsafe
 import Foreign.Ptr
 -- import GHC.Generics (Generic)
 import GHC.Stack
 import System.IO.Error
+import System.IO.Unsafe
 
 import Data.Slaw
 import Data.Slaw.Internal
 import Data.Slaw.Util
 import System.Loam.Hash
+import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level"
+    c_log_level :: CChar -> IO (Ptr ())
+
+foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
+    c_log_loc
+      :: C.ConstCString
+      -> Int64
+      -> Ptr ()
+      -> Word64
+      -> CString
+      -> C.ConstCString
+      -> C.ConstCString
+      -> IO ()
 
 data LogLevel = LogLevel
   { llName :: !T.Text
@@ -55,6 +82,25 @@ instance Hashable LogLevel where
 
 lev2Int :: LogLevel -> Int
 lev2Int = fromIntegral . ptrToIntPtr . unsafeForeignPtrToPtr . llPtr
+
+mkStaticLevel :: Char -> T.Text -> IO LogLevel
+mkStaticLevel c name = do
+  ptr  <- c_log_level $ fromIntegral $ ord c
+  when (ptr == nullPtr) $ do
+    fail $ "mkStaticLevel: nullPtr for " ++ show c
+  fptr <- newForeignPtr_ ptr
+  return $ LogLevel { llName = name
+                    , llPtr  = fptr
+                    }
+
+lvBug, lvError, lvDeprecation, lvWarn, lvInfo, lvDebug :: LogLevel
+
+lvBug         = unsafePerformIO $ mkStaticLevel 'B' "Bug"
+lvError       = unsafePerformIO $ mkStaticLevel 'E' "Error"
+lvDeprecation = unsafePerformIO $ mkStaticLevel 'D' "Deprecation"
+lvWarn        = unsafePerformIO $ mkStaticLevel 'W' "Warn"
+lvInfo        = unsafePerformIO $ mkStaticLevel 'I' "Info"
+lvDebug       = unsafePerformIO $ mkStaticLevel 'G' "Debug"
 
 {-
 data LogLevel = Bug
