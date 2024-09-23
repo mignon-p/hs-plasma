@@ -28,6 +28,7 @@ import Data.Hashable
 import Data.Int
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
+import Data.Typeable
 import Data.Word
 import Foreign.ForeignPtr
 import Foreign.ForeignPtr.Unsafe
@@ -37,6 +38,7 @@ import GHC.Stack
 import System.IO.Error
 
 import Data.Slaw
+import Data.Slaw.Internal
 import Data.Slaw.Util
 import System.Loam.Hash
 import System.Loam.Retorts.Constants
@@ -198,15 +200,16 @@ logMsg
   -> IO ()
 logMsg lev = logInternal callStack lev 0
 
-logExcInternal
+logExcInternal0
   :: TextClass a
   => CallStack
   -> LogLevel
   -> LogCode
   -> a
   -> SomeException
+  -> String
   -> IO ()
-logExcInternal cs lev code msg exc = do
+logExcInternal0 cs lev code msg exc excName = do
   let (excMsg, mExcCs, mExcBt, exCode) = btFromExc exc
       cs'                              = mExcCs ?> cs
       bt                               = mExcBt ?> prettyCallStack cs'
@@ -215,39 +218,57 @@ logExcInternal cs lev code msg exc = do
                 0 -> exCode
                 _ -> code
       lmsg  = toLazyText msg
+      ind   = indentLines (toLazyText stdIndent)
+      eMsg0 = toLazyText excMsg
+      eMsg1 = case null excName of
+                True  -> eMsg0
+                False -> toLazyText excName <> ":\n" <> ind eMsg0
       msg'  = case LT.null lmsg of
-                True  -> toLazyText excMsg
-                False -> lmsg <> "\n" <> toLazyText excMsg
+                True  -> eMsg1
+                False -> lmsg <> "\n" <> eMsg1
   logInternal0 fileLine bt lev code' msg'
 
+logExcInternal
+  :: (TextClass a, Exception e)
+  => CallStack
+  -> LogLevel
+  -> LogCode
+  -> a
+  -> e
+  -> IO ()
+logExcInternal cs lev code msg exc = do
+  let se      = toException exc
+      excName = tyConName $ typeRepTyCon $ typeOf exc
+  logExcInternal0 cs lev code msg se excName
+
 logExcCodeMsg
-  :: HasCallStack
+  :: (HasCallStack, Exception e)
   => LogLevel
   -> LogCode
   -> T.Text
-  -> SomeException
+  -> e
   -> IO ()
 logExcCodeMsg = logExcInternal callStack
 
 logExcCode
-  :: HasCallStack
+  :: (HasCallStack, Exception e)
   => LogLevel
   -> LogCode
-  -> SomeException
+  -> e
   -> IO ()
 logExcCode lev code = logExcInternal callStack lev code LT.empty
 
 logExcMsg
-  :: HasCallStack
+  :: (HasCallStack, Exception e)
   => LogLevel
   -> T.Text
-  -> SomeException
+  -> e
   -> IO ()
 logExcMsg lev = logExcInternal callStack lev 0
 
 logExc
-  :: HasCallStack
+  :: (HasCallStack, Exception e)
   => LogLevel
-  -> SomeException
+  -> e
   -> IO ()
 logExc lev = logExcInternal callStack lev 0 LT.empty
