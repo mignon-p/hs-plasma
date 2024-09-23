@@ -54,6 +54,7 @@ import Data.Slaw.Internal
 import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.Marshal
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 
@@ -62,13 +63,13 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level"
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
-      :: C.ConstCString
-      -> Int64
-      -> Ptr ()
-      -> Word64
-      -> CString
-      -> C.ConstCString
-      -> C.ConstCString
+      :: C.ConstCString -- file name
+      -> Int64          -- line number
+      -> Ptr ()         -- log level
+      -> Word64         -- code
+      -> CString        -- message (writable)
+      -> C.ConstCString -- thread
+      -> C.ConstCString -- backtrace
       -> IO ()
 
 data LogLevel = LogLevel
@@ -212,7 +213,17 @@ logInternal0
   -> LogCode
   -> a
   -> IO ()
-logInternal0 = undefined
+logInternal0 (fname, lineNo) bt lev code msg = do
+  let thr = "" :: String -- TODO
+  withLazyByteStringAsCString (toUtf8 fname) $ \fnamePtr -> do
+    withLazyByteStringAsCString (toUtf8 bt) $ \btPtr -> do
+      withLazyByteStringAsCString (toUtf8 thr) $ \thrPtr -> do
+        withLazyByteStringAsCStringNL (toUtf8 msg) $ \msgPtr -> do
+          withForeignPtr (llPtr lev) $ \pLev -> do
+            let cFn = C.ConstPtr fnamePtr
+                cBt = C.ConstPtr btPtr
+                cTh = C.ConstPtr thrPtr
+            c_log_loc cFn lineNo pLev code msgPtr cTh cBt
 
 logInternal
   :: TextClass a

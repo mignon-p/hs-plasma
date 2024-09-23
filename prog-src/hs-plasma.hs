@@ -12,6 +12,7 @@ import Data.Slaw.IO.Yaml
 import Data.Slaw.Util
 import System.Loam.Dirs
 import System.Loam.Hash
+import System.Loam.Log
 import System.Loam.Rand
 import System.Loam.Time
 import System.Loam.Util
@@ -169,3 +170,8 @@ main = do
         , ("h64x",  h64x)
         ] $ \(name, w64) -> do
     putStrLn $ printf "%-20s = 0x%016x" (name :: String) w64
+
+  putStrLn ""
+
+  logMsg lvError "Logging an error!"
+  logMsg lvInfo  "A two-line\nmessage."
