@@ -27,6 +27,7 @@ module System.Loam.Log
   ) where
 
 import Control.Applicative
+import Control.Concurrent
 -- import Control.DeepSeq
 import Control.Exception
 import Control.Monad
@@ -35,6 +36,7 @@ import Data.Char
 -- import Data.Default.Class
 import Data.Hashable
 import Data.Int
+import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
 import Data.Typeable
@@ -214,7 +216,7 @@ logInternal0
   -> a
   -> IO ()
 logInternal0 (fname, lineNo) bt lev code msg = do
-  let thr = "" :: String -- TODO
+  thr <- fmtThread
   withLazyByteStringAsCString (toUtf8 fname) $ \fnamePtr -> do
     withLazyByteStringAsCString (toUtf8 bt) $ \btPtr -> do
       withLazyByteStringAsCString (toUtf8 thr) $ \thrPtr -> do
@@ -329,3 +331,17 @@ logExc
   -> e
   -> IO ()
 logExc lev = logExcInternal callStack lev 0 LT.empty
+
+fmtThread :: IO String
+fmtThread = do
+  tid           <- myThreadId
+  (cap, locked) <- threadCapability tid
+  bound         <- isCurrentThreadBound
+  let pfxChr    = if bound then 'B' else 'H'
+      tidStr    = show tid
+      tidPfx    = "ThreadId "
+      tidPfxLen = length tidPfx
+      tidDrop   = if tidPfx `isPrefixOf` tidStr then tidPfxLen else 0
+      tidStr'   = drop tidDrop tidStr
+      capSfx    = if locked then ":C" ++ show cap else ""
+  return $ pfxChr : (tidStr' ++ capSfx)
