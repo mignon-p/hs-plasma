@@ -10,6 +10,8 @@ Portability : GHC
 module System.Loam.Log
   ( LogLevel
   , LogCode
+  , AppendMode
+  , LogDest
   , logLoc
   , logCode
   , logMsg
@@ -34,7 +36,7 @@ module System.Loam.Log
 
 import Control.Applicative
 import Control.Concurrent
--- import Control.DeepSeq
+import Control.DeepSeq
 import Control.Exception
 import Control.Monad
 import Data.Bits
@@ -57,10 +59,11 @@ import Foreign.ForeignPtr
 import Foreign.ForeignPtr.Unsafe
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
--- import GHC.Generics (Generic)
+import GHC.Generics (Generic)
 import GHC.Stack
 import System.IO.Error
 import System.IO.Unsafe
+import qualified System.OsPath            as O
 
 import Data.Slaw
 import Data.Slaw.Internal
@@ -136,18 +139,17 @@ lvWarn        = unsafePerformIO $ mkStaticLevel 'W' "Warn"
 lvInfo        = unsafePerformIO $ mkStaticLevel 'I' "Info"
 lvDebug       = unsafePerformIO $ mkStaticLevel 'G' "Debug"
 
-{-
-data LogLevel = Bug
-              | Error
-              | Deprecation
-              | Warn
-              | Info
-              | Debug
-              deriving (Eq, Ord, Show, Read, Bounded, Enum,
-                         Generic, NFData, Hashable)
--}
-
 type LogCode = Word64
+
+data AppendMode = Append | Overwrite
+                deriving (Eq, Ord, Show, Read, Bounded, Enum,
+                          Generic, NFData, Hashable)
+
+data LogDest = DestStdout
+             | DestStderr
+             | DestFilePath !AppendMode FilePath
+             | DestOsPath   !AppendMode O.OsPath
+             deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 excCode, etCode, ioeCode :: Word64 -> LogCode
 excCode = (0xa000_0000 .|.)
