@@ -28,6 +28,8 @@ module System.Loam.Log
   , makeLogLevel
   , levelSetPrefix
   , levelGetPrefix
+  , levelModifyFlags
+  , levelGetFlags
   ) where
 
 import Control.Applicative
@@ -42,6 +44,7 @@ import Data.Char
 import Data.Hashable
 import Data.Int
 import Data.List
+import Data.Maybe
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
 import qualified Data.Text.Encoding.Error as T
@@ -64,6 +67,7 @@ import Data.Slaw.Internal
 import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.Enums
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
@@ -78,10 +82,11 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_alloc"
 foreign import capi "ze-hs-log.h &ze_hs_log_level_free"
     c_log_level_free :: FunPtr (Ptr () -> IO ())
 
-{-
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_flags"
     c_log_level_set_flags :: Ptr () -> Word32 -> Word32 -> IO ()
--}
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_flags"
+    c_log_level_get_flags :: Ptr () -> IO Word32
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_prefix"
     c_log_level_set_prefix :: Ptr () -> C.ConstCString -> CSize -> IO ()
@@ -400,3 +405,33 @@ levelGetPrefix lev = do
       c_log_level_get_prefix levPtr bufPtr (fromIntegral bufLen)
       bs <- B.packCString bufPtr
       return $ T.decodeUtf8With T.lenientDecode bs
+
+levelModifyFlags
+  :: LogLevel
+  -> [LogFlag] -- ^ flags to set
+  -> [LogFlag] -- ^ flags to clear
+  -> IO ()
+levelModifyFlags lev setFlags clearFlags = do
+  let setMask   = flagsToMask setFlags
+      clearMask = flagsToMask clearFlags
+      allMask   = setMask .|. clearMask
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    c_log_level_set_flags levPtr setMask allMask
+
+levelGetFlags :: LogLevel -> IO [LogFlag]
+levelGetFlags lev = do
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    w32 <- c_log_level_get_flags levPtr
+    return $ maskToFlags w32
+
+flagsToMask :: [LogFlag] -> Word32
+flagsToMask = orList . map logFlag2w32
+
+maskToFlags :: Word32 -> [LogFlag]
+maskToFlags w32 = mapMaybe (maybeFlag w32) [minBound..maxBound]
+
+maybeFlag :: Word32 -> LogFlag -> Maybe LogFlag
+maybeFlag w32 flag =
+  if (logFlag2w32 flag .&. w32) == 0
+  then Nothing
+  else Just flag
