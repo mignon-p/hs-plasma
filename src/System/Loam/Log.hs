@@ -71,6 +71,7 @@ import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
+import System.Loam.Internal.Filename
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
@@ -437,3 +438,13 @@ maybeFlag w32 flag =
   if (logFlag2w32 flag .&. w32) == 0
   then Nothing
   else Just flag
+
+logDestToLbs :: LogDest -> (Char, B.ByteString)
+logDestToLbs DestStdout           = ('O', "<stdout>")
+logDestToLbs DestStderr           = ('E', "<stderr>")
+logDestToLbs (DestFilePath am fp) = (am2c am, to8bitFn fp)
+logDestToLbs (DestOsPath   am os) = (am2c am, to8bitFn os)
+
+am2c :: AppendMode -> Char
+am2c Append    = 'A'
+am2c Overwrite = 'F'

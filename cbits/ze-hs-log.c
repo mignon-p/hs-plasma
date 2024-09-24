@@ -1,6 +1,21 @@
 #include "ze-hs-log.h"
+#include "ze-hs-retorts.h"
 
+#include "libLoam/c/ob-file.h"
+#include "libLoam/c/ob-sys.h"
+
+#ifdef _WIN32
+#define	LOG_EMERG	0
+#define	LOG_ALERT	1
+#define	LOG_CRIT	2
+#define	LOG_ERR		3
+#define	LOG_WARNING	4
+#define	LOG_NOTICE	5
+#define	LOG_INFO	6
+#define	LOG_DEBUG	7
+#else
 #include <syslog.h>
+#endif
 
 /* Bug, Error, Deprecation, Warn, Info, debuG */
 ob_log_level *ze_hs_log_level (char c)
@@ -92,6 +107,62 @@ void ze_hs_log_level_get_prefix (ob_log_level *level,
                                  size_t        dst_len)
 {
     my_copy_string (dst, dst_len, level->prefix, sizeof (level->prefix));
+}
+
+static int set_output_fd (ob_log_level *lev, int fd)
+{
+  int r;
+  if (lev->fd <= 2)
+    r = lev->fd = ob_dup_cloexec (fd);
+  else
+    r = ob_dup2_cloexec (fd, lev->fd);
+  if (r >= 0)
+    lev->flags |= OB_DST_FD;
+  return r;
+}
+
+ob_retort ze_hs_log_level_set_dest (ob_log_level *level,
+                                    char          op,
+                                    const char   *name)
+{
+    int oflag = 0;
+    int fd    = -1;
+    int r     = 0;
+
+    switch (op) {
+    case 'O': fd = 1;                                break;
+    case 'E': fd = 2;                                break;
+    case 'F': oflag = O_WRONLY            | O_CREAT; break;
+    case 'A': oflag = O_WRONLY | O_APPEND | O_CREAT; break;
+    default:  return ZE_HS_INTERNAL_ERROR;
+    }
+
+    if (fd > -1) {
+        r = set_output_fd (level, fd);
+    } else if (oflag != 0) {
+        fd = ob_open_cloexec (name, oflag, 0666);
+        if (fd < 0) {
+            r = fd;
+            goto done;
+        }
+
+        r = set_output_fd (level, fd);
+        if (r < 0) {
+            const int save = errno;
+            close (fd);
+            errno = save;
+            goto done;
+        }
+
+        r = close (fd);
+    }
+
+ done:
+    if (r < 0) {
+        return ob_errno_to_retort (errno);
+    }
+
+    return OB_OK;
 }
 
 void ze_hs_log_loc (const char   *file,
