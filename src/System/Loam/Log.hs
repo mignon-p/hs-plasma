@@ -27,6 +27,7 @@ module System.Loam.Log
     --
   , makeLogLevel
   , levelSetPrefix
+  , levelGetPrefix
   ) where
 
 import Control.Applicative
@@ -35,6 +36,7 @@ import Control.Concurrent
 import Control.Exception
 import Control.Monad
 import Data.Bits
+import qualified Data.ByteString          as B
 import Data.Char
 -- import Data.Default.Class
 import Data.Hashable
@@ -42,6 +44,7 @@ import Data.Int
 import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
+import qualified Data.Text.Encoding.Error as T
 import qualified Data.Text.Lazy           as LT
 import Data.Typeable
 import Data.Word
@@ -49,6 +52,7 @@ import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.ForeignPtr.Unsafe
+import Foreign.Marshal.Alloc
 import Foreign.Ptr
 -- import GHC.Generics (Generic)
 import GHC.Stack
@@ -61,6 +65,7 @@ import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Marshal
+import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 
@@ -80,6 +85,9 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_flags"
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_prefix"
     c_log_level_set_prefix :: Ptr () -> C.ConstCString -> CSize -> IO ()
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_prefix"
+    c_log_level_get_prefix :: Ptr () -> CString -> CSize -> IO ()
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
@@ -364,9 +372,12 @@ fmtThread = do
       capSfx    = if locked then ":C" ++ show cap else ""
   return $ pfxChr : (tidStr' ++ capSfx)
 
-makeLogLevel :: T.Text -> IO LogLevel
+makeLogLevel :: HasCallStack => T.Text -> IO LogLevel
 makeLogLevel name = do
   ptr  <- c_log_level_alloc
+  when (ptr == nullPtr) $ do
+    let addn = Just "makeLogLevel"
+    throwRetortCS EtOther addn OB_NO_MEM Nothing callStack
   fptr <- newForeignPtr c_log_level_free ptr
   let lvl = LogLevel { llName = name
                      , llPtr  = fptr
@@ -380,3 +391,12 @@ levelSetPrefix lev pfx = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     C.useAsConstCStringLen bs $ \(pfxPtr, pfxLen) -> do
       c_log_level_set_prefix levPtr pfxPtr (fromIntegral pfxLen)
+
+levelGetPrefix :: LogLevel -> IO T.Text
+levelGetPrefix lev = do
+  let bufLen = 32
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    allocaBytes bufLen $ \bufPtr -> do
+      c_log_level_get_prefix levPtr bufPtr (fromIntegral bufLen)
+      bs <- B.packCString bufPtr
+      return $ T.decodeUtf8With T.lenientDecode bs
