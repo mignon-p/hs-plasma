@@ -146,7 +146,8 @@ data AppendMode = Append | Overwrite
                 deriving (Eq, Ord, Show, Read, Bounded, Enum,
                           Generic, NFData, Hashable)
 
-data LogDest = DestStdout
+data LogDest = DestNone
+             | DestStdout
              | DestStderr
              | DestFilePath !AppendMode FilePath
              | DestOsPath   !AppendMode O.OsPath
@@ -440,6 +441,7 @@ maybeFlag w32 flag =
   else Just flag
 
 logDestToLbs :: LogDest -> (Char, B.ByteString)
+logDestToLbs DestNone             = ('N', "(none)")
 logDestToLbs DestStdout           = ('O', "<stdout>")
 logDestToLbs DestStderr           = ('E', "<stderr>")
 logDestToLbs (DestFilePath am fp) = (am2c am, to8bitFn fp)

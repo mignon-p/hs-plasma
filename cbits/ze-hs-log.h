@@ -27,7 +27,7 @@ void ze_hs_log_level_get_prefix (ob_log_level *level,
                                  char         *dst,
                                  size_t        dst_len);
 
-/* stdOut, stdErr, File, Append */
+/* None, stdOut, stdErr, File, Append */
 ob_retort ze_hs_log_level_set_dest (ob_log_level *level,
                                     char          op,
                                     const char   *name);

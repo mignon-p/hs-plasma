@@ -116,12 +116,16 @@ static int set_output_fd (ob_log_level *lev, int fd)
     r = lev->fd = ob_dup_cloexec (fd);
   else
     r = ob_dup2_cloexec (fd, lev->fd);
-  if (r >= 0)
-    lev->flags |= OB_DST_FD;
   return r;
 }
 
-ob_retort ze_hs_log_level_set_dest (ob_log_level *level,
+#ifdef _WIN32
+static const char devNull[] = "NUL";
+#else   /* _WIN32 */
+static const char devNull[] = "/dev/null";
+#endif  /* _WIN32 */
+
+ob_retort ze_hs_log_level_set_dest (ob_log_level *lev,
                                     char          op,
                                     const char   *name)
 {
@@ -134,11 +138,17 @@ ob_retort ze_hs_log_level_set_dest (ob_log_level *level,
     case 'E': fd = 2;                                break;
     case 'F': oflag = O_WRONLY            | O_CREAT; break;
     case 'A': oflag = O_WRONLY | O_APPEND | O_CREAT; break;
-    default:  return ZE_HS_INTERNAL_ERROR;
+    case 'N':
+        lev->flags &= ~OB_DST_FD;
+        oflag = O_WRONLY | O_APPEND;
+        name  = devNull;
+        break;
+    default:
+        return ZE_HS_INTERNAL_ERROR;
     }
 
     if (fd > -1) {
-        r = set_output_fd (level, fd);
+        r = set_output_fd (lev, fd);
     } else if (oflag != 0) {
         fd = ob_open_cloexec (name, oflag, 0666);
         if (fd < 0) {
@@ -146,7 +156,7 @@ ob_retort ze_hs_log_level_set_dest (ob_log_level *level,
             goto done;
         }
 
-        r = set_output_fd (level, fd);
+        r = set_output_fd (lev, fd);
         if (r < 0) {
             const int save = errno;
             close (fd);
@@ -160,6 +170,10 @@ ob_retort ze_hs_log_level_set_dest (ob_log_level *level,
  done:
     if (r < 0) {
         return ob_errno_to_retort (errno);
+    }
+
+    if (op != 'N') {
+        lev->flags |= OB_DST_FD;
     }
 
     return OB_OK;
