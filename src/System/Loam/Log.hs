@@ -24,6 +24,9 @@ module System.Loam.Log
   , lvWarn
   , lvInfo
   , lvDebug
+    --
+  , makeLogLevel
+  , levelSetPrefix
   ) where
 
 import Control.Applicative
@@ -38,6 +41,7 @@ import Data.Hashable
 import Data.Int
 import Data.List
 import qualified Data.Text                as T
+import qualified Data.Text.Encoding       as T
 import qualified Data.Text.Lazy           as LT
 import Data.Typeable
 import Data.Word
@@ -62,6 +66,20 @@ import System.Loam.Retorts.Internal.IoeRetorts
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level"
     c_log_level :: CChar -> IO (Ptr ())
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_alloc"
+    c_log_level_alloc :: IO (Ptr ())
+
+foreign import capi "ze-hs-log.h &ze_hs_log_level_free"
+    c_log_level_free :: FunPtr (Ptr () -> IO ())
+
+{-
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_flags"
+    c_log_level_set_flags :: Ptr () -> Word32 -> Word32 -> IO ()
+-}
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_prefix"
+    c_log_level_set_prefix :: Ptr () -> C.ConstCString -> CSize -> IO ()
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
@@ -345,3 +363,20 @@ fmtThread = do
       tidStr'   = drop tidDrop tidStr
       capSfx    = if locked then ":C" ++ show cap else ""
   return $ pfxChr : (tidStr' ++ capSfx)
+
+makeLogLevel :: T.Text -> IO LogLevel
+makeLogLevel name = do
+  ptr  <- c_log_level_alloc
+  fptr <- newForeignPtr c_log_level_free ptr
+  let lvl = LogLevel { llName = name
+                     , llPtr  = fptr
+                     }
+  levelSetPrefix lvl $ name <> ": "
+  return lvl
+
+levelSetPrefix :: LogLevel -> T.Text -> IO ()
+levelSetPrefix lev pfx = do
+  let bs = T.encodeUtf8 pfx
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    C.useAsConstCStringLen bs $ \(pfxPtr, pfxLen) -> do
+      c_log_level_set_prefix levPtr pfxPtr (fromIntegral pfxLen)
