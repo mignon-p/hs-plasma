@@ -1,3 +1,5 @@
+#define SYSLOG_NAMES            /* define before including anything */
+
 #include "ze-hs-log.h"
 #include "ze-hs-retorts.h"
 #include "ze-hs-syslog.h"
@@ -193,6 +195,91 @@ void ze_hs_log_level_set_sl_facility (ob_log_level *level,
 int32 ze_hs_log_level_get_sl_facility (ob_log_level *level)
 {
     return (level->sl_priority & LOG_FACMASK);
+}
+
+/* use INTERNAL_MARK as a way to guess whether SYSLOG_NAMES worked */
+
+#ifdef INTERNAL_MARK
+
+typedef CODE ze_hs_pair;
+#define ze_hs_facility_names facilitynames
+
+#else  /* INTERNAL_MARK */
+
+typedef struct ze_hs_pair {
+    char  c_name[12];
+    int32 c_val;
+} ze_hs_pair;
+
+static const ze_hs_pair ze_hs_facility_names[] =
+    {
+#ifdef LOG_KERN
+      { "kern",     LOG_KERN     },
+#endif
+#ifdef LOG_USER
+      { "user",     LOG_USER     },
+#endif
+#ifdef LOG_MAIL
+      { "mail",     LOG_MAIL     },
+#endif
+#ifdef LOG_NEWS
+      { "news",     LOG_NEWS     },
+#endif
+#ifdef LOG_UUCP
+      { "uucp",     LOG_UUCP     },
+#endif
+#ifdef LOG_DAEMON
+      { "daemon",   LOG_DAEMON   },
+#endif
+#ifdef LOG_AUTH
+      { "auth",     LOG_AUTH     },
+#endif
+#ifdef LOG_CRON
+      { "cron",     LOG_CRON     },
+#endif
+#ifdef LOG_LPR
+      { "lpr",      LOG_LPR      },
+#endif
+#ifdef LOG_LOCAL0
+      { "local0",   LOG_LOCAL0   },
+#endif
+#ifdef LOG_LOCAL1
+      { "local1",   LOG_LOCAL1   },
+#endif
+#ifdef LOG_LOCAL2
+      { "local2",   LOG_LOCAL2   },
+#endif
+#ifdef LOG_LOCAL3
+      { "local3",   LOG_LOCAL3   },
+#endif
+#ifdef LOG_LOCAL4
+      { "local4",   LOG_LOCAL4   },
+#endif
+#ifdef LOG_LOCAL5
+      { "local5",   LOG_LOCAL5   },
+#endif
+#ifdef LOG_LOCAL6
+      { "local6",   LOG_LOCAL6   },
+#endif
+#ifdef LOG_LOCAL7
+      { "local7",   LOG_LOCAL7   },
+#endif
+      { "",         -1           },
+    };
+
+#endif /* INTERNAL_MARK */
+
+static const size_t nFacilityNames =
+    sizeof (ze_hs_facility_names[0]) / sizeof (ze_hs_facility_names);
+
+const char *ze_hs_facility_name (size_t idx, int32 *fac_out) {
+    if (idx < nFacilityNames) {
+        *fac_out = (int32) ze_hs_facility_names[idx].c_val;
+        return ze_hs_facility_names[idx].c_name;
+    } else {
+        *fac_out = -1;
+        return NULL;
+    }
 }
 
 void ze_hs_log_loc (const char   *file,
