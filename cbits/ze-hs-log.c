@@ -270,7 +270,7 @@ static const ze_hs_pair ze_hs_facility_names[] =
 #endif /* INTERNAL_MARK */
 
 static const size_t nFacilityNames =
-    sizeof (ze_hs_facility_names[0]) / sizeof (ze_hs_facility_names);
+    sizeof (ze_hs_facility_names) / sizeof (ze_hs_facility_names[0]);
 
 const char *ze_hs_facility_name (size_t idx, int32 *fac_out) {
     if (idx < nFacilityNames) {

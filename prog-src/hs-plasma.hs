@@ -1,5 +1,6 @@
 import Control.Monad
 import qualified Data.ByteString          as B
+import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
 import System.IO
@@ -175,3 +176,8 @@ main = do
 
   logMsg lvError "Logging an error!"
   logMsg lvInfo  "A two-line\nmessage."
+
+  putStrLn ""
+
+  let facNames = map T.unpack facilityNames
+  putStrLn $ "facilities are: " ++ intercalate ", " facNames

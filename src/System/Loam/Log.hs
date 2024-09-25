@@ -14,6 +14,7 @@ module System.Loam.Log
   , LogDest
   , LogFlag(..)        -- re-export
   , SyslogPriority(..) -- re-export
+  , SyslogFacility     -- opaque type
   , logLoc
   , logCode
   , logMsg
@@ -37,6 +38,10 @@ module System.Loam.Log
   , levelSetDestFile
   , levelSetSyslogPriority
   , levelGetSyslogPriority
+    --
+  , facilityNames
+  , facilityFromName
+  , facilityToName
   ) where
 
 import Control.Applicative
@@ -44,11 +49,14 @@ import Control.Concurrent
 import Control.DeepSeq
 import Control.Exception
 import Control.Monad
+import Data.Bifunctor
 import Data.Bits
 import qualified Data.ByteString          as B
+import qualified Data.ByteString.Unsafe   as B
 import Data.Char
 import Data.Default.Class
 import Data.Hashable
+import qualified Data.HashMap.Strict      as HM
 import Data.Int
 import qualified Data.IntMap.Strict       as IM
 import Data.List
@@ -65,11 +73,13 @@ import Foreign.ForeignPtr
 import Foreign.ForeignPtr.Unsafe
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
+import Foreign.Storable
 import GHC.Generics (Generic)
 import GHC.Stack
 import System.IO.Error
 import System.IO.Unsafe
 import qualified System.OsPath            as O
+import Text.Printf
 
 import Data.Slaw
 import Data.Slaw.Internal
@@ -112,6 +122,9 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_sl_priority"
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_priority"
     c_log_level_get_sl_priority :: Ptr () -> IO Int32
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_facility_name"
+    c_facility_name :: CSize -> Ptr Int32 -> IO C.ConstCString
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
@@ -167,6 +180,16 @@ data LogDest = DestNone
              | DestFilePath !AppendMode FilePath
              | DestOsPath   !AppendMode O.OsPath
              deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+
+newtype SyslogFacility = SyslogFacility Int32
+                       deriving (Eq, Ord, Show)
+
+instance NFData SyslogFacility where
+  rnf (SyslogFacility n) = n `seq` ()
+
+instance Hashable SyslogFacility where
+  hash                (SyslogFacility n) = hashInt        $ fromIntegral n
+  salt `hashWithSalt` (SyslogFacility n) = salt `hash2xInt` fromIntegral n
 
 excCode, etCode, ioeCode :: Word64 -> LogCode
 excCode = (0xa000_0000 .|.)
@@ -493,3 +516,55 @@ levelGetSyslogPriority lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     n <- c_log_level_get_sl_priority levPtr
     return $ IM.findWithDefault LogInfo (fromIntegral n) int2pri
+
+type FacPair = (T.Text, SyslogFacility)
+
+{-# NOINLINE facNames0 #-}
+facNames0 :: [FacPair]
+facNames0 = unsafePerformIO $ getFacNames 0 []
+
+facNames :: [FacPair]
+facNames = filter f facNames0
+  where f ("mark", _) = False
+        f _           = True
+
+facName2Num :: HM.HashMap T.Text SyslogFacility
+facName2Num = HM.fromListWith keepOld $ map f facNames
+  where f = first T.toCaseFold
+
+facNum2Name :: IM.IntMap T.Text
+facNum2Name = IM.fromListWith keepOld $ map f facNames
+  where f (name, SyslogFacility n) = (fromIntegral n, name)
+
+keepOld :: a -> b -> b
+keepOld _ = id
+
+getFacNames :: CSize -> [FacPair] -> IO [FacPair]
+getFacNames !idx pairs = do
+  (facName, facNum) <- getFacName idx
+  let pair = (facName, SyslogFacility facNum)
+  case T.null facName || facNum < 0 of
+    True  -> return $ reverse pairs
+    False -> getFacNames (idx + 1) (pair : pairs)
+
+getFacName :: CSize -> IO (T.Text, Int32)
+getFacName !idx = alloca $ \i32Ptr -> do
+  poke i32Ptr (-1)
+  ccs <- c_facility_name idx i32Ptr
+  bs  <- if ccs == C.nullConstPtr
+         then return B.empty
+         else B.unsafePackCString (C.unConstPtr ccs)
+  i32 <- peek i32Ptr
+  return (T.decodeUtf8With T.lenientDecode bs, i32)
+
+facilityNames :: [T.Text]
+facilityNames = map snd $ IM.toAscList facNum2Name
+
+facilityFromName :: T.Text -> Maybe SyslogFacility
+facilityFromName key = HM.lookup key' facName2Num
+  where key' = T.toCaseFold key
+
+facilityToName :: SyslogFacility -> T.Text
+facilityToName (SyslogFacility n) =
+  let dflt = T.pack $ printf "facility 0x%02x" n
+  in IM.findWithDefault dflt (fromIntegral n) facNum2Name
