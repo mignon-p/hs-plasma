@@ -170,12 +170,29 @@ ob_retort ze_hs_log_level_set_dest (ob_log_level *lev,
 void ze_hs_log_level_set_sl_priority (ob_log_level *level,
                                       int32         pri)
 {
-    level->sl_priority = pri;
+    int32 x = level->sl_priority;
+    x &= ~LOG_PRIMASK;
+    x |= (pri & LOG_PRIMASK);
+    level->sl_priority = x;
 }
 
 int32 ze_hs_log_level_get_sl_priority (ob_log_level *level)
 {
-    return level->sl_priority;
+    return (level->sl_priority & LOG_PRIMASK);
+}
+
+void ze_hs_log_level_set_sl_facility (ob_log_level *level,
+                                      int32         fac)
+{
+    int32 x = level->sl_priority;
+    x &= ~LOG_FACMASK;
+    x |= (fac & LOG_FACMASK);
+    level->sl_priority = x;
+}
+
+int32 ze_hs_log_level_get_sl_facility (ob_log_level *level)
+{
+    return (level->sl_priority & LOG_FACMASK);
 }
 
 void ze_hs_log_loc (const char   *file,

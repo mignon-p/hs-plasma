@@ -14,4 +14,12 @@
 #include <syslog.h>
 #endif
 
+#ifndef LOG_PRIMASK
+#define LOG_PRIMASK 7
+#endif
+
+#ifndef LOG_FACMASK
+#define LOG_FACMASK 0x03f8
+#endif
+
 #endif /* ZE_HS_SYSLOG_H_B0D81412 */

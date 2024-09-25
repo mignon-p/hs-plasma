@@ -37,6 +37,11 @@ void ze_hs_log_level_set_sl_priority (ob_log_level *level,
 
 int32 ze_hs_log_level_get_sl_priority (ob_log_level *level);
 
+void ze_hs_log_level_set_sl_facility (ob_log_level *level,
+                                      int32         fac);
+
+int32 ze_hs_log_level_get_sl_facility (ob_log_level *level);
+
 void ze_hs_log_loc (const char   *file,
                     int64         lineno,
                     ob_log_level *level,
