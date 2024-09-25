@@ -12,6 +12,8 @@ module System.Loam.Internal.Enums
   , versionOfWhat2int
   , SystemInfo(..)
   , systemInfo2int
+  , SyslogPriority(..)
+  , syslogPriority2int
   , StandardDir(..)
   , standardDir2int
   , LogFlag(..)
@@ -43,6 +45,7 @@ import GHC.Generics (Generic)
 #include "libLoam/c/ob-dirs.h"
 #include "libLoam/c/ob-log.h"
 #include "libLoam/c/ob-vers.h"
+#include "ze-hs-syslog.h"
 
 data VersionOfWhat =
     GspeakVersion
@@ -81,6 +84,27 @@ systemInfo2int SysNumCores          = #{const OB_SYSINFO_NUM_CORES}
 systemInfo2int SysCpuMhz            = #{const OB_SYSINFO_CPU_MHZ}
 systemInfo2int SysPhysicalMegabytes = #{const OB_SYSINFO_PHYSICAL_MEGABYTES}
 systemInfo2int SysSwapMegabytes     = #{const OB_SYSINFO_VIRTUAL_MEGABYTES}
+
+data SyslogPriority =
+    LogEmerg
+  | LogAlert
+  | LogCrit
+  | LogErr
+  | LogWarning
+  | LogNotice
+  | LogInfo
+  | LogDebug
+  deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+syslogPriority2int :: SyslogPriority -> CInt
+syslogPriority2int LogEmerg   = #{const LOG_EMERG}
+syslogPriority2int LogAlert   = #{const LOG_ALERT}
+syslogPriority2int LogCrit    = #{const LOG_CRIT}
+syslogPriority2int LogErr     = #{const LOG_ERR}
+syslogPriority2int LogWarning = #{const LOG_WARNING}
+syslogPriority2int LogNotice  = #{const LOG_NOTICE}
+syslogPriority2int LogInfo    = #{const LOG_INFO}
+syslogPriority2int LogDebug   = #{const LOG_DEBUG}
 
 data StandardDir =
     -- | Non-changing “resource” files like fonts, images, videos.
