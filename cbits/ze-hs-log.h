@@ -44,6 +44,8 @@ int32 ze_hs_log_level_get_sl_facility (ob_log_level *level);
 
 const char *ze_hs_facility_name (size_t idx, int32 *fac_out);
 
+int32 ze_hs_default_facility (void);
+
 void ze_hs_log_loc (const char   *file,
                     int64         lineno,
                     ob_log_level *level,

@@ -126,6 +126,9 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_priority"
 foreign import capi unsafe "ze-hs-log.h ze_hs_facility_name"
     c_facility_name :: CSize -> Ptr Int32 -> IO C.ConstCString
 
+foreign import capi unsafe "ze-hs-log.h ze_hs_default_facility"
+    c_default_facility :: Int32
+
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
       :: C.ConstCString -- file name
@@ -190,6 +193,9 @@ instance NFData SyslogFacility where
 instance Hashable SyslogFacility where
   hash                (SyslogFacility n) = hashInt        $ fromIntegral n
   salt `hashWithSalt` (SyslogFacility n) = salt `hash2xInt` fromIntegral n
+
+instance Default SyslogFacility where
+  def = SyslogFacility $ c_default_facility
 
 excCode, etCode, ioeCode :: Word64 -> LogCode
 excCode = (0xa000_0000 .|.)

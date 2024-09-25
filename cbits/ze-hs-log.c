@@ -272,7 +272,8 @@ static const ze_hs_pair ze_hs_facility_names[] =
 static const size_t nFacilityNames =
     sizeof (ze_hs_facility_names) / sizeof (ze_hs_facility_names[0]);
 
-const char *ze_hs_facility_name (size_t idx, int32 *fac_out) {
+const char *ze_hs_facility_name (size_t idx, int32 *fac_out)
+{
     if (idx < nFacilityNames) {
         *fac_out = (int32) ze_hs_facility_names[idx].c_val;
         return ze_hs_facility_names[idx].c_name;
@@ -280,6 +281,15 @@ const char *ze_hs_facility_name (size_t idx, int32 *fac_out) {
         *fac_out = -1;
         return NULL;
     }
+}
+
+int32 ze_hs_default_facility (void)
+{
+#ifdef LOG_USER
+    return LOG_USER;
+#else
+    return 0;
+#endif
 }
 
 void ze_hs_log_loc (const char   *file,
