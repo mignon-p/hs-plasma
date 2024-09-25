@@ -151,11 +151,23 @@ foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
 data LogLevel = LogLevel
   { llName :: !T.Text
   , llPtr  :: !(ForeignPtr ())
-  } deriving (Show, Eq, Ord)
+  } deriving (Eq, Ord)
+
+instance NFData LogLevel where
+  rnf (LogLevel x y) = x `seq` y `seq` ()
 
 instance Hashable LogLevel where
   hash                lev = hashInt        $ lev2Int lev
   salt `hashWithSalt` lev = salt `hash2xInt` lev2Int lev
+
+instance Default LogLevel where
+  def = lvInfo
+
+instance Show LogLevel where
+  show lev = "{LogLevel: " ++ name ++ " <" ++ ptr ++ ">}"
+    where
+      name = showEscapedStr $ T.unpack $ llName lev
+      ptr  = show                      $ llPtr  lev
 
 lev2Int :: LogLevel -> Int
 lev2Int = fromIntegral . ptrToIntPtr . unsafeForeignPtrToPtr . llPtr
@@ -193,7 +205,7 @@ data LogDest = DestNone
              deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 newtype SyslogFacility = SyslogFacility Int32
-                       deriving (Eq, Ord, Show)
+                       deriving (Eq, Ord)
 
 instance NFData SyslogFacility where
   rnf (SyslogFacility n) = n `seq` ()
@@ -204,6 +216,16 @@ instance Hashable SyslogFacility where
 
 instance Default SyslogFacility where
   def = SyslogFacility $ c_default_facility
+
+instance Show SyslogFacility where
+  show (SyslogFacility n) = "{SyslogFacility: " ++ info ++ "}"
+    where
+      hexFac = printf "<0x%02x>" n
+      info   = case IM.lookup (fromIntegral n) facNum2Name of
+                 Nothing   -> hexFac
+                 Just name ->
+                   let escName = showEscapedStr $ T.unpack name
+                   in escName ++ " " ++ hexFac
 
 excCode, etCode, ioeCode :: Word64 -> LogCode
 excCode = (0xa000_0000 .|.)

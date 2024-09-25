@@ -1,5 +1,6 @@
 import Control.Monad
 import qualified Data.ByteString          as B
+import Data.Default.Class
 import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
@@ -181,3 +182,8 @@ main = do
 
   let facNames = map T.unpack facilityNames
   putStrLn $ "facilities are: " ++ intercalate ", " facNames
+
+  putStrLn ""
+
+  putStrLn $ show (def :: LogLevel)
+  putStrLn $ show (def :: SyslogFacility)

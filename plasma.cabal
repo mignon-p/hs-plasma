@@ -162,6 +162,7 @@ executable hs-plasma
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
                      , bytestring           >= 0.11.3.0  && < 0.13
+                     , data-default-class   >= 0.1.2.0   && < 0.2
                      , plasma
                      , slaw
                      , text                 >= 1.2.3.1   && < 2.2
