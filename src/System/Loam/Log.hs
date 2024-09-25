@@ -32,6 +32,7 @@ module System.Loam.Log
   , levelGetPrefix
   , levelModifyFlags
   , levelGetFlags
+  , levelSetDestFile
   ) where
 
 import Control.Applicative
@@ -42,7 +43,7 @@ import Control.Monad
 import Data.Bits
 import qualified Data.ByteString          as B
 import Data.Char
--- import Data.Default.Class
+import Data.Default.Class
 import Data.Hashable
 import Data.Int
 import Data.List
@@ -97,6 +98,9 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_prefix"
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_prefix"
     c_log_level_get_prefix :: Ptr () -> CString -> CSize -> IO ()
+
+foreign import capi safe "ze-hs-log.h ze_hs_log_level_set_dest"
+    c_log_level_set_dest :: Ptr () -> CChar -> C.ConstCString -> IO Int64
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
@@ -440,13 +444,25 @@ maybeFlag w32 flag =
   then Nothing
   else Just flag
 
-logDestToLbs :: LogDest -> (Char, B.ByteString)
-logDestToLbs DestNone             = ('N', "(none)")
-logDestToLbs DestStdout           = ('O', "<stdout>")
-logDestToLbs DestStderr           = ('E', "<stderr>")
-logDestToLbs (DestFilePath am fp) = (am2c am, to8bitFn fp)
-logDestToLbs (DestOsPath   am os) = (am2c am, to8bitFn os)
+logDestToBs :: LogDest -> (Char, B.ByteString)
+logDestToBs DestNone             = ('N', "(none)")
+logDestToBs DestStdout           = ('O', "<stdout>")
+logDestToBs DestStderr           = ('E', "<stderr>")
+logDestToBs (DestFilePath am fp) = (am2c am, to8bitFn fp)
+logDestToBs (DestOsPath   am os) = (am2c am, to8bitFn os)
 
 am2c :: AppendMode -> Char
 am2c Append    = 'A'
 am2c Overwrite = 'F'
+
+levelSetDestFile :: HasCallStack => LogLevel -> LogDest -> IO ()
+levelSetDestFile lev dest = do
+  let (c, fn) = logDestToBs dest
+      c'      = fromIntegral $ ord c
+      cs      = callStack
+      addn    = Just "levelSetDestFile"
+      erl     = def { elSource = (DsFile . fromUtf8 . fromByteString) fn }
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    C.useAsConstCString fn $ \fnPtr -> do
+      tort <- c_log_level_set_dest levPtr c' fnPtr
+      throwRetortCS EtOther addn (Retort tort) (Just erl) cs
