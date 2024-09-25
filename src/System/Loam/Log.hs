@@ -38,6 +38,8 @@ module System.Loam.Log
   , levelSetDestFile
   , levelSetSyslogPriority
   , levelGetSyslogPriority
+  , levelSetSyslogFacility
+  , levelGetSyslogFacility
     --
   , facilityNames
   , facilityFromName
@@ -122,6 +124,12 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_sl_priority"
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_priority"
     c_log_level_get_sl_priority :: Ptr () -> IO Int32
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_sl_facility"
+    c_log_level_set_sl_facility :: Ptr () -> Int32 -> IO ()
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_facility"
+    c_log_level_get_sl_facility :: Ptr () -> IO Int32
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_facility_name"
     c_facility_name :: CSize -> Ptr Int32 -> IO C.ConstCString
@@ -523,6 +531,17 @@ levelGetSyslogPriority lev = do
     n <- c_log_level_get_sl_priority levPtr
     return $ IM.findWithDefault LogInfo (fromIntegral n) int2pri
 
+levelSetSyslogFacility :: LogLevel -> SyslogFacility -> IO ()
+levelSetSyslogFacility lev (SyslogFacility fac) = do
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    c_log_level_set_sl_facility levPtr fac
+
+levelGetSyslogFacility :: LogLevel -> IO SyslogFacility
+levelGetSyslogFacility lev = do
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    fac <- c_log_level_get_sl_facility levPtr
+    return $ SyslogFacility fac
+
 type FacPair = (T.Text, SyslogFacility)
 
 {-# NOINLINE facNames0 #-}
@@ -531,6 +550,7 @@ facNames0 = unsafePerformIO $ getFacNames 0 []
 
 facNames :: [FacPair]
 facNames = filter f facNames0
+  -- "mark" is noted as "internal" in syslog.h
   where f ("mark", _) = False
         f _           = True
 
