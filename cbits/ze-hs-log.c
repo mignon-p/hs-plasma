@@ -1,21 +1,9 @@
 #include "ze-hs-log.h"
 #include "ze-hs-retorts.h"
+#include "ze-hs-syslog.h"
 
 #include "libLoam/c/ob-file.h"
 #include "libLoam/c/ob-sys.h"
-
-#ifdef _WIN32
-#define	LOG_EMERG	0
-#define	LOG_ALERT	1
-#define	LOG_CRIT	2
-#define	LOG_ERR		3
-#define	LOG_WARNING	4
-#define	LOG_NOTICE	5
-#define	LOG_INFO	6
-#define	LOG_DEBUG	7
-#else
-#include <syslog.h>
-#endif
 
 /* Bug, Error, Deprecation, Warn, Info, debuG */
 ob_log_level *ze_hs_log_level (char c)
