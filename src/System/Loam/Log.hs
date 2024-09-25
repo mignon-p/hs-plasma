@@ -12,6 +12,8 @@ module System.Loam.Log
   , LogCode
   , AppendMode
   , LogDest
+  , LogFlag(..)        -- re-export
+  , SyslogPriority(..) -- re-export
   , logLoc
   , logCode
   , logMsg
@@ -33,6 +35,8 @@ module System.Loam.Log
   , levelModifyFlags
   , levelGetFlags
   , levelSetDestFile
+  , levelSetSyslogPriority
+  , levelGetSyslogPriority
   ) where
 
 import Control.Applicative
@@ -46,6 +50,7 @@ import Data.Char
 import Data.Default.Class
 import Data.Hashable
 import Data.Int
+import qualified Data.IntMap.Strict       as IM
 import Data.List
 import Data.Maybe
 import qualified Data.Text                as T
@@ -101,6 +106,12 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_prefix"
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_level_set_dest"
     c_log_level_set_dest :: Ptr () -> CChar -> C.ConstCString -> IO Int64
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_sl_priority"
+    c_log_level_set_sl_priority :: Ptr () -> Int32 -> IO ()
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_priority"
+    c_log_level_get_sl_priority :: Ptr () -> IO Int32
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
@@ -466,3 +477,19 @@ levelSetDestFile lev dest = do
     C.useAsConstCString fn $ \fnPtr -> do
       tort <- c_log_level_set_dest levPtr c' fnPtr
       throwRetortCS EtOther addn (Retort tort) (Just erl) cs
+
+levelSetSyslogPriority :: LogLevel -> SyslogPriority -> IO ()
+levelSetSyslogPriority lev pri = do
+  let pri' = fromIntegral $ syslogPriority2int pri
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    c_log_level_set_sl_priority levPtr pri'
+
+int2pri :: IM.IntMap SyslogPriority
+int2pri = IM.fromList $ map f [minBound..maxBound]
+  where f pri = (fromIntegral (syslogPriority2int pri), pri)
+
+levelGetSyslogPriority :: LogLevel -> IO SyslogPriority
+levelGetSyslogPriority lev = do
+  withForeignPtr (llPtr lev) $ \levPtr -> do
+    n <- c_log_level_get_sl_priority levPtr
+    return $ IM.findWithDefault LogInfo (fromIntegral n) int2pri
