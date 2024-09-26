@@ -38,12 +38,33 @@
 
 #endif  /* _WIN32 */
 
+/* define a few things if they are not already defined */
+
 #ifndef LOG_PRIMASK
 #define LOG_PRIMASK 7
 #endif
 
 #ifndef LOG_FACMASK
 #define LOG_FACMASK 0x03f8
+#endif
+
+#ifndef LOG_PID
+#define LOG_PID      0
+#endif
+#ifndef LOG_CONS
+#define LOG_CONS     0
+#endif
+#ifndef LOG_ODELAY
+#define LOG_ODELAY   0
+#endif
+#ifndef LOG_NDELAY
+#define LOG_NDELAY   0
+#endif
+#ifndef LOG_NOWAIT
+#define LOG_NOWAIT   0
+#endif
+#ifndef LOG_PERROR
+#define LOG_PERROR   0
 #endif
 
 #endif /* ZE_HS_SYSLOG_H_B0D81412 */

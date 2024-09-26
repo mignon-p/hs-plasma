@@ -14,6 +14,8 @@ module System.Loam.Internal.Enums
   , systemInfo2int
   , SyslogPriority(..)
   , syslogPriority2int
+  , SyslogFlags(..)
+  , syslogFlags2int
   , StandardDir(..)
   , standardDir2int
   , LogFlag(..)
@@ -109,6 +111,23 @@ syslogPriority2int LogWarning = #{const LOG_WARNING}
 syslogPriority2int LogNotice  = #{const LOG_NOTICE}
 syslogPriority2int LogInfo    = #{const LOG_INFO}
 syslogPriority2int LogDebug   = #{const LOG_DEBUG}
+
+data SyslogFlags =
+    LogPid
+  | LogCons
+  | LogOdelay
+  | LogNdelay
+  | LogNowait
+  | LogPerror
+  deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+syslogFlags2int :: SyslogFlags -> CInt
+syslogFlags2int LogPid    = #{const LOG_PID}
+syslogFlags2int LogCons   = #{const LOG_CONS}
+syslogFlags2int LogOdelay = #{const LOG_ODELAY}
+syslogFlags2int LogNdelay = #{const LOG_NDELAY}
+syslogFlags2int LogNowait = #{const LOG_NOWAIT}
+syslogFlags2int LogPerror = #{const LOG_PERROR}
 
 data StandardDir =
     -- | Non-changing “resource” files like fonts, images, videos.
