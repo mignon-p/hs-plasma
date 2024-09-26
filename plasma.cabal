@@ -71,6 +71,7 @@ library
                      , System.Loam.Internal.Marshal
                      , System.Loam.Retorts.Internal.Descriptions
                      , System.Loam.Retorts.Internal.IoeRetorts
+                     , System.Loam.Retorts.Internal.RetortUtil
 
   -- LANGUAGE extensions enabled for all modules in this package.
   default-extensions:  BangPatterns
