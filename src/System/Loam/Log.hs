@@ -44,6 +44,10 @@ module System.Loam.Log
   , facilityNames
   , facilityFromName
   , facilityToName
+    --
+  , syslogOpen
+  , syslogMask
+  , syslogClose
   ) where
 
 import Control.Applicative
@@ -147,7 +151,7 @@ foreign import capi safe "ze-hs-syslog.h setlogmask"
     c_setlogmask :: CInt -> IO CInt
 
 foreign import capi safe "ze-hs-syslog.h closelog"
-    c_closelog :: IO ()
+    syslogClose :: IO ()
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
@@ -628,3 +632,29 @@ facilityToName :: SyslogFacility -> T.Text
 facilityToName (SyslogFacility n) =
   let dflt = T.pack $ printf "facility 0x%02x" n
   in IM.findWithDefault dflt (fromIntegral n) facNum2Name
+
+syslogOpen :: Maybe T.Text -> [SyslogFlags] -> SyslogFacility -> IO ()
+syslogOpen ident flags (SyslogFacility fac) = do
+  let flagMask = orList $ map syslogFlags2int flags
+  syslogOpen0 ident flagMask fac
+
+syslogOpen0 :: Maybe T.Text -> CInt -> Int32 -> IO ()
+syslogOpen0 Nothing flags fac = c_syslog_open C.nullConstPtr flags fac
+syslogOpen0 (Just ident) flags fac = do
+  C.useAsConstCString (T.encodeUtf8 ident) $ \identPtr -> do
+    c_syslog_open identPtr flags fac
+
+syslogMask :: [SyslogPriority] -> IO [SyslogPriority]
+syslogMask pris = do
+  let priMask = orList $ map pri2mask pris
+  oldMask <- c_setlogmask priMask
+  return $ mapMaybe (maybePri oldMask) [minBound..maxBound]
+
+pri2mask :: SyslogPriority -> CInt
+pri2mask = c_log_mask . fromIntegral . syslogPriority2int
+
+maybePri :: CInt -> SyslogPriority -> Maybe SyslogPriority
+maybePri priMask pri =
+  if (pri2mask pri .&. priMask) == 0
+  then Nothing
+  else Just pri
