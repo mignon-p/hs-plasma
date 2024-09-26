@@ -569,16 +569,22 @@ levelGetSyslogPriority lev = do
     n <- c_log_level_get_sl_priority levPtr
     return $ IM.findWithDefault LogInfo (fromIntegral n) int2pri
 
-levelSetSyslogFacility :: LogLevel -> SyslogFacility -> IO ()
-levelSetSyslogFacility lev (SyslogFacility fac) = do
+levelSetSyslogFacility :: LogLevel -> Maybe SyslogFacility -> IO ()
+levelSetSyslogFacility lev fac = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
-    c_log_level_set_sl_facility levPtr fac
+    c_log_level_set_sl_facility levPtr $ mf2i32 fac
 
-levelGetSyslogFacility :: LogLevel -> IO SyslogFacility
+mf2i32 :: Maybe SyslogFacility -> Int32
+mf2i32 (Just (SyslogFacility fac)) = fac
+mf2i32 _                           = 0
+
+levelGetSyslogFacility :: LogLevel -> IO (Maybe SyslogFacility)
 levelGetSyslogFacility lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     fac <- c_log_level_get_sl_facility levPtr
-    return $ SyslogFacility fac
+    if fac == 0
+      then return Nothing
+      else return $ Just $ SyslogFacility fac
 
 type FacPair = (T.Text, SyslogFacility)
 
