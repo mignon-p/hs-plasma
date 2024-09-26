@@ -48,10 +48,6 @@ int32 ze_hs_default_facility (void);
 
 void ze_hs_syslog_open (const char *ident, int flags, int32 fac);
 
-void ze_hs_syslog_mask (const int32 *pr_array, size_t n_pri);
-
-void ze_hs_syslog_close (void);
-
 void ze_hs_log_loc (const char   *file,
                     int64         lineno,
                     ob_log_level *level,

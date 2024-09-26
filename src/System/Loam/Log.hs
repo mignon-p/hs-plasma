@@ -137,6 +137,18 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_facility_name"
 foreign import capi unsafe "ze-hs-log.h ze_hs_default_facility"
     c_default_facility :: Int32
 
+foreign import capi safe "ze-hs-log.h ze_hs_syslog_open"
+    c_syslog_open :: C.ConstCString -> CInt -> Int32 -> IO ()
+
+foreign import capi unsafe "ze-hs-syslog.h LOG_MASK"
+    c_log_mask :: Int32 -> CInt
+
+foreign import capi safe "ze-hs-syslog.h setlogmask"
+    c_setlogmask :: CInt -> IO CInt
+
+foreign import capi safe "ze-hs-syslog.h closelog"
+    c_closelog :: IO ()
+
 foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
       :: C.ConstCString -- file name

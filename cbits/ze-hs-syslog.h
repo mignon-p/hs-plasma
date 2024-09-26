@@ -32,6 +32,23 @@
 #define LOG_LOCAL6   (15 << 3)
 #define LOG_LOCAL7   (16 << 3)
 
+static inline void openlog (const char *ident, int logopt, int facility)
+{
+}
+
+static inline int setlogmask (int maskpri)
+{
+    return maskpri;
+}
+
+static inline void syslog (int priority, const char *message, ...)
+{
+}
+
+static inline void closelog (void)
+{
+}
+
 #else  /* _WIN32 */
 
 #include <syslog.h>

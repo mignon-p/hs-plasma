@@ -305,23 +305,6 @@ void ze_hs_syslog_open (const char *ident, int flags, int32 fac)
     openlog (ident ? static_ident : NULL, flags, fac);
 }
 
-void ze_hs_syslog_mask (const int32 *pr_array, size_t n_pri)
-{
-    int    mask = 0;
-    size_t i;
-
-    for (i = 0; i < n_pri; i++) {
-        mask |= LOG_MASK(pr_array[i]);
-    }
-
-    setlogmask (mask);
-}
-
-void ze_hs_syslog_close (void)
-{
-    closelog();
-}
-
 void ze_hs_log_loc (const char   *file,
                     int64         lineno,
                     ob_log_level *level,
