@@ -37,6 +37,7 @@ module System.Loam.Internal.Enums
 
 import Control.DeepSeq
 import Data.Bits
+import Data.Default.Class
 import Data.Hashable
 import Data.Word
 import Foreign.C.Types
@@ -95,6 +96,9 @@ data SyslogPriority =
   | LogInfo
   | LogDebug
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+instance Default SyslogPriority where
+  def = LogInfo
 
 syslogPriority2int :: SyslogPriority -> CInt
 syslogPriority2int LogEmerg   = #{const LOG_EMERG}
