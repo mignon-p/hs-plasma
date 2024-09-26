@@ -48,6 +48,10 @@
 #define LOG_FACMASK 0x03f8
 #endif
 
+#ifndef LOG_MASK
+#define LOG_MASK(p)  (1 << (p))
+#endif
+
 #ifndef LOG_PID
 #define LOG_PID      0
 #endif

@@ -5,6 +5,7 @@
 #include "ze-hs-syslog.h"
 
 #include "libLoam/c/ob-file.h"
+#include "libLoam/c/ob-string.h"
 #include "libLoam/c/ob-sys.h"
 
 /* Bug, Error, Deprecation, Warn, Info, debuG */
@@ -290,6 +291,35 @@ int32 ze_hs_default_facility (void)
 #else
     return 0;
 #endif
+}
+
+static char static_ident[160];
+
+void ze_hs_syslog_open (const char *ident, int flags, int32 fac)
+{
+    /* specification says ident must remain valid, so copy it */
+    if (ident) {
+        ob_safe_copy_string (static_ident, sizeof (static_ident), ident);
+    }
+
+    openlog (ident ? static_ident : NULL, flags, fac);
+}
+
+void ze_hs_syslog_mask (const int32 *pr_array, size_t n_pri)
+{
+    int    mask = 0;
+    size_t i;
+
+    for (i = 0; i < n_pri; i++) {
+        mask |= LOG_MASK(pr_array[i]);
+    }
+
+    setlogmask (mask);
+}
+
+void ze_hs_syslog_close (void)
+{
+    closelog();
 }
 
 void ze_hs_log_loc (const char   *file,
