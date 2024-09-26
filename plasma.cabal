@@ -69,7 +69,6 @@ library
                      , System.Loam.Internal.Enums
                      , System.Loam.Internal.Filename
                      , System.Loam.Internal.Marshal
-                     , System.Loam.Retorts.Internal
                      , System.Loam.Retorts.Internal.Descriptions
                      , System.Loam.Retorts.Internal.IoeRetorts
 
