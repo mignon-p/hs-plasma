@@ -178,6 +178,13 @@ main = do
   logMsg lvError "Logging an error!"
   logMsg lvInfo  "A two-line\nmessage."
 
+  myLev <- makeLogLevel "Custom"
+  levelSetDestFile myLev DestStdout
+  levelModifyFlags myLev [FlgShowTime, FlgShowPid, FlgShowProg] []
+  logMsg myLev "Logging a message\nto a custom LogLevel\n"
+  levelSetDestFile myLev DestNone
+  logMsg myLev "This won't get printed!"
+
   putStrLn ""
 
   let facNames = map T.unpack facilityNames
@@ -187,3 +194,4 @@ main = do
 
   putStrLn $ show (def :: LogLevel)
   putStrLn $ show (def :: SyslogFacility)
+  putStrLn $ show myLev

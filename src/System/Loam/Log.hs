@@ -8,10 +8,10 @@ Portability : GHC
 -}
 
 module System.Loam.Log
-  ( LogLevel
+  ( LogLevel           -- opaque type
   , LogCode
-  , AppendMode
-  , LogDest
+  , AppendMode(..)
+  , LogDest(..)
   , LogFlag(..)        -- re-export
   , SyslogPriority(..) -- re-export
   , SyslogFacility     -- opaque type
