@@ -555,7 +555,7 @@ levelSetDestFile lev dest = do
 
 levelSetSyslogPriority :: LogLevel -> SyslogPriority -> IO ()
 levelSetSyslogPriority lev pri = do
-  let pri' = fromIntegral $ syslogPriority2int pri
+  let pri' = syslogPriority2int pri
   withForeignPtr (llPtr lev) $ \levPtr -> do
     c_log_level_set_sl_priority levPtr pri'
 
@@ -633,9 +633,9 @@ facilityToName (SyslogFacility n) =
   let dflt = T.pack $ printf "facility 0x%02x" n
   in IM.findWithDefault dflt (fromIntegral n) facNum2Name
 
-syslogOpen :: Maybe T.Text -> [SyslogFlags] -> SyslogFacility -> IO ()
+syslogOpen :: Maybe T.Text -> [SyslogFlag] -> SyslogFacility -> IO ()
 syslogOpen ident flags (SyslogFacility fac) = do
-  let flagMask = orList $ map syslogFlags2int flags
+  let flagMask = orList $ map syslogFlag2int flags
   syslogOpen0 ident flagMask fac
 
 syslogOpen0 :: Maybe T.Text -> CInt -> Int32 -> IO ()
@@ -651,7 +651,7 @@ syslogMask pris = do
   return $ mapMaybe (maybePri oldMask) [minBound..maxBound]
 
 pri2mask :: SyslogPriority -> CInt
-pri2mask = c_log_mask . fromIntegral . syslogPriority2int
+pri2mask = c_log_mask . syslogPriority2int
 
 maybePri :: CInt -> SyslogPriority -> Maybe SyslogPriority
 maybePri priMask pri =

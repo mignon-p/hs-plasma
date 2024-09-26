@@ -14,8 +14,8 @@ module System.Loam.Internal.Enums
   , systemInfo2int
   , SyslogPriority(..)
   , syslogPriority2int
-  , SyslogFlags(..)
-  , syslogFlags2int
+  , SyslogFlag(..)
+  , syslogFlag2int
   , StandardDir(..)
   , standardDir2int
   , LogFlag(..)
@@ -41,6 +41,7 @@ import Control.DeepSeq
 import Data.Bits
 import Data.Default.Class
 import Data.Hashable
+import Data.Int
 import Data.Word
 import Foreign.C.Types
 import GHC.Generics (Generic)
@@ -102,7 +103,7 @@ data SyslogPriority =
 instance Default SyslogPriority where
   def = LogInfo
 
-syslogPriority2int :: SyslogPriority -> CInt
+syslogPriority2int :: SyslogPriority -> Int32
 syslogPriority2int LogEmerg   = #{const LOG_EMERG}
 syslogPriority2int LogAlert   = #{const LOG_ALERT}
 syslogPriority2int LogCrit    = #{const LOG_CRIT}
@@ -112,7 +113,7 @@ syslogPriority2int LogNotice  = #{const LOG_NOTICE}
 syslogPriority2int LogInfo    = #{const LOG_INFO}
 syslogPriority2int LogDebug   = #{const LOG_DEBUG}
 
-data SyslogFlags =
+data SyslogFlag =
     LogPid
   | LogCons
   | LogOdelay
@@ -121,13 +122,13 @@ data SyslogFlags =
   | LogPerror
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
 
-syslogFlags2int :: SyslogFlags -> CInt
-syslogFlags2int LogPid    = #{const LOG_PID}
-syslogFlags2int LogCons   = #{const LOG_CONS}
-syslogFlags2int LogOdelay = #{const LOG_ODELAY}
-syslogFlags2int LogNdelay = #{const LOG_NDELAY}
-syslogFlags2int LogNowait = #{const LOG_NOWAIT}
-syslogFlags2int LogPerror = #{const LOG_PERROR}
+syslogFlag2int :: SyslogFlag -> CInt
+syslogFlag2int LogPid    = #{const LOG_PID}
+syslogFlag2int LogCons   = #{const LOG_CONS}
+syslogFlag2int LogOdelay = #{const LOG_ODELAY}
+syslogFlag2int LogNdelay = #{const LOG_NDELAY}
+syslogFlag2int LogNowait = #{const LOG_NOWAIT}
+syslogFlag2int LogPerror = #{const LOG_PERROR}
 
 data StandardDir =
     -- | Non-changing “resource” files like fonts, images, videos.
