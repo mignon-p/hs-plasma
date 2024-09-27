@@ -67,9 +67,9 @@ main = do
 
   putStrLn ""
 
-  randBytes <- trulyRandom 8
-  let randBytesStr = show $ B.unpack randBytes
-  putStrLn $ printf "%-20s = %s" ("randBytes" :: String) randBytesStr
+  someBytes <- trulyRandom 8
+  let someBytesStr = show $ B.unpack someBytes
+  putStrLn $ printf "%-20s = %s" ("someBytes" :: String) someBytesStr
 
   putStrLn ""
   putStrLn "spewOverview"
