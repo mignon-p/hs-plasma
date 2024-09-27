@@ -195,3 +195,31 @@ main = do
   putStrLn $ show (def :: LogLevel)
   putStrLn $ show (def :: SyslogFacility)
   putStrLn $ show myLev
+
+  putStrLn ""
+
+  withSlawInput ("test-files/example.slaw" :: String) () $ \sis -> do
+    putStrLn $ "binary input stream:"
+    putStrLn $ "  " ++ show sis
+
+  withSlawInput ("test-files/protein.slaw" :: String) () $ \sis -> do
+    putStrLn $ "binary input stream:"
+    putStrLn $ "  " ++ show sis
+
+  withSlawInput ("test-files/example.yaml" :: String) () $ \sis -> do
+    putStrLn $ "YAML input stream:"
+    putStrLn $ "  " ++ show sis
+
+  putStrLn ""
+
+  let wbo     = (def :: WriteBinaryOptions)
+      wyo     = (def :: WriteYamlOptions)
+      devNull = "/dev/null" :: String
+
+  withSlawOutput devNull wbo $ \sos -> do
+    putStrLn $ "binary output stream:"
+    putStrLn $ "  " ++ show sos
+
+  withSlawOutput devNull wyo $ \sos -> do
+    putStrLn $ "YAML output stream:"
+    putStrLn $ "  " ++ show sos
