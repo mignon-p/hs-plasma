@@ -41,6 +41,7 @@ import Data.Default.Class
 import Data.Int
 import Data.IORef
 import qualified Data.Text.Lazy                as LT
+import Data.Unique
 import Data.Word
 import Foreign.C.Types
 import Foreign.ForeignPtr
@@ -63,6 +64,7 @@ import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 import System.Loam.Retorts.Internal.RetortUtil
 import System.Loam.Internal.Marshal
+import System.Loam.Internal.Misc
 
 --
 
@@ -338,10 +340,13 @@ openYamlSlawInput1 addn nam rdr _ = do
     readPtr <- makeInputFunc yin
     c_open_yaml_input readPtr tortPtr
   iFPtr <- newForeignPtr c_finalize_input iPtr
+  uniq  <- newUnique
   let yin2 = YInput2 { yinPtr = iFPtr
                      , yinYin = yin
                      }
   return $ SlawInputStream { siName   = nam
+                           , siShow   = yamPtr iPtr
+                           , siUniq   = uniq
                            , siRead'  = yiRead  yin2
                            , siClose' = yiClose yin2
                            }
@@ -417,10 +422,13 @@ openYamlSlawOutput1 addn file opts cs = do
       writePtr <- makeOutputFunc yout
       c_open_yaml_output writePtr slawPtr tortPtr
   oFPtr <- newForeignPtr c_finalize_output oPtr
+  uniq  <- newUnique
   let yout2 = YOutput2 { youtPtr  = oFPtr
                        , youtYout = yout
                        }
-  return $ SlawOutputStream { soName = nam
+  return $ SlawOutputStream { soName   = nam
+                            , soShow   = yamPtr oPtr
+                            , soUniq   = uniq
                             , soWrite' = yoWrite yout2
                             , soFlush' = yoFlush yout2
                             , soClose' = yoClose yout2
@@ -665,10 +673,13 @@ slawOpenYamlString addn nam opts cs = do
       writePtr <- makeStrFunc y1
       c_open_yaml_output writePtr slawPtr tortPtr
   oFPtr <- newForeignPtr c_finalize_output oPtr
+  uniq  <- newUnique
   let y2 = YStrOut2 { yStr2Ptr = oFPtr
                     , yStr2Out = y1
                     }
   return ( SlawOutputStream { soName   = nam
+                            , soShow   = yamPtr oPtr
+                            , soUniq   = uniq
                             , soWrite' = ysWrite y2
                             , soFlush' = ysFlush y2
                             , soClose' = ysClose y2
@@ -711,3 +722,6 @@ tryAndConvertExc f = do
   case eth of
     Left  ioe -> return $ Left $ ioeToPe EtSlawIO (Just callStack) ioe
     Right x   -> return x
+
+yamPtr :: Ptr a -> String
+yamPtr p = "YAML <" ++ fmtPtr p ++ ">"
