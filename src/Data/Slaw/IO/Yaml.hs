@@ -677,12 +677,16 @@ slawToYamlStringIO'
   -> IO LT.Text
 slawToYamlStringIO' addn ss opts = do
   let nam  = "<string>"
-  (sos, y1) <- slawOpenYamlString addn nam (š opts) callStack
-  mapM_ (soWrite sos) ss
-  soClose sos
+      opn  = slawOpenYamlString addn nam (š opts) callStack
+  y1 <- bracket opn (soClose . fst) (stys1 ss)
   y0 <- readIORef $ yStr1Ref y1
   let lbs = L.fromChunks $ reverse $ yStr0Str y0
   return $ fromUtf8 lbs
+
+stys1 :: [Slaw] -> (SlawOutputStream, YStrOut1) -> IO YStrOut1
+stys1 ss (sos, y1) = do
+  mapM_ (soWrite sos) ss
+  return y1
 
 slawOpenYamlString
   :: HasCallStack
