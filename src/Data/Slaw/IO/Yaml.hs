@@ -10,15 +10,19 @@ Portability : GHC
 module Data.Slaw.IO.Yaml
   ( -- * Reading slawx from a file (YAML or binary)
     openSlawInput
+  , withSlawInput
   , readSlawFile
     -- * Writing slawx to a file (YAML or binary)
   , openSlawOutput
+  , withSlawOutput
   , writeSlawFile
     -- * Reading slawx from a YAML file
   , openYamlSlawInput
+  , withYamlSlawInput
   , readYamlSlawFile
     -- * Writing slawx to a YAML file
   , openYamlSlawOutput
+  , withYamlSlawOutput
   , writeYamlSlawFile
     -- * Slawx to/from YAML-encoded strings
   , slawFromYamlString
@@ -117,6 +121,16 @@ foreign import capi "ze-hs-slawio.h &ze_hs_finalize_output"
 
 --
 
+-- | Run an action with a 'SlawInputStream'.
+withSlawInput
+  :: (HasCallStack, FileClass a, ToSlaw b)
+  => a                         -- ^ name (or handle) of file to read
+  -> b                         -- ^ options map/protein (currently none)
+  -> (SlawInputStream -> IO c) -- ^ action to run
+  -> IO c
+withSlawInput fname opts act = withFrozenCallStack $ do
+  bracket (openSlawInput fname opts) siClose act
+
 -- | Convenience function to read all the slawx from a file.
 -- Automatically detects whether the file is binary or YAML.
 -- It opens a stream, reads all the slawx from the stream,
@@ -127,10 +141,17 @@ readSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
              -> b -- ^ options map/protein (currently none)
              -> IO [Slaw]
 readSlawFile fname opts = withFrozenCallStack $ do
-  sis <- openSlawInput fname opts
-  ss  <- readAllSlawx sis
-  siClose sis
-  return ss
+  withSlawInput fname opts readAllSlawx
+
+-- | Run an action with a 'SlawInputStream'.
+withYamlSlawInput
+  :: (HasCallStack, FileClass a, ToSlaw b)
+  => a                         -- ^ name (or handle) of file to read
+  -> b                         -- ^ options map/protein (currently none)
+  -> (SlawInputStream -> IO c) -- ^ action to run
+  -> IO c
+withYamlSlawInput fname opts act = withFrozenCallStack $ do
+  bracket (openYamlSlawInput fname opts) siClose act
 
 -- | Convenience function to read all the slawx from a YAML
 -- file.  It opens a stream, reads all the slawx from the stream,
@@ -141,10 +162,17 @@ readYamlSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
                  -> b -- ^ options map/protein (currently none)
                  -> IO [Slaw]
 readYamlSlawFile fname opts = withFrozenCallStack $ do
-  sis <- openYamlSlawInput fname opts
-  ss  <- readAllSlawx sis
-  siClose sis
-  return ss
+  withYamlSlawInput fname opts readAllSlawx
+
+-- | Run an action with a 'SlawOutputStream'.
+withYamlSlawOutput
+  :: (HasCallStack, FileClass a, ToSlaw b)
+  => a                          -- ^ name (or handle) of file to read
+  -> b                          -- ^ options map/protein
+  -> (SlawOutputStream -> IO c) -- ^ action to run
+  -> IO c
+withYamlSlawOutput fname opts act = withFrozenCallStack $ do
+  bracket (openYamlSlawOutput fname opts) soClose act
 
 -- | Convenience function to write a YAML slaw file all at once.
 -- It opens a stream, writes all the slawx to the stream,
@@ -155,9 +183,17 @@ writeYamlSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
                   -> [Slaw] -- ^ slawx to write to file
                   -> IO ()
 writeYamlSlawFile fname opts ss = withFrozenCallStack $ do
-  sos <- openYamlSlawOutput fname opts
-  mapM_ (soWrite sos) ss
-  soClose sos
+  withYamlSlawOutput fname opts $ \sos -> mapM_ (soWrite sos) ss
+
+-- | Run an action with a 'SlawOutputStream'.
+withSlawOutput
+  :: (HasCallStack, FileClass a, ToSlaw b)
+  => a                          -- ^ name (or handle) of file to read
+  -> b                          -- ^ options map/protein
+  -> (SlawOutputStream -> IO c) -- ^ action to run
+  -> IO c
+withSlawOutput fname opts act = withFrozenCallStack $ do
+  bracket (openSlawOutput fname opts) soClose act
 
 -- | Convenience function to write a slaw file all at once.
 -- It opens a stream, writes all the slawx to the stream,
@@ -172,9 +208,7 @@ writeSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
               -> [Slaw] -- ^ slawx to write to file
               -> IO ()
 writeSlawFile fname opts ss = withFrozenCallStack $ do
-  sos <- openSlawOutput fname opts
-  mapM_ (soWrite sos) ss
-  soClose sos
+  withSlawOutput fname opts $ \sos -> mapM_ (soWrite sos) ss
 
 --
 
