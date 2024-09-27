@@ -76,7 +76,7 @@ import Data.Word
 import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
-import Foreign.ForeignPtr.Unsafe
+-- import Foreign.ForeignPtr.Unsafe
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
@@ -95,6 +95,7 @@ import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
 import System.Loam.Internal.Filename
 import System.Loam.Internal.Marshal
+import System.Loam.Internal.Misc
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
@@ -183,10 +184,10 @@ instance Show LogLevel where
   show lev = "{LogLevel: " ++ name ++ " <" ++ ptr ++ ">}"
     where
       name = showEscapedStr $ T.unpack $ llName lev
-      ptr  = show                      $ llPtr  lev
+      ptr  = fmtForeignPtr             $ llPtr  lev
 
 lev2Int :: LogLevel -> Int
-lev2Int = fromIntegral . ptrToIntPtr . unsafeForeignPtrToPtr . llPtr
+lev2Int = fPtrToIntegral . llPtr
 
 mkStaticLevel :: Char -> T.Text -> IO LogLevel
 mkStaticLevel c name = do
