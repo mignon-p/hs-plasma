@@ -61,6 +61,7 @@ import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
+import System.Loam.Retorts.Internal.RetortUtil
 import System.Loam.Internal.Marshal
 
 --
@@ -517,7 +518,7 @@ openSlawOutput file opts = do
 --
 
 -- | Reads zero or more slawx from a string containing YAML.
--- If an error occurs, may throw 'PlasmaException'.
+-- If an error occurs, returns a 'PlasmaException'.
 --
 -- Does not currently take any options, so the second argument is
 -- placeholder which is just ignored.  The easiest thing to do
@@ -526,12 +527,13 @@ slawFromYamlString
   :: (HasCallStack, ToSlaw b)
   => LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
-  -> [Slaw]
+  -> Either PlasmaException [Slaw]
 slawFromYamlString txt opts = withFrozenCallStack $ unsafePerformIO $ do
-  slawFromYamlStringIO' "slawFromYamlString" txt opts
+  tryAndConvertExc $ do
+    slawFromYamlStringIO' "slawFromYamlString" txt opts
 
--- | Like 'slawFromYamlString', but runs in the IO monad, to
--- allow more control over when exceptions are thrown.
+-- | Like 'slawFromYamlString', but runs in the IO monad,
+-- and throws a 'PlasmaException' on error.
 slawFromYamlStringIO
   :: (HasCallStack, ToSlaw b)
   => LT.Text -- ^ string to read YAML from
@@ -600,7 +602,7 @@ makeStrFunc y1 = createWritePtr (yStrWriteFunc y1)
 
 -- | Writes zero or more slawx as YAML into a string, and returns
 -- that string.
--- If an error occurs, may throw 'PlasmaException'.
+-- If an error occurs, returns a 'PlasmaException'.
 --
 -- The second argument is a map or protein which specifies options.
 -- The easiest thing is to pass in 'WriteYamlOptions' if you want
@@ -610,12 +612,13 @@ slawToYamlString
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
   -> b      -- ^ options map/protein
-  -> LT.Text
+  -> Either PlasmaException LT.Text
 slawToYamlString ss opts = withFrozenCallStack $ unsafePerformIO $ do
-  slawToYamlStringIO' "slawToYamlString" ss opts
+  tryAndConvertExc $ do
+    slawToYamlStringIO' "slawToYamlString" ss opts
 
--- | Like 'slawToYamlString', but runs in the IO monad, to
--- allow more control over when exceptions are thrown.
+-- | Like 'slawToYamlString', but runs in the IO monad,
+-- and throws a 'PlasmaException' on error.
 slawToYamlStringIO
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
@@ -701,3 +704,10 @@ ysClose y2 cs = do
   withForeignPtr (yStr2Ptr y2) $ \oPtr -> do
     tort <- c_close_output oPtr
     throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+
+tryAndConvertExc :: HasCallStack => IO a -> IO (Either PlasmaException a)
+tryAndConvertExc f = do
+  eth <- try $ try f
+  case eth of
+    Left  ioe -> return $ Left $ ioeToPe EtSlawIO (Just callStack) ioe
+    Right x   -> return x
