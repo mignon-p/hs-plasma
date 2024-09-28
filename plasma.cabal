@@ -87,7 +87,11 @@ library
                      , TupleSections
 
   -- LANGUAGE extensions used by modules in this package.
-  -- other-extensions:
+  other-extensions:    CPP
+                     , DerivingStrategies
+                     , FlexibleInstances
+                     , GeneralizedNewtypeDeriving
+                     , TypeSynonymInstances
 
   c-sources:           cbits/ze-hs-cleanup.c
                      , cbits/ze-hs-log.c
