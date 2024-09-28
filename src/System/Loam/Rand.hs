@@ -137,6 +137,7 @@ makeSeed (Just seedIn) =
 
 newRandState :: HasCallStack => T.Text -> Maybe Int -> IO RandState
 newRandState name seed = do
+  checkCleanup
   ptr <- c_rand_allocate_state (makeSeed seed)
   when (ptr == nullPtr) $ do
     let addn = Just "newRandState"

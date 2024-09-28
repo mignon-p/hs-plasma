@@ -13,6 +13,8 @@ module System.Loam.Internal.Misc
   , fPtrToIntegral
   , fmtPtr
   , fmtForeignPtr
+    --
+  , checkCleanup
   ) where
 
 import Data.Bits
@@ -23,6 +25,9 @@ import Foreign.ForeignPtr.Unsafe
 import Foreign.Ptr
 import Numeric.Natural
 import Text.Printf
+
+foreign import capi safe "ze-hs-cleanup.h ze_hs_check_cleanup"
+    checkCleanup :: IO ()
 
 natToDashedHex :: Natural -> String
 natToDashedHex =
