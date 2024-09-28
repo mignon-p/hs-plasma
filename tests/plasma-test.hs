@@ -61,7 +61,8 @@ setIfNotSet var val = do
 
 qcProps :: TestTree
 qcProps = testGroup "QuickCheck tests"
-  [ QC.testProperty "round-trip IO (yaml)"    $ rtIoProp
+  [ QC.testProperty "round-trip IO (yaml)"     $ rtIoProp
+  , QC.testProperty "round-trip (yaml string)" $ rtStrProp
   ]
 
 unitTests :: TestTree
@@ -72,6 +73,9 @@ unitTests = testGroup "HUnit tests"
 rtIoProp :: Slaw -> QC.Property
 rtIoProp s = QC.monadicIO $ do
   roundTripIOwr fpQC [s] def False
+
+rtStrProp :: Slaw -> QC.Property
+rtStrProp s = Right [s] QC.=== roundTripYamlStr [s]
 
 testSlawIO :: Assertion
 testSlawIO = do

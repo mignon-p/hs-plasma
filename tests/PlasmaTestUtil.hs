@@ -19,6 +19,7 @@ module PlasmaTestUtil
   , roundTripIOwr
   , checkSlawRead
   , checkSlawRead2
+  , roundTripYamlStr
   ) where
 
 import Control.Monad
@@ -104,3 +105,7 @@ checkSlawRead2 :: HasCallStack
                -> IO ()
 checkSlawRead2 fnActual fnExpected =
   readSlawFile fnExpected () >>= checkSlawRead fnActual
+
+roundTripYamlStr :: [Slaw] -> Either PlasmaException [Slaw]
+roundTripYamlStr ss =
+  slawToYamlString ss () >>= (`slawFromYamlString` ())
