@@ -1,6 +1,6 @@
 #include <stdarg.h>
 #include "ze-hs-cleanup.h"
-#include "ze-hs-plasma.h"
+#include "ze-hs-misc.h"
 #include "libLoam/c/ob-hash.h"
 
 static inline slaw ret_slaw_len (slaw s, int64 *len)
@@ -31,12 +31,12 @@ static ob_retort my_callback (const char *file, va_list vargies)
     }
 }
 
-slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
-                                        const char     *filename,
-                                        const char     *searchspec,
-                                        int64           max_to_return,
-                                        ob_retort      *retort_ptr,
-                                        int64          *len_ptr)
+slaw ze_hs_search_standard_path (ob_standard_dir dir,
+                                 const char     *filename,
+                                 const char     *searchspec,
+                                 int64           max_to_return,
+                                 ob_retort      *retort_ptr,
+                                 int64          *len_ptr)
 {
     ob_retort tort = OB_UNKNOWN_ERR;
     slabu    *sb   = slabu_new ();
@@ -66,7 +66,7 @@ slaw ze_hs_plasma_search_standard_path (ob_standard_dir dir,
     return ret_slaw_len (ret, len_ptr);
 }
 
-slaw ze_hs_plasma_spew_overview_to_string (bslaw s, int64 *len_ptr)
+slaw ze_hs_spew_overview_to_string (bslaw s, int64 *len_ptr)
 {
     slaw ret = slaw_spew_overview_to_string (s);
     return ret_slaw_len (ret, len_ptr);

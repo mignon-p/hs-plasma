@@ -50,7 +50,7 @@ import qualified System.Loam.Internal.ConstPtr as C
 foreign import capi unsafe "libLoam/c/ob-hash.h ob_jenkins_hash"
     c_jenkins_hash :: C.ConstPtr () -> CSize -> Word32 -> IO Word32
 
-foreign import capi unsafe "ze-hs-plasma.h ze_hs_jenkins_hash64"
+foreign import capi unsafe "ze-hs-misc.h ze_hs_jenkins_hash64"
     c_jenkins_hash64 :: C.ConstPtr () -> CSize -> Word64 -> IO Word64
 
 foreign import capi unsafe "libLoam/c/ob-hash.h ob_city_hash64"

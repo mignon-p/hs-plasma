@@ -41,7 +41,7 @@ foreign import capi unsafe "libLoam/c/ob-dirs.h value OB_PATH_CHAR"
 foreign import capi "libLoam/c/ob-dirs.h ob_get_standard_path"
     c_get_standard_path :: CInt -> IO C.ConstCString
 
-foreign import capi "ze-hs-plasma.h ze_hs_plasma_search_standard_path"
+foreign import capi "ze-hs-misc.h ze_hs_search_standard_path"
     c_search_standard_path
       :: CInt           -- ob_standard_dir dir
       -> C.ConstCString -- const char     *filename

@@ -38,7 +38,7 @@ import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Marshal
 -- import System.Loam.Retorts
 
-foreign import capi "ze-hs-plasma.h ze_hs_plasma_spew_overview_to_string"
+foreign import capi "ze-hs-misc.h ze_hs_spew_overview_to_string"
     c_spew_overview_to_string
       :: C.ConstPtr ()  -- bslaw  s
       -> Ptr Int64      -- int64 *len_ptr

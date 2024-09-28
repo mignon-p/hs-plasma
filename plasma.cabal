@@ -95,7 +95,7 @@ library
 
   c-sources:           cbits/ze-hs-cleanup.c
                      , cbits/ze-hs-log.c
-                     , cbits/ze-hs-plasma.c
+                     , cbits/ze-hs-misc.c
                      , cbits/ze-hs-retorts.c
                      , cbits/ze-hs-slawio.c
 
