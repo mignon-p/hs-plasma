@@ -89,7 +89,8 @@ library
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
 
-  c-sources:           cbits/ze-hs-log.c
+  c-sources:           cbits/ze-hs-cleanup.c
+                     , cbits/ze-hs-log.c
                      , cbits/ze-hs-plasma.c
                      , cbits/ze-hs-retorts.c
                      , cbits/ze-hs-slawio.c

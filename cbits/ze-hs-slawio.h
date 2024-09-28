@@ -1,6 +1,8 @@
 #ifndef ZE_HS_SLAWIO_H_9466ABB5
 #define ZE_HS_SLAWIO_H_9466ABB5
 
+#include "ze-hs-cleanup.h"
+
 #include "libLoam/c/ob-retorts.h"
 #include "libLoam/c/ob-types.h"
 #include "libPlasma/c/slaw-io.h"
@@ -15,14 +17,6 @@ typedef ob_retort (*ze_hs_read_func) (char    op,
 typedef ob_retort (*ze_hs_write_func) (char        op,
                                        const byte *buffer,
                                        size_t      size);
-
-typedef ob_retort (*ze_hs_cleanup_func) (void *v);
-
-typedef struct ze_hs_cleanup {
-    void                 *arg;
-    ze_hs_cleanup_func    func;
-    struct ze_hs_cleanup *next;
-} ze_hs_cleanup;
 
 typedef union {
     ze_hs_cleanup cu;
