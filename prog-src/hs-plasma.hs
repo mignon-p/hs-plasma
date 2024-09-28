@@ -20,8 +20,6 @@ import System.Loam.Time
 import System.Loam.Util
 import System.Loam.Version
 
--- import Comprehensive
-
 main :: IO ()
 main = do
   w <- x86Features
@@ -79,16 +77,6 @@ main = do
   let mySlaw = SlawList ["Hello, World!", 37619]
       mySlawTxt = spewOverview mySlaw
   putStrLn $ LT.unpack mySlawTxt
-
-{-
-  putStrLn ""
-  putStrLn "comprehensiveProtein"
-  putStrLn "===================="
-  putStrLn ""
-
-  let comprehensiveTxt = spewOverview comprehensiveProtein
-  putStrLn $ LT.unpack comprehensiveTxt
--}
 
   putStrLn ""
 
