@@ -223,3 +223,25 @@ main = do
   withSlawOutput devNull wyo $ \sos -> do
     putStrLn $ "YAML output stream:"
     putStrLn $ "  " ++ show sos
+
+  putStrLn ""
+
+  rs   <- newRandState "Jenny" $ Just (867-5309)
+  rf64 <- randFloat64 0.0 1.0 rs
+  ri32 <- randInt32   1   100 rs
+  rw32 <- randWord32 rs
+  rw64 <- randWord64 rs
+  nrml <- randNormal rs
+
+  forM_ [ ("rs",   show rs)
+        , ("rf64", show rf64)
+        , ("ri32", show ri32)
+        , ("rw32", show rw32)
+        , ("rw64", show rw64)
+        , ("nrml", show nrml)
+        ] $ \(name, str) -> do
+    putStrLn $ printf "%-20s = %s" (name :: String) str
+
+  rBytes <- randBytes 16 rs
+  let rBytesStr = concatMap (printf "%02x") $ B.unpack rBytes
+  putStrLn $ printf "%-20s = %s" ("rBytes" :: String) (rBytesStr :: String)
