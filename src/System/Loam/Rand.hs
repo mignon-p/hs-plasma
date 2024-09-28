@@ -54,7 +54,7 @@ foreign import capi unsafe "libLoam/c/ob-rand.h value OB_RAND_COMPLETELY_RANDOM_
 foreign import capi "libLoam/c/ob-rand.h ob_rand_allocate_state"
     c_rand_allocate_state :: Int32 -> IO (Ptr ())
 
-foreign import capi unsafe "libLoam/c/ob-rand.h &ob_rand_free_state"
+foreign import capi unsafe "ze-hs-plasma.h &ze_hs_rand_free_state"
     c_rand_free_state :: FunPtr (Ptr () -> IO ())
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_state_float64"
@@ -135,7 +135,6 @@ makeSeed (Just seedIn) =
      then 0x4ffe874
      else seed32
 
--- FIXME: finalizer might call ob_log()
 newRandState :: HasCallStack => T.Text -> Maybe Int -> IO RandState
 newRandState name seed = do
   ptr <- c_rand_allocate_state (makeSeed seed)

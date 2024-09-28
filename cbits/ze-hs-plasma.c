@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include "ze-hs-cleanup.h"
 #include "ze-hs-plasma.h"
 #include "libLoam/c/ob-hash.h"
 
@@ -88,4 +89,12 @@ unt64 ze_hs_jenkins_hash64 (const void *key,
     ret |= io2;
 
     return ret;
+}
+
+void ze_hs_rand_free_state (ob_rand_t *rand_state)
+{
+    /* Queue the finalizer to run later, because ob_rand_free_state()
+     * might call ob_log().  (At least on Windows, anyway.) */
+    ze_hs_submit_finalizer ((ze_hs_cleanup_func) ob_rand_free_state,
+                            rand_state);
 }
