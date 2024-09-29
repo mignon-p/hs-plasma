@@ -10,7 +10,6 @@ typedef struct ze_hs_cleanup {
 } ze_hs_cleanup;
 
 void ze_hs_check_cleanup (void);
-void ze_hs_submit_cleanup (ze_hs_cleanup *cu);
 void ze_hs_submit_finalizer (ze_hs_cleanup_func f, void *v);
 
 #endif /* ZE_HS_CLEANUP_H_DA8FD815 */

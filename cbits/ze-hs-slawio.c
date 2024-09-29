@@ -148,8 +148,6 @@ ob_retort ze_hs_close_input (ze_hs_input *inp)
     ob_retort  tort = OB_OK;
     slaw_input si   = inp->si;
 
-    ze_hs_check_cleanup();
-
     if (si) {
         tort    = slaw_input_close (si);
         inp->si = NULL;
@@ -158,10 +156,16 @@ ob_retort ze_hs_close_input (ze_hs_input *inp)
     return tort;
 }
 
+static void input_finalizer (void *v)
+{
+    ze_hs_input *inp = (ze_hs_input *) v;
+    ze_hs_close_input (inp);
+    free (inp);
+}
+
 void ze_hs_finalize_input (ze_hs_input *inp)
 {
-    inp->cu.func = (ze_hs_cleanup_func) ze_hs_close_input;
-    ze_hs_submit_cleanup (&inp->cu);
+    ze_hs_submit_finalizer (input_finalizer, inp);
 }
 
 ob_retort ze_hs_write_output (ze_hs_output *out, bslaw s)
@@ -183,8 +187,6 @@ ob_retort ze_hs_close_output (ze_hs_output *out)
     ob_retort   tort = OB_OK;
     slaw_output so   = out->so;
 
-    ze_hs_check_cleanup();
-
     if (so) {
         tort    = slaw_output_close (so);
         out->so = NULL;
@@ -193,8 +195,14 @@ ob_retort ze_hs_close_output (ze_hs_output *out)
     return tort;
 }
 
+static void output_finalizer (void *v)
+{
+    ze_hs_output *out = (ze_hs_output *) v;
+    ze_hs_close_output (out);
+    free (out);
+}
+
 void ze_hs_finalize_output (ze_hs_output *out)
 {
-    out->cu.func = (ze_hs_cleanup_func) ze_hs_close_output;
-    ze_hs_submit_cleanup (&out->cu);
+    ze_hs_submit_finalizer (output_finalizer, out);
 }

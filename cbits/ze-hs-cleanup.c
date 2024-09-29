@@ -19,25 +19,21 @@ void ze_hs_check_cleanup (void)
 
     while (cu) {
         ze_hs_cleanup *next = cu->next;
-        cu->func ((void *) cu);
+        cu->func (cu->arg);
         free (cu);
         cu = next;
     }
 }
 
-void ze_hs_submit_cleanup (ze_hs_cleanup *cu)
+static void ze_hs_submit_cleanup (ze_hs_cleanup *cu)
 {
-    if (cu->arg) {
-        ze_hs_cleanup *head;
+    ze_hs_cleanup *head;
 
-        do {
-            head = ob_atomic_pointer_ref (&cleanup_head);
-            ob_atomic_pointer_set (&cu->next, head);
-        } while (! ob_atomic_pointer_compare_and_swap (&cleanup_head,
-                                                       head, cu));
-    } else {
-        free (cu);
-    }
+    do {
+        head = ob_atomic_pointer_ref (&cleanup_head);
+        ob_atomic_pointer_set (&cu->next, head);
+    } while (! ob_atomic_pointer_compare_and_swap (&cleanup_head,
+                                                   head, cu));
 }
 
 void ze_hs_submit_finalizer (ze_hs_cleanup_func f, void *v)
