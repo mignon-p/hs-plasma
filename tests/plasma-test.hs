@@ -65,6 +65,7 @@ qcProps = testGroup "QuickCheck tests"
   [ QC.testProperty "round-trip IO (yaml)"     $ rtIoProp
   , QC.testProperty "round-trip (yaml string)" $ rtStrProp
   , QC.testProperty "randInt32 bounds"         $ randInt32Prop
+  , QC.testProperty "randFloat64 bounds"       $ randFloat64Prop
   ]
 
 unitTests :: TestTree
@@ -80,12 +81,22 @@ rtStrProp :: Slaw -> QC.Property
 rtStrProp s = Right [s] QC.=== roundTripYamlStr [s]
 
 randInt32Prop :: (Int, Int32, Int32) -> QC.Property
-randInt32Prop (seed, x, y) = QC.monadicIO $ do
+randInt32Prop = randProp randInt32
+
+randFloat64Prop :: (Int, Double, Double) -> QC.Property
+randFloat64Prop = randProp randFloat64
+
+randProp
+  :: (Ord a, Show a)
+  => (a -> a -> RandState -> IO a)
+  -> (Int, a, a)
+  -> QC.Property
+randProp randFunc (seed, x, y) = QC.monadicIO $ do
   let (lo, hi) = if (x < y) then (x, y) else (y, x)
   when (lo < hi) $ do
     rs <- QC.run $ newRandState "test" (Just seed)
     forM_ [1 .. (100 :: Int)] $ \_ -> do
-      n <- QC.run $ randInt32 lo hi rs
+      n <- QC.run $ randFunc lo hi rs
       let msg = concat [ "seed="
                        , show seed
                        , ", lo="
