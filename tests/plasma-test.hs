@@ -39,6 +39,7 @@ import Data.Slaw
 import Data.Slaw.IO.Yaml
 -- import Data.Slaw.Path
 -- import Data.Slaw.Semantic
+import System.Loam.Rand
 
 import Comprehensive
 import PlasmaTestUtil
@@ -63,6 +64,7 @@ qcProps :: TestTree
 qcProps = testGroup "QuickCheck tests"
   [ QC.testProperty "round-trip IO (yaml)"     $ rtIoProp
   , QC.testProperty "round-trip (yaml string)" $ rtStrProp
+  , QC.testProperty "randInt32 bounds"         $ randInt32Prop
   ]
 
 unitTests :: TestTree
@@ -76,6 +78,25 @@ rtIoProp s = QC.monadicIO $ do
 
 rtStrProp :: Slaw -> QC.Property
 rtStrProp s = Right [s] QC.=== roundTripYamlStr [s]
+
+randInt32Prop :: (Int, Int32, Int32) -> QC.Property
+randInt32Prop (seed, x, y) = QC.monadicIO $ do
+  let (lo, hi) = if (x < y) then (x, y) else (y, x)
+  when (lo < hi) $ do
+    rs <- QC.run $ newRandState "test" (Just seed)
+    forM_ [1 .. (100 :: Int)] $ \_ -> do
+      n <- QC.run $ randInt32 lo hi rs
+      let msg = concat [ "seed="
+                       , show seed
+                       , ", lo="
+                       , show lo
+                       , ", hi="
+                       , show hi
+                       , ", n="
+                       , show n
+                       ]
+      QC.assertWith (lo <= n) msg
+      QC.assertWith (n  < hi) msg
 
 testSlawIO :: Assertion
 testSlawIO = do
