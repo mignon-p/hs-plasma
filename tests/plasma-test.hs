@@ -68,6 +68,8 @@ qcProps = testGroup "QuickCheck tests"
   , QC.testProperty "round-trip (yaml string)" $ rtStrProp
   , QC.testProperty "randInt32 bounds"         $ randInt32Prop
   , QC.testProperty "randFloat64 bounds"       $ randFloat64Prop
+  , QC.testProperty "randWord32 repeatability" $ randRep32Prop
+  , QC.testProperty "randWord64 repeatability" $ randRep64Prop
   ]
 
 unitTests :: TestTree
@@ -99,10 +101,12 @@ randProp randFunc (seed, x, y) = QC.monadicIO $ do
   let (lo, hi) = if (x < y) then (x, y) else (y, x)
   when (lo < hi) $ do
     rs <- QC.run $ newRandState "test" (Just seed)
-    forM_ [1 .. (100 :: Int)] $ \_ -> do
+    forM_ [1 .. (100 :: Int)] $ \i -> do
       n <- QC.run $ randFunc lo hi rs
       let msg = concat [ "seed="
                        , show seed
+                       , ", i="
+                       , show i
                        , ", lo="
                        , show lo
                        , ", hi="
@@ -112,6 +116,34 @@ randProp randFunc (seed, x, y) = QC.monadicIO $ do
                        ]
       QC.assertWith (lo <= n) msg
       QC.assertWith (n  < hi) msg
+
+randRep32Prop :: Int -> QC.Property
+randRep32Prop = randRepeatableProp randWord32
+
+randRep64Prop :: Int -> QC.Property
+randRep64Prop = randRepeatableProp randWord64
+
+randRepeatableProp
+  :: (Eq a, Show a)
+  => (RandState -> IO a)
+  -> Int
+  -> QC.Property
+randRepeatableProp randFunc seed = QC.monadicIO $ do
+  rs1 <- QC.run $ newRandState "test1" (Just seed)
+  rs2 <- QC.run $ newRandState "test2" (Just seed)
+  forM_ [1 .. (100 :: Int)] $ \i -> do
+    n1 <- QC.run $ randFunc rs1
+    n2 <- QC.run $ randFunc rs2
+    let msg = concat [ "seed="
+                     , show seed
+                     , ", i="
+                     , show i
+                     , ", n1="
+                     , show n1
+                     , ", n2="
+                     , show n2
+                     ]
+    QC.assertWith (n1 == n2) msg
 
 testSlawIO :: Assertion
 testSlawIO = do
