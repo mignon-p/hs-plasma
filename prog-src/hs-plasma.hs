@@ -146,9 +146,11 @@ main = do
       h64   = hashWord64          s64
       h32   = hashWord32          s32
       h64x  = hash2xWord64        s64 (fromIntegral s32)
+      h32x  = hash2xWord32        s32 (fromIntegral s64)
 
   forM_ [ ("jh32",  jh32)
         , ("h32",   h32)
+        , ("h32x",  h32x)
         ] $ \(name, w32) -> do
     putStrLn $ printf "%-20s = 0x%08x" (name :: String) w32
 

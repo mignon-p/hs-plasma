@@ -39,6 +39,7 @@ import Data.Slaw
 import Data.Slaw.IO.Yaml
 -- import Data.Slaw.Path
 -- import Data.Slaw.Semantic
+import Data.Slaw.Util
 import System.Loam.Hash
 import System.Loam.Rand
 
@@ -73,6 +74,7 @@ unitTests :: TestTree
 unitTests = testGroup "HUnit tests"
   [ testCase "YAML slaw IO"               $ testSlawIO
   , testCase "cityHash64"                 $ testCityHash64
+  , testCase "hash functions"             $ testHash
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -168,3 +170,28 @@ testCityHash64 = do
   0xd7ec31d8a099ef3c @=? cityHash64 "tag:yaml.org,2002:seq"
   0x6e17023b1ba5ddbf @=? cityHash64 "tag:yaml.org,2002:str"
   0x2e7062203251384f @=? cityHash64 "tag:yaml.org,2002:string"
+
+testHash :: Assertion
+testHash = do
+  let myBs  = toByteString $ toUtf8 ("ρρρ your boat" :: String)
+      s32   = 0xC0DE_BABE
+      s64   = 0xDEFACED_BAD_FACADE
+      h64   = hashWord64          s64
+      h32   = hashWord32          s32
+      h64x  = hash2xWord64        s64 (fromIntegral s32)
+      h32x  = hash2xWord32        s32 (fromIntegral s64)
+      jh32  = jenkinsHash32       s32      myBs
+      jh64  = jenkinsHash64       s64      myBs
+      c64   = cityHash64                   myBs
+      c64s  = cityHash64withSeed  s64      myBs
+      c64s2 = cityHash64withSeeds s64 h64x myBs
+
+  0x427ed0732b08bd3a @=? h64
+  0xeaf30d40         @=? h32
+  0x038b51a0cd958308 @=? h64x
+  0x0fbac4b7         @=? h32x
+  0x126691af         @=? jh32
+  0x947092ff8e397ad3 @=? jh64
+  0x833870d4da30a39e @=? c64
+  0xcfda188d7ad9ec2c @=? c64s
+  0xf2cf4e6d03f7137a @=? c64s2
