@@ -39,6 +39,7 @@ import Foreign.Ptr
 import Foreign.Storable
 import GHC.Stack
 
+import Data.Slaw
 import Data.Slaw.Internal
 import System.Loam.Hash
 -- import qualified System.Loam.Internal.ConstPtr as C
@@ -162,24 +163,67 @@ newRandState name seed = do
                      , rsPtr  = fptr
                      }
 
+checkFinite
+  :: (RealFloat a, Show a)
+  => String
+  -> CallStack
+  -> String
+  -> a
+  -> IO()
+checkFinite func cs argName x = do
+  when (isNaN x || isInfinite x) $ do
+    let msg = concat [ func
+                     , ": "
+                     , show argName
+                     , " is "
+                     , show x
+                     , ", but expected a finite number"
+                     ]
+    throwIO $ def { peType      = EtInvalidArgument
+                  , peRetort    = Just OB_INVALID_ARGUMENT
+                  , peMessage   = msg
+                  , peCallstack = Just cs
+                  }
+
+checkBounds :: (Ord a, Show a) => String -> CallStack -> a -> a -> IO ()
+checkBounds func cs lo hi = do
+  when (lo >= hi) $ do
+    let msg = concat [ func
+                     , ": lower bound "
+                     , show lo
+                     , " was not less than upper bound "
+                     , show hi
+                     ]
+    throwIO $ def { peType      = EtInvalidArgument
+                  , peRetort    = Just OB_INVALID_ARGUMENT
+                  , peMessage   = msg
+                  , peCallstack = Just cs
+                  }
+
 -- | Returns a uniformly distributed 'Double' @x@,
 -- where @low <= x < high@
 randFloat64
-  :: Double    -- ^ low
+  :: HasCallStack
+  => Double    -- ^ low
   -> Double    -- ^ high
   -> RandState -- ^ random number generator
   -> IO Double
 randFloat64 lo hi rs = do
+  checkFinite "randFloat64" callStack "lo" lo
+  checkFinite "randFloat64" callStack "hi" hi
+  checkBounds "randFloat64" callStack lo hi
   withForeignPtr (rsPtr rs) $ c_rand_state_float64 lo hi
 
 -- | Returns a uniformly distributed 'Int32' @x@,
 -- where @low <= x < high@
 randInt32
-  :: Int32     -- ^ low
+  :: HasCallStack
+  => Int32     -- ^ low
   -> Int32     -- ^ high
   -> RandState -- ^ random number generator
   -> IO Int32
 randInt32 lo hi rs = do
+  checkBounds "randInt32" callStack lo hi
   withForeignPtr (rsPtr rs) $ c_rand_state_int32 lo hi
 
 -- | Produces all unsigned 32-bit integers with equal probability.
