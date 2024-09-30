@@ -8,8 +8,9 @@ Portability : GHC
 -}
 
 module System.Loam.Rand
-  ( trulyRandom
-    --
+  ( -- * Unpredictable numbers
+    trulyRandom
+    -- * Pseudo-random numbers (Mersenne Twister)
   , RandState     -- opaque
   , newRandState
   , randFloat64
@@ -75,6 +76,7 @@ foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_normal_state"
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_random_bytes_state"
     c_random_bytes_state :: Ptr () -> Ptr Word8 -> CSize -> IO ()
 
+-- | Encapsulates the state of a random number generator.
 data RandState = RandState
   { rsName :: !T.Text
   , rsSeed :: !(Maybe Int)
@@ -104,7 +106,12 @@ instance Show RandState where
                Nothing -> "random"
                Just x  -> show x
 
-trulyRandom :: HasCallStack => Int -> IO B.ByteString
+-- | Produces true random numbers from a platform-specific
+-- source, such as @\/dev\/urandom@.
+trulyRandom
+  :: HasCallStack
+  => Int             -- ^ number of bytes to generate
+  -> IO B.ByteString
 trulyRandom nBytes
   | nBytes < 0 = do
       let msg = "trulyRandom: nBytes " ++ show nBytes ++ " < 0"
@@ -135,7 +142,14 @@ makeSeed (Just seedIn) =
      then 0x4ffe874
      else seed32
 
-newRandState :: HasCallStack => T.Text -> Maybe Int -> IO RandState
+-- | Allocates a new random number generator.  If a seed is provided,
+-- it is seeded deterministically.  If the seed is 'Nothing', a
+-- random seed is generated using 'trulyRandom'.
+newRandState
+  :: HasCallStack
+  => T.Text    -- ^ name of this RandState (only used in 'Show' instance)
+  -> Maybe Int -- ^ seed
+  -> IO RandState
 newRandState name seed = do
   checkCleanup
   ptr <- c_rand_allocate_state (makeSeed seed)
@@ -148,22 +162,38 @@ newRandState name seed = do
                      , rsPtr  = fptr
                      }
 
-randFloat64 :: Double -> Double -> RandState -> IO Double
+-- | Returns a uniformly distributed 'Double' @x@,
+-- where @low <= x < high@
+randFloat64
+  :: Double    -- ^ low
+  -> Double    -- ^ high
+  -> RandState -- ^ random number generator
+  -> IO Double
 randFloat64 lo hi rs = do
   withForeignPtr (rsPtr rs) $ c_rand_state_float64 lo hi
 
-randInt32 :: Int32 -> Int32 -> RandState -> IO Int32
+-- | Returns a uniformly distributed 'Int32' @x@,
+-- where @low <= x < high@
+randInt32
+  :: Int32     -- ^ low
+  -> Int32     -- ^ high
+  -> RandState -- ^ random number generator
+  -> IO Int32
 randInt32 lo hi rs = do
   withForeignPtr (rsPtr rs) $ c_rand_state_int32 lo hi
 
+-- | Produces all unsigned 32-bit integers with equal probability.
 randWord32 :: RandState -> IO Word32
 randWord32 rs = do
   withForeignPtr (rsPtr rs) c_rand_state_unt32
 
+-- | Produces all unsigned 64-bit integers with equal probability.
 randWord64 :: RandState -> IO Word64
 randWord64 rs = do
   withForeignPtr (rsPtr rs) c_rand_state_unt64
 
+-- | Generate a standard normal variate; the algorithm generates two
+-- variates at once.
 randNormal :: RandState -> IO (Double, Double)
 randNormal rs = do
   withForeignPtr (rsPtr rs) $ \ptr -> do
@@ -173,7 +203,12 @@ randNormal rs = do
       ret2 <- peek sndPtr
       return (ret1, ret2)
 
-randBytes :: HasCallStack => Int -> RandState -> IO B.ByteString
+-- | Generate random bytes.
+randBytes
+  :: HasCallStack
+  => Int             -- ^ number of bytes to generate
+  -> RandState       -- ^ random number generator
+  -> IO B.ByteString
 randBytes nBytes rs
   | nBytes < 0 = do
       let msg = "randBytes: nBytes " ++ show nBytes ++ " < 0"
