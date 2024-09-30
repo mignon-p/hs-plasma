@@ -39,6 +39,7 @@ import Data.Slaw
 import Data.Slaw.IO.Yaml
 -- import Data.Slaw.Path
 -- import Data.Slaw.Semantic
+import System.Loam.Hash
 import System.Loam.Rand
 
 import Comprehensive
@@ -70,7 +71,8 @@ qcProps = testGroup "QuickCheck tests"
 
 unitTests :: TestTree
 unitTests = testGroup "HUnit tests"
-  [ testCase "slaw-io"                    $ testSlawIO
+  [ testCase "YAML slaw IO"               $ testSlawIO
+  , testCase "cityHash64"                 $ testCityHash64
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -133,3 +135,36 @@ testSlawIO = do
 
   forM_ testFiles $ \fn -> do
     checkSlawRead2 (testDir ++ fn ++ ".yaml") (testDir ++ fn ++ ".slaw")
+
+testCityHash64 :: Assertion
+testCityHash64 = do
+  0x095934e7f55b39ba @=? cityHash64 "!"
+  0x3f8d4bbcea903711 @=? cityHash64 "descrips"
+  0x16a60446ba1f5119 @=? cityHash64 "ingests"
+  0xf5cb44dedc2dd3d4 @=? cityHash64 "rude_data"
+  0x32b9c7ec210c1a04 @=? cityHash64 "tag:oblong.com,2009:slaw/array"
+  0xa71e08969f161fb7 @=? cityHash64 "tag:oblong.com,2009:slaw/badutf8"
+  0x2195c54d76476112 @=? cityHash64 "tag:oblong.com,2009:slaw/complex"
+  0xf7b4a5d51438b792 @=? cityHash64 "tag:oblong.com,2009:slaw/cons"
+  0x479db3b52758c108 @=? cityHash64 "tag:oblong.com,2009:slaw/f32"
+  0xcd876fe462578c4f @=? cityHash64 "tag:oblong.com,2009:slaw/f64"
+  0xa8024548a1ca2305 @=? cityHash64 "tag:oblong.com,2009:slaw/i16"
+  0xa489c4c31b630c5a @=? cityHash64 "tag:oblong.com,2009:slaw/i32"
+  0xc940065b925d3a15 @=? cityHash64 "tag:oblong.com,2009:slaw/i64"
+  0xa266b0470338e398 @=? cityHash64 "tag:oblong.com,2009:slaw/i8"
+  0x5b6eb1410fe7bd04 @=? cityHash64 "tag:oblong.com,2009:slaw/multivector"
+  0xd70c69f2b823fb40 @=? cityHash64 "tag:oblong.com,2009:slaw/nonstd"
+  0xdf8a6b35e9acd602 @=? cityHash64 "tag:oblong.com,2009:slaw/protein"
+  0x2cdc5570e3b4f4c0 @=? cityHash64 "tag:oblong.com,2009:slaw/u16"
+  0xa1d53e6f55db8ac8 @=? cityHash64 "tag:oblong.com,2009:slaw/u32"
+  0x2c67cbce14289d59 @=? cityHash64 "tag:oblong.com,2009:slaw/u64"
+  0x9cdaf818f6756e1a @=? cityHash64 "tag:oblong.com,2009:slaw/u8"
+  0x64fdc5a5ca6cd3c6 @=? cityHash64 "tag:oblong.com,2009:slaw/vector"
+  0x5cafcc4621b348fa @=? cityHash64 "tag:yaml.org,2002:binary"
+  0xb6492c832b82f189 @=? cityHash64 "tag:yaml.org,2002:bool"
+  0xb17678ff2f939aa2 @=? cityHash64 "tag:yaml.org,2002:map"
+  0x9e34c34e89b60f38 @=? cityHash64 "tag:yaml.org,2002:null"
+  0x42443404839a2550 @=? cityHash64 "tag:yaml.org,2002:omap"
+  0xd7ec31d8a099ef3c @=? cityHash64 "tag:yaml.org,2002:seq"
+  0x6e17023b1ba5ddbf @=? cityHash64 "tag:yaml.org,2002:str"
+  0x2e7062203251384f @=? cityHash64 "tag:yaml.org,2002:string"
