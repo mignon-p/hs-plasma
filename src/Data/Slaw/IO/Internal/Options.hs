@@ -13,6 +13,9 @@ module Data.Slaw.IO.Internal.Options
   ( StrOrInt(..)
   , WriteYamlOptions(..)
   , PoolCreateOptions(..)
+    --
+  , kType
+  , kMmap
   ) where
 
 import Control.DeepSeq
@@ -155,7 +158,16 @@ writeYamlOptions =
 --
 
 data PoolCreateOptions = PoolCreateOptions
-  { -- | This enables a newer pool format, which supports a number
+  { -- | The pool type.  Theoretically, different types could
+    -- exist, but in practice, only the “mmap” type exists.
+    --
+    -- [key]: @type@
+    --
+    -- [type]: string
+    --
+    -- [default]: @mmap@
+    pcoType         :: Maybe T.Text
+    -- | This enables a newer pool format, which supports a number
     -- of new features, including being able to resize the pool
     -- after it is created.  You should almost always have this
     -- enabled.  The only reason to ever disable it is if you want
@@ -167,7 +179,7 @@ data PoolCreateOptions = PoolCreateOptions
     -- [type]: boolean
     --
     -- [default]: 'True'
-    pcoResizable    :: Maybe Bool
+  , pcoResizable    :: Maybe Bool
     -- | This means that the pool will reside in a single file,
     -- rather than creating an entire directory for the pool.
     --
@@ -317,7 +329,8 @@ data PoolCreateOptions = PoolCreateOptions
 
 instance Default PoolCreateOptions where
   def = PoolCreateOptions
-        { pcoResizable    = Nothing
+        { pcoType         = Nothing
+        , pcoResizable    = Nothing
         , pcoSingleFile   = Nothing
         , pcoSize         = Nothing
         , pcoTocCapacity  = Nothing
@@ -343,7 +356,8 @@ instance ToSlaw PoolCreateOptions where
 
 poolCreateOptions :: Options PoolCreateOptions
 poolCreateOptions =
-  [ FIELD("resizable",      pcoResizable   )
+  [ FIELD(kType,            pcoType        )
+  , FIELD("resizable",      pcoResizable   )
   , FIELD("single-file",    pcoSingleFile  )
   , NFELD("size",           pcoSize        , NumUnt64)
   , NFELD("toc-capacity",   pcoTocCapacity , NumUnt64)
@@ -357,3 +371,11 @@ poolCreateOptions =
   , FIELD("owner",          pcoOwner       )
   , FIELD("group",          pcoGroup       )
   ]
+
+-- | The string “type”.
+kType :: T.Text
+kType = "type"
+
+-- | The string “mmap”.
+kMmap :: T.Text
+kMmap = "mmap"
