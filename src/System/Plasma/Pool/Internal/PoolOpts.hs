@@ -58,13 +58,13 @@ huge = size2opts c_pool_size_huge
 typeAndOptions :: ToSlaw a => a -> (T.Text, Slaw)
 typeAndOptions opts = (typ, s)
   where
-    o     = coerceToMap $ š opts
-    typ   = (o !? kType) ?> kMmap
-    sz    = o !? kSize
-    pairs = getPairs o
-    s     = case (sz :: Maybe Slaw) of
-              Just _  -> o
-              Nothing -> SlawMap $ (š kSize, š c_pool_size_small) : pairs
+    origPairs = getPairs $ coerceToMap $ š opts
+    dfltPairs = [ (š kType, š kMmap)
+                , (š kSize, š c_pool_size_small)
+                ]
+    pairs     = origPairs `preferLeftCI` dfltPairs
+    s         = SlawMap pairs
+    typ       = (s !? kType) ?> kMmap
 
 getPairs :: Slaw -> [(Slaw, Slaw)]
 getPairs (SlawMap pairs) = pairs
