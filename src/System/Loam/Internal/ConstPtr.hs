@@ -19,10 +19,13 @@ module System.Loam.Internal.ConstPtr
   , castConstPtr
   , useAsConstCString
   , useAsConstCStringLen
+  , useSBSAsConstCString
+  , useSBSAsConstCStringLen
   ) where
 
 import Data.Bifunctor
 import qualified Data.ByteString          as B
+import qualified Data.ByteString.Short    as SBS
 import qualified Data.ByteString.Unsafe   as B
 import Foreign.C.Types (CChar(..))
 import Foreign.Ptr
@@ -61,3 +64,16 @@ useAsConstCStringLen
   -> IO a
 useAsConstCStringLen bs f =
   B.unsafeUseAsCStringLen bs (f . first ConstPtr)
+
+useSBSAsConstCString
+  :: SBS.ShortByteString
+  -> (ConstCString -> IO a)
+  -> IO a
+useSBSAsConstCString sbs f = SBS.useAsCString sbs (f . ConstPtr)
+
+useSBSAsConstCStringLen
+  :: SBS.ShortByteString
+  -> (ConstCStringLen -> IO a)
+  -> IO a
+useSBSAsConstCStringLen sbs f =
+  SBS.useAsCStringLen sbs (f . first ConstPtr)
