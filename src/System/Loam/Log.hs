@@ -181,10 +181,7 @@ instance Default LogLevel where
   def = lvInfo
 
 instance Show LogLevel where
-  show lev = "{LogLevel: " ++ name ++ " <" ++ ptr ++ ">}"
-    where
-      name = showEscapedStr $ T.unpack $ llName lev
-      ptr  = fmtForeignPtr             $ llPtr  lev
+  show lev = fmtForeignObj "LogLevel" (llName lev) [] (llPtr lev)
 
 lev2Int :: LogLevel -> Int
 lev2Int = fPtrToIntegral . llPtr

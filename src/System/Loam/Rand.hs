@@ -40,7 +40,7 @@ import Foreign.Storable
 import GHC.Stack
 
 import Data.Slaw
-import Data.Slaw.Internal
+-- import Data.Slaw.Internal
 import System.Loam.Hash
 -- import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Misc
@@ -92,17 +92,9 @@ instance Hashable RandState where
   salt `hashWithSalt` rs = salt `hash2xInt` fPtrToIntegral (rsPtr rs)
 
 instance Show RandState where
-  show rs  = concat [ "{RandState: "
-                    , name
-                    , " seed="
-                    , seed
-                    , " <"
-                    , ptr
-                    , ">}"
-                    ]
+  show rs = fmtForeignObj "RandState" (rsName rs) [info] (rsPtr rs)
     where
-      name = showEscapedStr $ T.unpack $ rsName rs
-      ptr  = fmtForeignPtr             $ rsPtr  rs
+      info = "seed=" ++ seed
       seed = case rsSeed rs of
                Nothing -> "random"
                Just x  -> show x

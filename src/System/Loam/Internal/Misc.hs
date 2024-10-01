@@ -13,18 +13,22 @@ module System.Loam.Internal.Misc
   , fPtrToIntegral
   , fmtPtr
   , fmtForeignPtr
+  , fmtForeignObj
     --
   , checkCleanup
   ) where
 
 import Data.Bits
 import Data.List
+import qualified Data.Text                as T
 import Data.Word
 import Foreign.ForeignPtr
 import Foreign.ForeignPtr.Unsafe
 import Foreign.Ptr
 import Numeric.Natural
 import Text.Printf
+
+import Data.Slaw.Internal
 
 foreign import capi safe "ze-hs-cleanup.h ze_hs_check_cleanup"
     checkCleanup :: IO ()
@@ -53,3 +57,16 @@ fmtPtr = natToDashedHex . ptrToIntegral
 
 fmtForeignPtr :: ForeignPtr a -> String
 fmtForeignPtr = fmtPtr . unsafeForeignPtrToPtr
+
+fmtForeignObj
+  :: String       -- type name
+  -> T.Text       -- object name
+  -> [String]     -- other information (optional)
+  -> ForeignPtr a -- address of foreign object
+  -> String
+fmtForeignObj typeName objName info fPtr = intercalate " " parts
+  where
+    parts    = [typePart, namePart] ++ info ++ [ptrPart]
+    typePart = "{" ++ typeName ++ ":"
+    namePart = showEscapedStr $ T.unpack objName
+    ptrPart  = "<" ++ fmtForeignPtr fPtr ++ ">}"
