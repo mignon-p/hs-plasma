@@ -61,6 +61,7 @@ library
                      , System.Loam.Time
                      , System.Loam.Util
                      , System.Loam.Version
+                     , System.Plasma.Pool
 
   -- Modules included in this library but not exported.
   other-modules:       Data.Slaw.Extras.Internal.SpewParser
