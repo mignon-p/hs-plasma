@@ -16,20 +16,30 @@ module System.Plasma.Pool.Internal.PoolName
   , fromPoolName
   , (+/)
   , isPoolNameValid
+    --
+  , ParsedPoolName
+  , PoolLocation
+  , PoolAuthority
+  , parsePoolName
+  , makePoolName
   ) where
 
+import Control.Applicative
 import Control.DeepSeq
-import qualified Data.ByteString          as B
-import qualified Data.ByteString.Short    as SBS
+import qualified Data.Attoparsec.ByteString.Char8 as A
+import qualified Data.ByteString                  as B
+import qualified Data.ByteString.Char8            as B8
+import qualified Data.ByteString.Short            as SBS
 import Data.Char
 import Data.Hashable
 import Data.Int
 import Data.String
 import Data.Word
+import GHC.Generics (Generic)
 import System.IO.Unsafe
 
 import Data.Slaw.Util
-import qualified System.Loam.Internal.ConstPtr as C
+import qualified System.Loam.Internal.ConstPtr    as C
 
 infixr 5 +/
 
@@ -103,3 +113,118 @@ isPoolNameValid (PoolName sbs) = unsafePerformIO $ do
   C.useSBSAsConstCString sbs $ \namePtr -> do
     tort <- c_pool_validate_name namePtr
     return $ tort >= 0
+
+data ParsedPoolName = ParsedPoolName
+  { poolLocation :: Maybe PoolLocation
+  , poolPath     :: !PoolName
+  } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+
+data PoolLocation = PoolLocation
+  { poolScheme    :: !PoolName
+  , poolAuthority :: Maybe PoolAuthority
+  } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+
+data PoolAuthority = PoolAuthority
+  { poolHost :: !PoolName
+  , poolPort :: Maybe Int
+  } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+
+parsePoolName :: PoolName -> ParsedPoolName
+parsePoolName (PoolName sbs) =
+  case A.parseOnly (poolNameP <* A.endOfInput) (SBS.fromShort sbs) of
+    Left  _   -> ParsedPoolName Nothing (PoolName sbs)
+    Right ppn -> ppn
+
+makePoolName :: ParsedPoolName -> PoolName
+makePoolName ppn =
+  mconcat $ locParts (poolLocation ppn) ++ [poolPath ppn]
+
+locParts :: Maybe PoolLocation -> [PoolName]
+locParts Nothing = []
+locParts (Just loc) =
+  [poolScheme loc, ":"] ++ authParts (poolAuthority loc)
+
+authParts :: Maybe PoolAuthority -> [PoolName]
+authParts Nothing = []
+authParts (Just auth) =
+  ["//", poolHost auth] ++ portParts (poolPort auth) ++ ["/"]
+
+portParts :: Maybe Int -> [PoolName]
+portParts Nothing = []
+portParts (Just port) = [":", fromString (show port)]
+
+isAsciiAlnum :: Char -> Bool
+isAsciiAlnum c = isAsciiLower c || isAsciiUpper c || isDigit c
+
+isSchemeChar :: Char -> Bool
+isSchemeChar '+' = True
+isSchemeChar '.' = True
+isSchemeChar '-' = True
+isSchemeChar c   = isAsciiAlnum c
+
+isHostChar :: Char -> Bool
+isHostChar '.' = True
+isHostChar '-' = True
+isHostChar '_' = True
+isHostChar c   = isAsciiAlnum c
+
+isV6Char :: Char -> Bool
+isV6Char '[' = False
+isV6Char ']' = False
+isV6Char _   = True
+
+bs2pn :: B.ByteString -> PoolName
+bs2pn = PoolName . SBS.toShort
+
+takeWhile2 :: (Char -> Bool) -> A.Parser B.ByteString
+takeWhile2 predicate = do
+  c    <- A.satisfy    predicate
+  rest <- A.takeWhile1 predicate
+  return $ c `B8.cons` rest
+
+poolNameP :: A.Parser ParsedPoolName
+poolNameP = do
+  -- Scheme must be at least two characters, because a Windows
+  -- drive letter could look like a one-character scheme.
+  scheme <- takeWhile2 isSchemeChar
+  A.char ':'
+  -- The "local" scheme never has an authority.
+  auth <- if B8.map toLower scheme == "local"
+          then return   Nothing
+          else optional authorityP
+  path <- A.option B.empty (A.char '/' >> A.takeByteString)
+  let loc = PoolLocation
+            { poolScheme    = bs2pn scheme
+            , poolAuthority = auth
+            }
+      ppn = ParsedPoolName
+            { poolLocation = Just loc
+            , poolPath     = bs2pn path
+            }
+  return ppn
+
+authorityP :: A.Parser PoolAuthority
+authorityP = do
+  A.string "//"
+  host <- hostnameP <|> ipv6P
+  port <- optional portP
+  let auth = PoolAuthority
+             { poolHost = bs2pn host
+             , poolPort = port
+             }
+  return auth
+
+-- matches a DNS name or an IPv4 address
+hostnameP :: A.Parser B.ByteString
+hostnameP = A.takeWhile1 isHostChar
+
+-- matches an IPv6 address (really, any string in square brackets)
+ipv6P :: A.Parser B.ByteString
+ipv6P = do
+  A.char '['
+  v6 <- A.takeWhile isV6Char
+  A.char ']'
+  return $ mconcat ["[", v6, "]"]
+
+portP :: A.Parser Int
+portP = A.char ':' >> A.decimal
