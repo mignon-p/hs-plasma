@@ -73,6 +73,7 @@ library
                      , System.Loam.Retorts.Internal.Descriptions
                      , System.Loam.Retorts.Internal.IoeRetorts
                      , System.Loam.Retorts.Internal.RetortUtil
+                     , System.Plasma.Pool.Internal.PoolName
                      , System.Plasma.Pool.Internal.PoolOpts
 
   -- LANGUAGE extensions enabled for all modules in this package.
