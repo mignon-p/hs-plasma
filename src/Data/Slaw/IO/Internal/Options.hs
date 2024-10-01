@@ -15,6 +15,7 @@ module Data.Slaw.IO.Internal.Options
   , PoolCreateOptions(..)
     --
   , kType
+  , kSize
   , kMmap
   ) where
 
@@ -359,7 +360,7 @@ poolCreateOptions =
   [ FIELD(kType,            pcoType        )
   , FIELD("resizable",      pcoResizable   )
   , FIELD("single-file",    pcoSingleFile  )
-  , NFELD("size",           pcoSize        , NumUnt64)
+  , NFELD(kSize,            pcoSize        , NumUnt64)
   , NFELD("toc-capacity",   pcoTocCapacity , NumUnt64)
   , FIELD("stop-when-full", pcoStopWhenFull)
   , FIELD("frozen",         pcoFrozen      )
@@ -375,6 +376,10 @@ poolCreateOptions =
 -- | The string “type”.
 kType :: T.Text
 kType = "type"
+
+-- | The string “size”.
+kSize :: T.Text
+kSize = "size"
 
 -- | The string “mmap”.
 kMmap :: T.Text
