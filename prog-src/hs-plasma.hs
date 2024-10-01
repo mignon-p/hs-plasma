@@ -19,6 +19,7 @@ import System.Loam.Rand
 import System.Loam.Time
 import System.Loam.Util
 import System.Loam.Version
+import System.Plasma.Pool
 
 main :: IO ()
 main = do
@@ -235,3 +236,22 @@ main = do
   rBytes <- randBytes 16 rs
   let rBytesStr = concatMap (printf "%02x") $ B.unpack rBytes
   putStrLn $ printf "%-20s = %s" ("rBytes" :: String) (rBytesStr :: String)
+
+  putStrLn ""
+
+  let poolNames = [ "?bad?"
+                  , "hello"
+                  , "Fully-Automated Luxury Gay Space Communism"
+                  , "badness$"
+                  , "LPT7.foo"
+                  , "pigs-in "
+                  , " the-final-frontier"
+                  , "my_pool"
+                  , "pipeline/gripes"
+                  , "tcp://localhost/my_pool"
+                  , "tcp://mango:10000/my_pool"
+                  ]
+
+  forM_ poolNames $ \name -> do
+    let isOk = isPoolNameValid name
+    putStrLn $ printf "%-5s %s" (show isOk) (show name)

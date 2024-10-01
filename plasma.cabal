@@ -130,6 +130,8 @@ library
   extra-libraries:     Plasma
                      , Loam
                      , yaml
+                     , ssl
+                     , crypto
 
   -- extra-libraries-static: Loam
   --                       , Plasma
