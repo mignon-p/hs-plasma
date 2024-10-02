@@ -13,13 +13,17 @@ module System.Plasma.Pool
   , toPoolName
   , fromPoolName
   , (+/)
-  , isPoolNameValid
     -- ** Parsing pool names
-  , ParsedPoolName
+  , ParsedPoolUri
   , PoolLocation
   , PoolAuthority
-  , parsePoolName
-  , makePoolName
+  , parsePoolUri
+  , makePoolUri
+    -- ** Checking validity of pool names
+  , isPoolUriValid
+  , isParsedPoolUriValid
+  , isPoolPathValid
+  , isPoolHostValid
     -- * Standard pool sizes
   , small
   , medium

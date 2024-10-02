@@ -15,13 +15,17 @@ module System.Plasma.Pool.Internal.PoolName
   , toPoolName
   , fromPoolName
   , (+/)
-  , isPoolNameValid
     --
-  , ParsedPoolName
+  , isPoolPathValid
+  , isPoolHostValid
+  , isPoolUriValid
+    --
+  , ParsedPoolUri
   , PoolLocation
   , PoolAuthority
-  , parsePoolName
-  , makePoolName
+  , parsePoolUri
+  , makePoolUri
+  , isParsedPoolUriValid
   ) where
 
 import Control.Applicative
@@ -108,13 +112,13 @@ noLeadSlash name@(PoolName sbs)
       PoolName . SBS.toShort $ B.dropWhile isSlash $ SBS.fromShort sbs
   | otherwise = name
 
-isPoolNameValid :: PoolName -> Bool
-isPoolNameValid (PoolName sbs) = unsafePerformIO $ do
+isPoolPathValid :: PoolName -> Bool
+isPoolPathValid (PoolName sbs) = unsafePerformIO $ do
   C.useSBSAsConstCString sbs $ \namePtr -> do
     tort <- c_pool_validate_name namePtr
     return $ tort >= 0
 
-data ParsedPoolName = ParsedPoolName
+data ParsedPoolUri = ParsedPoolUri
   { poolLocation :: Maybe PoolLocation
   , poolPath     :: !PoolName
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
@@ -129,14 +133,14 @@ data PoolAuthority = PoolAuthority
   , poolPort :: Maybe Int
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
-parsePoolName :: PoolName -> ParsedPoolName
-parsePoolName (PoolName sbs) =
+parsePoolUri :: PoolName -> ParsedPoolUri
+parsePoolUri (PoolName sbs) =
   case A.parseOnly (poolNameP <* A.endOfInput) (SBS.fromShort sbs) of
-    Left  _   -> ParsedPoolName Nothing (PoolName sbs)
+    Left  _   -> ParsedPoolUri Nothing (PoolName sbs)
     Right ppn -> ppn
 
-makePoolName :: ParsedPoolName -> PoolName
-makePoolName ppn =
+makePoolUri :: ParsedPoolUri -> PoolName
+makePoolUri ppn =
   mconcat $ locParts (poolLocation ppn) ++ [poolPath ppn]
 
 locParts :: Maybe PoolLocation -> [PoolName]
@@ -164,9 +168,12 @@ isSchemeChar c   = isAsciiAlnum c
 
 isHostChar :: Char -> Bool
 isHostChar '.' = True
-isHostChar '-' = True
-isHostChar '_' = True
-isHostChar c   = isAsciiAlnum c
+isHostChar c   = isHostComponentChar c
+
+isHostComponentChar :: Char -> Bool
+isHostComponentChar '-' = True
+isHostComponentChar '_' = True
+isHostComponentChar c   = isAsciiAlnum c
 
 isV6Char :: Char -> Bool
 isV6Char '[' = False
@@ -182,7 +189,7 @@ takeWhile2 predicate = do
   rest <- A.takeWhile1 predicate
   return $ c `B8.cons` rest
 
-poolNameP :: A.Parser ParsedPoolName
+poolNameP :: A.Parser ParsedPoolUri
 poolNameP = do
   -- Scheme must be at least two characters, because a Windows
   -- drive letter could look like a one-character scheme.
@@ -197,7 +204,7 @@ poolNameP = do
             { poolScheme    = bs2pn scheme
             , poolAuthority = auth
             }
-      ppn = ParsedPoolName
+      ppn = ParsedPoolUri
             { poolLocation = Just loc
             , poolPath     = bs2pn path
             }
@@ -228,3 +235,40 @@ ipv6P = do
 
 portP :: A.Parser Int
 portP = A.char ':' >> A.decimal
+
+isParsedPoolUriValid :: ParsedPoolUri -> Bool
+isParsedPoolUriValid ppu = hostOk && isPoolPathValid (poolPath ppu)
+  where
+    hostOk = case poolLocation ppu of
+               Just (PoolLocation _ (Just (PoolAuthority h _))) ->
+                 isPoolHostValid h
+               _ -> True
+
+isPoolHostValid :: PoolName -> Bool
+isPoolHostValid (PoolName sbs) =
+  case A.parseOnly (validHostP <* A.endOfInput) (SBS.fromShort sbs) of
+    Left  _ -> False
+    Right _ -> True
+
+isPoolUriValid :: PoolName -> Bool
+isPoolUriValid = isParsedPoolUriValid . parsePoolUri
+
+validHostP :: A.Parser ()
+validHostP = validHostnameP <|> validIPv6P
+
+validHostnameP :: A.Parser ()
+validHostnameP = do
+  A.takeWhile1 isHostComponentChar `A.sepBy1` A.char '.'
+  return ()
+
+validIPv6P :: A.Parser ()
+validIPv6P = do
+  A.char '['
+  A.takeWhile isHexDigit `A.sepBy1` A.char ':'
+  optional $ do
+    -- An IPv6 "zone index" for non-global addresses
+    A.char '%'
+    -- Not exactly clear what characters are legal in a "zone index"?
+    A.takeWhile1 isHostChar
+  A.char ']'
+  return ()

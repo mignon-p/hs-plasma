@@ -250,8 +250,16 @@ main = do
                   , "pipeline/gripes"
                   , "tcp://localhost/my_pool"
                   , "tcp://mango:10000/my_pool"
+                  , "tcpo://foo-bar.example.com/some/pool"
+                  , "tcps://18.85.8.220:1234/a/pool"
+                  , "tcp://[::1]/a pool"
+                  , "tcp://[fe80::dead:beef]/foo"
+                  , "tcp://[fe80::dead:beef]/"
+                  , "tcp://[fe80::dead:beef]"
+                  , "tcp://[fe80::1ff:fe23:4567:890a%eth2]/pool"
                   ]
 
   forM_ poolNames $ \name -> do
-    let isOk = isPoolNameValid name
-    putStrLn $ printf "%-5s %s" (show isOk) (show name)
+    let pathOk = show $ isPoolPathValid name
+        uriOk  = show $ isPoolUriValid  name
+    putStrLn $ printf "%-5s | %-5s | %s" pathOk uriOk (show name)
