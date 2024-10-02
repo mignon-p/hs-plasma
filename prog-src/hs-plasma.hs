@@ -257,6 +257,11 @@ main = do
                   , "tcp://[fe80::dead:beef]/"
                   , "tcp://[fe80::dead:beef]"
                   , "tcp://[fe80::1ff:fe23:4567:890a%eth2]/pool"
+                  , "tcp://chives.la923.oblong.net:1234/"
+                  , "tcp://[2001:db8::dead:beef:bad:f00d]:5678/C++"
+                  , "tcp://[192.0.2.123]/foo"
+                  , "tcp://[2001:db8::baad%en0:1234]/bar"
+                  , "tcp://[blech]/stuff"
                   ]
 
   forM_ poolNames $ \name -> do

@@ -237,12 +237,20 @@ portP :: A.Parser Int
 portP = A.char ':' >> A.decimal
 
 isParsedPoolUriValid :: ParsedPoolUri -> Bool
-isParsedPoolUriValid ppu = hostOk && isPoolPathValid (poolPath ppu)
+isParsedPoolUriValid ppu = hostOk && pathOk
   where
-    hostOk = case poolLocation ppu of
-               Just (PoolLocation _ (Just (PoolAuthority h _))) ->
-                 isPoolHostValid h
-               _ -> True
+    (hasAuth, hostOk) =
+      case poolLocation ppu of
+        Just (PoolLocation _ (Just (PoolAuthority h _))) ->
+          (True, isPoolHostValid h)
+        _ -> (False, True)
+    path      = poolPath ppu
+    pathEmpty = SBS.null $ unPoolName path
+    -- If the URI has an authority, allow the path to be empty.
+    -- For example, "tcp://chives.la923.oblong.net:1234/" or
+    -- "tcp://example.com".  This does not name a pool, but it
+    -- is a valid URI for use with pool_list_ex(), for example.
+    pathOk    = (hasAuth && pathEmpty) || isPoolPathValid path
 
 isPoolHostValid :: PoolName -> Bool
 isPoolHostValid (PoolName sbs) =
