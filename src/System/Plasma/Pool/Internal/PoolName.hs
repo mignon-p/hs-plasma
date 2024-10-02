@@ -41,6 +41,7 @@ import Data.String
 import Data.Word
 import GHC.Generics (Generic)
 import System.IO.Unsafe
+import Text.Printf
 
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr    as C
@@ -77,6 +78,9 @@ instance TextClass PoolName where
   fromText     = fromString . toString
   fromLazyText = fromString . toString
   fromUtf8     = fromLazyByteString
+
+instance PrintfArg PoolName where
+  formatArg = formatString . toString
 
 clampString :: String -> [Word8]
 clampString = map (clampByte . ord)
