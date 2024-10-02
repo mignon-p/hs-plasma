@@ -47,16 +47,16 @@ import System.Loam.Internal.Misc
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 
-foreign import capi safe "libLoam/c/ob-rand.h ob_truly_random"
+foreign import capi safe "ze-hs-rand.h ze_hs_truly_random"
     c_truly_random :: Ptr () -> CSize -> IO Int64
 
 foreign import capi unsafe "libLoam/c/ob-rand.h value OB_RAND_COMPLETELY_RANDOM_PLEASE"
     c_completely_random :: Int32
 
-foreign import capi safe "libLoam/c/ob-rand.h ob_rand_allocate_state"
+foreign import capi safe "ze-hs-rand.h ze_hs_rand_allocate_state"
     c_rand_allocate_state :: Int32 -> IO (Ptr ())
 
-foreign import capi unsafe "ze-hs-misc.h &ze_hs_rand_free_state"
+foreign import capi unsafe "ze-hs-rand.h &ze_hs_rand_free_state"
     c_rand_free_state :: FunPtr (Ptr () -> IO ())
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_state_float64"
@@ -144,7 +144,6 @@ newRandState
   -> Maybe Int -- ^ seed
   -> IO RandState
 newRandState name seed = do
-  checkCleanup
   ptr <- c_rand_allocate_state (makeSeed seed)
   when (ptr == nullPtr) $ do
     let addn = Just "newRandState"

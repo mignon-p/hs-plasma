@@ -20,6 +20,4 @@ OB_HOT unt64 ze_hs_jenkins_hash64 (const void *key,
                                    size_t      length,
                                    unt64       seed);
 
-void ze_hs_rand_free_state (ob_rand_t *rand_state);
-
 #endif /* ZE_HS_MISC_H_EF95EBA1 */
