@@ -43,6 +43,7 @@ import GHC.Generics (Generic)
 import System.IO.Unsafe
 import Text.Printf
 
+import Data.Slaw.Internal
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr    as C
 
@@ -200,7 +201,7 @@ poolNameP = do
   scheme <- takeWhile2 isSchemeChar
   A.char ':'
   -- The "local" scheme never has an authority.
-  auth <- if B8.map toLower scheme == "local"
+  auth <- if B.map lcAscii8 scheme == "local"
           then return   Nothing
           else optional authorityP
   path <- A.option B.empty (A.char '/' >> A.takeByteString)
