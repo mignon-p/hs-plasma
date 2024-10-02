@@ -13,6 +13,7 @@ module Data.Slaw.IO.Internal.Options
   ( StrOrInt(..)
   , WriteYamlOptions(..)
   , PoolCreateOptions(..)
+  , ContextOptions(..)
     --
   , kType
   , kSize
@@ -22,6 +23,7 @@ module Data.Slaw.IO.Internal.Options
 import Control.DeepSeq
 import Data.Bifunctor
 -- import qualified Data.ByteString.Short    as SBS
+import qualified Data.ByteString.Lazy     as L
 import Data.Default.Class
 import Data.Hashable
 -- import Data.Int
@@ -41,6 +43,9 @@ import Data.Slaw.Util
 
 #define NFELD(qzName, qzField, qzPref) optN qzName qzField \
   (\qzRec qzVal -> qzRec { qzField = qzVal }) qzPref
+
+#define CFELD(qzName, qzField, qzTo, qzFrom) opt1 qzName qzField \
+  (\qzRec qzVal -> qzRec { qzField = qzVal }) qzTo qzFrom
 
 --
 
@@ -384,3 +389,31 @@ kSize = "size"
 -- | The string “mmap”.
 kMmap :: T.Text
 kMmap = "mmap"
+
+--
+
+data ContextOptions = ContextOptions
+  { coCertificate :: Maybe L.ByteString
+  , coPrivateKey  :: Maybe L.ByteString
+  } deriving (Eq, Ord, Show, Read, Generic, NFData, Hashable)
+
+instance Default ContextOptions where
+  def = ContextOptions
+        { coCertificate = Nothing
+        , coPrivateKey  = Nothing
+        }
+
+instance Nameable ContextOptions where
+  typeName _ = "ContextOptions"
+
+instance FromSlaw ContextOptions where
+  fromSlaw = Right . recordFromMap contextOptions
+
+instance ToSlaw ContextOptions where
+  toSlaw = recordToMap contextOptions
+
+contextOptions :: Options ContextOptions
+contextOptions =
+  [ CFELD("certificate", coCertificate, SlawString, ŝm)
+  , CFELD("private-key", coPrivateKey,  SlawString, ŝm)
+  ]
