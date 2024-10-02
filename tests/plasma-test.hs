@@ -42,6 +42,7 @@ import Data.Slaw.IO.Yaml
 import Data.Slaw.Util
 import System.Loam.Hash
 import System.Loam.Rand
+import System.Plasma.Pool
 
 import Comprehensive
 import PlasmaTestUtil
@@ -77,6 +78,7 @@ unitTests = testGroup "HUnit tests"
   [ testCase "YAML slaw IO"               $ testSlawIO
   , testCase "cityHash64"                 $ testCityHash64
   , testCase "hash functions"             $ testHash
+  , testCase "pool name validation"       $ testPoolName
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -227,3 +229,33 @@ testHash = do
   0x833870d4da30a39e @=? c64
   0xcfda188d7ad9ec2c @=? c64s
   0xf2cf4e6d03f7137a @=? c64s2
+
+testPoolName :: Assertion
+testPoolName = do
+  let both x = (isPoolPathValid x, isPoolUriValid x)
+
+  (False, False) @=? both "?bad?"
+  (True , True ) @=? both "hello"
+  (True , True ) @=? both "Fully-Automated Luxury Gay Space Communism"
+  (False, False) @=? both "badness$"
+  (False, False) @=? both "LPT7.foo"
+  (False, False) @=? both "pigs-in "
+  (True , True ) @=? both " the-final-frontier"
+  (True , True ) @=? both "my_pool"
+  (True , True ) @=? both "pipeline/gripes"
+  (False, True ) @=? both "tcp://localhost/my_pool"
+  (False, True ) @=? both "tcp://mango:10000/my_pool"
+  (False, True ) @=? both "tcpo://foo-bar.example.com/some/pool"
+  (False, True ) @=? both "tcps://18.85.8.220:1234/a/pool"
+  (False, True ) @=? both "tcp://[::1]/a pool"
+  (False, True ) @=? both "tcp://[fe80::dead:beef]/foo"
+  (False, True ) @=? both "tcp://[fe80::dead:beef]/"
+  (False, True ) @=? both "tcp://[fe80::dead:beef]"
+  (False, True ) @=? both "tcp://[fe80::1ff:fe23:4567:890a%eth2]/pool"
+  (False, True ) @=? both "tcp://chives.la923.oblong.net:1234/"
+  (False, True ) @=? both "tcp://[2001:db8::dead:beef:bad:f00d]:5678/C++"
+  (False, False) @=? both "tcp://[192.0.2.123]/foo"
+  (False, False) @=? both "tcp://[2001:db8::baad%en0:1234]/bar"
+  (False, False) @=? both "tcp://[blech]/stuff"
+  (False, False) @=? both "local://example.com/foo"
+  (True , True ) @=? both "local:/var/some/where"
