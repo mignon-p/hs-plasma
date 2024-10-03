@@ -1,0 +1,30 @@
+#include "ze-hs-cleanup.h"
+#include "ze-hs-ctx.h"
+
+pool_context ze_hs_new_context (bslaw opts, ob_retort *tort_out)
+{
+    pool_context ctx = NULL;
+
+    ze_hs_check_cleanup ();
+
+    ob_retort tort = pool_new_context (&ctx);
+    if (tort < OB_OK) {
+        *tort_out = tort;
+        return NULL;
+    }
+
+    tort = pool_ctx_set_options (ctx, opts);
+    if (tort < OB_OK) {
+        pool_free_context (ctx);
+        *tort_out = tort;
+        return NULL;
+    }
+
+    *tort_out = tort;
+    return ctx;
+}
+
+void ze_hs_free_context (pool_context ctx)
+{
+    ze_hs_submit_finalizer ((ze_hs_cleanup_func) pool_free_context, ctx);
+}
