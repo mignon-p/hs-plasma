@@ -45,6 +45,7 @@ import System.Loam.Rand
 import System.Plasma.Pool
 
 import Comprehensive
+import OtherInstances ()
 import PlasmaTestUtil
 import SlawInstances ()
 
@@ -71,6 +72,8 @@ qcProps = testGroup "QuickCheck tests"
   , QC.testProperty "randFloat64 bounds"       $ randFloat64Prop
   , QC.testProperty "randWord32 repeatability" $ randRep32Prop
   , QC.testProperty "randWord64 repeatability" $ randRep64Prop
+  , QC.testProperty "ParsedPoolUri round-trip" $ poolUriProp
+  , QC.testProperty "ParsedPoolUri validity"   $ uriValidityProp
   ]
 
 unitTests :: TestTree
@@ -146,6 +149,12 @@ randRepeatableProp randFunc seed = QC.monadicIO $ do
                      , show n2
                      ]
     QC.assertWith (n1 == n2) msg
+
+poolUriProp :: ParsedPoolUri -> QC.Property
+poolUriProp ppu = ppu QC.=== parsePoolUri (makePoolUri ppu)
+
+uriValidityProp :: ParsedPoolUri -> QC.Property
+uriValidityProp ppu = True QC.=== isParsedPoolUriValid ppu
 
 testSlawIO :: Assertion
 testSlawIO = do
