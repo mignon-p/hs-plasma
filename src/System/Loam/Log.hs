@@ -470,7 +470,8 @@ fmtThread = do
   return $ pfxChr : (tidStr' ++ capSfx)
 
 makeLogLevel :: HasCallStack => T.Text -> IO LogLevel
-makeLogLevel name = do
+makeLogLevel name0 = do
+  name <- nonEmptyName "LogLevel" name0 callStack
   ptr  <- c_log_level_alloc
   when (ptr == nullPtr) $ do
     let addn = Just "makeLogLevel"
@@ -479,7 +480,8 @@ makeLogLevel name = do
   let lvl = LogLevel { llName = name
                      , llPtr  = fptr
                      }
-  levelSetPrefix lvl $ name <> ": "
+  when (not $ T.null name0) $ do
+    levelSetPrefix lvl $ name0 <> ": "
   return lvl
 
 levelSetPrefix :: LogLevel -> T.Text -> IO ()

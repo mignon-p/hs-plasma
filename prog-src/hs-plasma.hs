@@ -268,3 +268,11 @@ main = do
     let pathOk = show $ isPoolPathValid name
         uriOk  = show $ isPoolUriValid  name
     putStrLn $ printf "%-5s | %-5s | %s" pathOk uriOk (show name)
+
+  putStrLn ""
+
+  emptyRand <- newRandState "" Nothing
+  emptyLog  <- makeLogLevel ""
+
+  putStrLn $ show emptyRand
+  putStrLn $ show emptyLog

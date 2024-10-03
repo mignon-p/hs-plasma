@@ -143,8 +143,9 @@ newRandState
   => T.Text    -- ^ name of this RandState (only used in 'Show' instance)
   -> Maybe Int -- ^ seed
   -> IO RandState
-newRandState name seed = do
-  ptr <- c_rand_allocate_state (makeSeed seed)
+newRandState name0 seed = do
+  name <- nonEmptyName "RandState" name0 callStack
+  ptr  <- c_rand_allocate_state (makeSeed seed)
   when (ptr == nullPtr) $ do
     let addn = Just "newRandState"
     throwRetortCS EtOther addn OB_NO_MEM Nothing callStack
