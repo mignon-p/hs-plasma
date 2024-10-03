@@ -101,7 +101,11 @@ genName genComp sep totalLen = do
   return $ toPoolName $ intercalate sep comps
 
 genScheme :: Gen PoolName
-genScheme = toPoolName <$> genSimpleName (2, 15) schemeChars
+genScheme = do
+  scheme <- toPoolName <$> genSimpleName (2, 15) schemeChars
+  if scheme == kLocal
+    then genScheme -- try again, to avoid "local" scheme
+    else return scheme
 
 genSimpleName :: (Int, Int) -> String -> Gen String
 genSimpleName (lo, hi) chars = do
