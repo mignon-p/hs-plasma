@@ -159,4 +159,10 @@ instance Arbitrary PoolLocation where
   arbitrary = PoolLocation <$> genScheme <*> arbitrary
 
 instance Arbitrary ParsedPoolUri where
-  arbitrary = ParsedPoolUri <$> arbitrary <*> genPath
+  arbitrary = frequency
+    [ (15, ParsedPoolUri <$> arbitrary <*> genPath)
+    , (1,  mkLocalUri <$> genPath)
+    ]
+    where
+      mkLocalUri path = ParsedPoolUri (Just localLoc) ("/" <> path)
+      localLoc        = PoolLocation kLocal Nothing
