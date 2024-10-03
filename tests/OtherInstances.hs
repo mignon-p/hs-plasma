@@ -10,12 +10,22 @@ Portability : GHC
 module OtherInstances where
 
 import Control.Monad
+import Data.Char
 import Data.List
+import qualified Data.Set as S
 import Test.QuickCheck
 import Text.Printf
 
 -- import Data.Slaw.Util
 import System.Plasma.Pool
+
+forbiddenNames :: String
+forbiddenNames = map toLower $
+  "CON PRN AUX NUL COM1 COM2 COM3 COM4 COM5 COM6 COM7 COM8 " ++
+  "COM9 LPT1 LPT2 LPT3 LPT4 LPT5 LPT6 LPT7 LPT8 LPT9 lost+found"
+
+forbiddenNameSet :: S.Set String
+forbiddenNameSet = S.fromList $ words forbiddenNames
 
 nameMidChars :: String
 nameMidChars = " !#$%&'()+,-.0123456789;=@ABCDEFGHIJKLMNOPQRSTUVWXYZ" ++
@@ -63,15 +73,23 @@ genComponent vc n
 clamp :: (Int, Int) -> Int -> Int
 clamp (lo, hi) x = hi `min` (x `max` lo)
 
+genPathComponent :: Int -> Gen String
+genPathComponent n = do
+  str <- genComponent vNameChars n
+  let pfx = map toLower $ takeWhile (/= '.') str
+  case pfx `S.member` forbiddenNameSet of
+    False -> return str
+    True  -> genPathComponent n
+
 genPath :: Gen PoolName
-genPath = genName vNameChars "/" 100
+genPath = genName genPathComponent "/" 100
 
 genName
-  :: ValidChars
+  :: (Int -> Gen String)
   -> String
   -> Int
   -> Gen PoolName
-genName vc sep totalLen = do
+genName genComp sep totalLen = do
   sz <- getSize
   let maxComps = clamp (1, 10) sz
   nComps <- chooseInt (1, maxComps)
@@ -79,7 +97,7 @@ genName vc sep totalLen = do
       maxLen = clamp (1, budget) sz
   comps <- replicateM nComps $ do
     len <- chooseInt (1, maxLen)
-    genComponent vc len
+    genComp len
   return $ toPoolName $ intercalate sep comps
 
 genScheme :: Gen PoolName
@@ -93,7 +111,7 @@ genSimpleName (lo, hi) chars = do
   replicateM len $ elements chars
 
 genDNS :: Gen PoolName
-genDNS = genName vHostChars "." 63
+genDNS = genName (genComponent vHostChars) "." 63
 
 genIPv4 :: Gen PoolName
 genIPv4 = do
