@@ -204,7 +204,9 @@ poolNameP = do
   auth <- if B.map lcAscii8 scheme == "local"
           then return   Nothing
           else optional authorityP
-  path <- A.option B.empty (A.char '/' >> A.takeByteString)
+  path <- case auth of
+            Nothing -> A.takeByteString
+            Just _  -> A.option B.empty (A.char '/' >> A.takeByteString)
   let loc = PoolLocation
             { poolScheme    = bs2pn scheme
             , poolAuthority = auth
