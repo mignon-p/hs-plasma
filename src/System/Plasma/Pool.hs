@@ -24,6 +24,11 @@ module System.Plasma.Pool
   , isParsedPoolUriValid
   , isPoolPathValid
   , isPoolHostValid
+    -- ** Constants for “scheme”
+  , kLocal
+  , kTcp
+  , kTcpo
+  , kTcps
     -- * Standard pool sizes
   , small
   , medium

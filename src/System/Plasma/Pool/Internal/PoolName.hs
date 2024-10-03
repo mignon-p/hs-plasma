@@ -26,6 +26,11 @@ module System.Plasma.Pool.Internal.PoolName
   , parsePoolUri
   , makePoolUri
   , isParsedPoolUriValid
+    --
+  , kLocal
+  , kTcp
+  , kTcpo
+  , kTcps
   ) where
 
 import Control.Applicative
@@ -43,7 +48,7 @@ import GHC.Generics (Generic)
 import System.IO.Unsafe
 import Text.Printf
 
-import Data.Slaw.Internal
+-- import Data.Slaw.Internal
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr    as C
 
@@ -194,20 +199,22 @@ takeWhile2 predicate = do
   rest <- A.takeWhile1 predicate
   return $ c `B8.cons` rest
 
+{-
 ciBsEq :: B.ByteString -> B.ByteString -> Bool
 ciBsEq bs1 bs2 =
   if B.length bs1 == B.length bs2
   then B.map lcAscii8 bs1 == B.map lcAscii8 bs2
   else False
+-}
 
-isLocal :: ByteStringClass a => a -> Bool
-isLocal = ciBsEq "local" . toByteString
+isLocal :: PoolName -> Bool
+isLocal = (== kLocal)
 
 poolNameP :: A.Parser ParsedPoolUri
 poolNameP = do
   -- Scheme must be at least two characters, because a Windows
   -- drive letter could look like a one-character scheme.
-  scheme <- takeWhile2 isSchemeChar
+  scheme <- bs2pn <$> takeWhile2 isSchemeChar
   A.char ':'
   -- The "local" scheme never has an authority.
   auth <- if isLocal scheme
@@ -217,7 +224,7 @@ poolNameP = do
             Nothing -> A.takeByteString
             Just _  -> A.option B.empty (A.char '/' >> A.takeByteString)
   let loc = PoolLocation
-            { poolScheme    = bs2pn scheme
+            { poolScheme    = scheme
             , poolAuthority = auth
             }
       ppn = ParsedPoolUri
@@ -308,3 +315,9 @@ validIPv6P = do
     A.takeWhile1 isHostChar
   A.char ']'
   return ()
+
+kLocal, kTcp, kTcpo, kTcps :: PoolName
+kLocal = "local"
+kTcp   = "tcp"
+kTcpo  = "tcpo"
+kTcps  = "tcps"
