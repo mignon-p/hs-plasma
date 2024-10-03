@@ -197,6 +197,7 @@ test-suite test
   main-is:             plasma-test.hs
 
   other-modules:       Comprehensive
+                     , OtherInstances
                      , PlasmaTestUtil
                      , SlawInstances
 

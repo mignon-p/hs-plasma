@@ -20,9 +20,9 @@ module System.Plasma.Pool.Internal.PoolName
   , isPoolHostValid
   , isPoolUriValid
     --
-  , ParsedPoolUri
-  , PoolLocation
-  , PoolAuthority
+  , ParsedPoolUri(..)
+  , PoolLocation(..)
+  , PoolAuthority(..)
   , parsePoolUri
   , makePoolUri
   , isParsedPoolUriValid

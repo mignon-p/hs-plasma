@@ -14,9 +14,9 @@ module System.Plasma.Pool
   , fromPoolName
   , (+/)
     -- ** Parsing pool names
-  , ParsedPoolUri
-  , PoolLocation
-  , PoolAuthority
+  , ParsedPoolUri(..)
+  , PoolLocation(..)
+  , PoolAuthority(..)
   , parsePoolUri
   , makePoolUri
     -- ** Checking validity of pool names
