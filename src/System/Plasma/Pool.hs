@@ -29,12 +29,19 @@ module System.Plasma.Pool
   , kTcp
   , kTcpo
   , kTcps
-    -- * Standard pool sizes
+    -- * Pool contexts
+  , ContextOptions(..)
+    -- * Pool creation options
+  , PoolCreateOptions(..)
+  , StrOrInt(..)
+  , kMmap
+    -- ** Standard pool sizes
   , small
   , medium
   , large
   , huge
   ) where
 
+import Data.Slaw.IO.Internal.Options
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
