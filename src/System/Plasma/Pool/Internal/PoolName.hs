@@ -194,6 +194,15 @@ takeWhile2 predicate = do
   rest <- A.takeWhile1 predicate
   return $ c `B8.cons` rest
 
+ciBsEq :: B.ByteString -> B.ByteString -> Bool
+ciBsEq bs1 bs2 =
+  if B.length bs1 == B.length bs2
+  then B.map lcAscii8 bs1 == B.map lcAscii8 bs2
+  else False
+
+isLocal :: ByteStringClass a => a -> Bool
+isLocal = ciBsEq "local" . toByteString
+
 poolNameP :: A.Parser ParsedPoolUri
 poolNameP = do
   -- Scheme must be at least two characters, because a Windows
@@ -201,7 +210,7 @@ poolNameP = do
   scheme <- takeWhile2 isSchemeChar
   A.char ':'
   -- The "local" scheme never has an authority.
-  auth <- if B.map lcAscii8 scheme == "local"
+  auth <- if isLocal scheme
           then return   Nothing
           else optional authorityP
   path <- case auth of
@@ -246,18 +255,30 @@ portP = A.char ':' >> A.decimal
 isParsedPoolUriValid :: ParsedPoolUri -> Bool
 isParsedPoolUriValid ppu = hostOk && pathOk
   where
+    loc = poolLocation ppu
     (hasAuth, hostOk) =
-      case poolLocation ppu of
+      case loc of
         Just (PoolLocation _ (Just (PoolAuthority h _))) ->
           (True, isPoolHostValid h)
         _ -> (False, True)
+    scheme =
+      case loc of
+        Just (PoolLocation sch _) -> sch
+        _                         -> mempty
+    uri       = makePoolUri ppu
     path      = poolPath ppu
     pathEmpty = SBS.null $ unPoolName path
     -- If the URI has an authority, allow the path to be empty.
     -- For example, "tcp://chives.la923.oblong.net:1234/" or
     -- "tcp://example.com".  This does not name a pool, but it
     -- is a valid URI for use with pool_list_ex(), for example.
-    pathOk    = (hasAuth && pathEmpty) || isPoolPathValid path
+    pathOk1   = (hasAuth && pathEmpty) || isPoolPathValid path
+    -- For "local:" URIs, there must be a path, and there must
+    -- not be an authority.  In order to validate the pool path,
+    -- we must include the "local:" part when we call the C
+    -- function (unlike all other pool URIs).
+    pathOk2   = not hasAuth && not pathEmpty && isPoolPathValid uri
+    pathOk    = if isLocal scheme then pathOk2 else pathOk1
 
 isPoolHostValid :: PoolName -> Bool
 isPoolHostValid (PoolName sbs) =
