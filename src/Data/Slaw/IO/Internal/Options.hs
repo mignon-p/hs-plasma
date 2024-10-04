@@ -38,6 +38,13 @@ import Data.Slaw
 import Data.Slaw.Internal
 import Data.Slaw.Util
 
+-- Note: the "qzName" argument can consist of multiple names,
+-- separated by a pipe character, such as "tag_numbers|tag-numbers".
+-- When converting from a record to a map, all of those keys are
+-- set to the same value.  When converting from a map to a record
+-- the keys are checked in order.  (Therefore, the preferred name
+-- should be listed first.)
+
 #define FIELD(qzName, qzField) opt qzName qzField \
   (\qzRec qzVal -> qzRec { qzField = qzVal })
 
@@ -153,12 +160,12 @@ instance ToSlaw WriteYamlOptions where
 
 writeYamlOptions :: Options WriteYamlOptions
 writeYamlOptions =
-  [ FIELD("tag_numbers",        wyoTagNumbers      )
-  , FIELD("directives",         wyoDirectives      )
-  , FIELD("ordered_maps",       wyoOrderedMaps     )
-  , FIELD("comment",            wyoComment         )
-  , NFELD("max-array-elements", wyoMaxArrayElements, NumInt64)
-  , FIELD("auto-flush",         wyoAutoFlush       )
+  [ FIELD("tag_numbers|tag-numbers",   wyoTagNumbers      )
+  , FIELD("directives",                wyoDirectives      )
+  , FIELD("ordered_maps|ordered-maps", wyoOrderedMaps     )
+  , FIELD("comment",                   wyoComment         )
+  , NFELD("max-array-elements",        wyoMaxArrayElements, NumInt64)
+  , FIELD("auto-flush",                wyoAutoFlush       )
   ]
 
 --
@@ -362,20 +369,20 @@ instance ToSlaw PoolCreateOptions where
 
 poolCreateOptions :: Options PoolCreateOptions
 poolCreateOptions =
-  [ FIELD(kType,            pcoType        )
-  , FIELD("resizable",      pcoResizable   )
-  , FIELD("single-file",    pcoSingleFile  )
-  , NFELD(kSize,            pcoSize        , NumUnt64)
-  , NFELD("toc-capacity",   pcoTocCapacity , NumUnt64)
-  , FIELD("stop-when-full", pcoStopWhenFull)
-  , FIELD("frozen",         pcoFrozen      )
-  , FIELD("auto-dispose",   pcoAutoDispose )
-  , FIELD("sync",           pcoSync        )
-  , FIELD("flock",          pcoFlock       )
-  , FIELD("checksum",       pcoChecksum    )
-  , FIELD("mode",           pcoMode        )
-  , FIELD("owner",          pcoOwner       )
-  , FIELD("group",          pcoGroup       )
+  [ FIELD(kType,                         pcoType        )
+  , FIELD("resizable",                   pcoResizable   )
+  , FIELD("single-file",                 pcoSingleFile  )
+  , NFELD(kSize,                         pcoSize        , NumUnt64)
+  , NFELD("toc-capacity|index-capacity", pcoTocCapacity , NumUnt64)
+  , FIELD("stop-when-full",              pcoStopWhenFull)
+  , FIELD("frozen",                      pcoFrozen      )
+  , FIELD("auto-dispose",                pcoAutoDispose )
+  , FIELD("sync",                        pcoSync        )
+  , FIELD("flock",                       pcoFlock       )
+  , FIELD("checksum",                    pcoChecksum    )
+  , FIELD("mode",                        pcoMode        )
+  , FIELD("owner",                       pcoOwner       )
+  , FIELD("group",                       pcoGroup       )
   ]
 
 -- | The string “type”.
