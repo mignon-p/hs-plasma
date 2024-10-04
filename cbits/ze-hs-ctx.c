@@ -1,5 +1,6 @@
 #include "ze-hs-cleanup.h"
 #include "ze-hs-ctx.h"
+#include "ze-hs-util.h"
 
 pool_context ze_hs_new_context (bslaw opts, ob_retort *tort_out)
 {
@@ -29,12 +30,6 @@ void ze_hs_free_context (pool_context ctx)
     ze_hs_submit_finalizer ((ze_hs_cleanup_func) pool_free_context, ctx);
 }
 
-static inline slaw ret_slaw_len (slaw s, int64 *len)
-{
-    *len = slaw_len (s);
-    return s;
-}
-
 slaw ze_hs_ctx_get_options (pool_context ctx, int64 *len_out)
 {
     slaw ret = NULL;
@@ -46,5 +41,5 @@ slaw ze_hs_ctx_get_options (pool_context ctx, int64 *len_out)
         ret = slaw_map_empty ();
     }
 
-    return ret_slaw_len (ret, len_out);
+    return ze_hs_ret_slaw_len (ret, len_out);
 }

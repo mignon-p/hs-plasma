@@ -1,12 +1,7 @@
 #include <stdarg.h>
 #include "ze-hs-misc.h"
+#include "ze-hs-util.h"
 #include "libLoam/c/ob-hash.h"
-
-static inline slaw ret_slaw_len (slaw s, int64 *len)
-{
-    *len = slaw_len (s);
-    return s;
-}
 
 static ob_retort my_callback (const char *file, va_list vargies)
 {
@@ -62,13 +57,13 @@ slaw ze_hs_search_standard_path (ob_standard_dir dir,
  done:
     slabu_free (sb);
     *retort_ptr = tort;
-    return ret_slaw_len (ret, len_ptr);
+    return ze_hs_ret_slaw_len (ret, len_ptr);
 }
 
 slaw ze_hs_spew_overview_to_string (bslaw s, int64 *len_ptr)
 {
     slaw ret = slaw_spew_overview_to_string (s);
-    return ret_slaw_len (ret, len_ptr);
+    return ze_hs_ret_slaw_len (ret, len_ptr);
 }
 
 unt64 ze_hs_jenkins_hash64 (const void *key,
