@@ -10,13 +10,14 @@ Portability : GHC
 module OtherInstances where
 
 import Control.Monad
+import qualified Data.ByteString.Lazy     as L
 import Data.Char
 import Data.List
-import qualified Data.Set as S
+import qualified Data.Set                 as S
 import Test.QuickCheck
 import Text.Printf
 
--- import Data.Slaw.Util
+import Data.Slaw.Util
 import System.Plasma.Pool
 
 forbiddenNames :: String
@@ -166,3 +167,14 @@ instance Arbitrary ParsedPoolUri where
     where
       mkLocalUri path = ParsedPoolUri (Just localLoc) ("/" <> path)
       localLoc        = PoolLocation kLocal Nothing
+
+--
+
+genMaybeLBS :: Gen (Maybe L.LazyByteString)
+genMaybeLBS = frequency
+  [ (5, (Just . toUtf8) <$> genSimpleName (0, 15) nameMidChars)
+  , (1, return Nothing)
+  ]
+
+instance Arbitrary ContextOptions where
+  arbitrary = ContextOptions <$> genMaybeLBS <*> genMaybeLBS

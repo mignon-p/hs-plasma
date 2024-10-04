@@ -20,6 +20,7 @@ module PlasmaTestUtil
   , checkSlawRead
   , checkSlawRead2
   , roundTripYamlStr
+  , roundTripCtxOpts
   ) where
 
 import Control.Monad
@@ -39,6 +40,7 @@ import qualified Test.QuickCheck.Monadic  as QC
 import Data.Slaw
 import Data.Slaw.IO
 import Data.Slaw.IO.Yaml
+import System.Plasma.Pool
 
 type AssEqFunc m = forall a. (HasCallStack, Eq a, Show a) => String -> a -> a -> m ()
 type IoFunc    m = forall a. IO a -> m a
@@ -109,3 +111,8 @@ checkSlawRead2 fnActual fnExpected =
 roundTripYamlStr :: [Slaw] -> Either PlasmaException [Slaw]
 roundTripYamlStr ss =
   slawToYamlString ss () >>= (`slawFromYamlString` ())
+
+roundTripCtxOpts :: ContextOptions -> ContextOptions
+roundTripCtxOpts opts = unsafePerformIO $ do
+  ctx <- newContext "" opts
+  getContextOptions ctx

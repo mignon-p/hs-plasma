@@ -273,6 +273,20 @@ main = do
 
   emptyRand <- newRandState "" Nothing
   emptyLog  <- makeLogLevel ""
+  emptyCtx  <- newContext   "" ()
 
   putStrLn $ show emptyRand
   putStrLn $ show emptyLog
+  putStrLn $ show emptyCtx
+
+  putStrLn ""
+
+  let ctxOpts = def { coCertificate = Just "foo"
+                    , coPrivateKey  = Just "bar"
+                    }
+
+  myCtx    <- newContext "My Context" ctxOpts
+  ctxOpts' <- getContextOptions myCtx
+
+  putStrLn $ show myCtx
+  putStrLn $ show (ctxOpts' :: ContextOptions)

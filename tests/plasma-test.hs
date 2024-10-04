@@ -74,6 +74,7 @@ qcProps = testGroup "QuickCheck tests"
   , QC.testProperty "randWord64 repeatability" $ randRep64Prop
   , QC.testProperty "ParsedPoolUri round-trip" $ poolUriProp
   , QC.testProperty "ParsedPoolUri validity"   $ uriValidityProp
+  , QC.testProperty "ContextOptions"           $ ctxOptsProp
   ]
 
 unitTests :: TestTree
@@ -155,6 +156,9 @@ poolUriProp ppu = ppu QC.=== parsePoolUri (makePoolUri ppu)
 
 uriValidityProp :: ParsedPoolUri -> QC.Property
 uriValidityProp ppu = True QC.=== isParsedPoolUriValid ppu
+
+ctxOptsProp :: ContextOptions -> QC.Property
+ctxOptsProp opts = opts QC.=== roundTripCtxOpts opts
 
 testSlawIO :: Assertion
 testSlawIO = do

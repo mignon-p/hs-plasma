@@ -30,7 +30,10 @@ module System.Plasma.Pool
   , kTcpo
   , kTcps
     -- * Pool contexts
+  , Context            -- opaque
   , ContextOptions(..)
+  , newContext
+  , getContextOptions
     -- * Pool creation options
   , PoolCreateOptions(..)
   , StrOrInt(..)
@@ -43,5 +46,6 @@ module System.Plasma.Pool
   ) where
 
 import Data.Slaw.IO.Internal.Options
+import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts

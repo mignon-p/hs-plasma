@@ -28,3 +28,23 @@ void ze_hs_free_context (pool_context ctx)
 {
     ze_hs_submit_finalizer ((ze_hs_cleanup_func) pool_free_context, ctx);
 }
+
+static inline slaw ret_slaw_len (slaw s, int64 *len)
+{
+    *len = slaw_len (s);
+    return s;
+}
+
+slaw ze_hs_ctx_get_options (pool_context ctx, int64 *len_out)
+{
+    slaw ret = NULL;
+
+    bslaw opts = pool_ctx_get_options (ctx);
+    if (opts) {
+        ret = slaw_dup (opts);
+    } else {
+        ret = slaw_map_empty ();
+    }
+
+    return ret_slaw_len (ret, len_out);
+}

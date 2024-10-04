@@ -1,0 +1,104 @@
+{-|
+Module      : System.Plasma.Pool.Internal.PoolContext
+Description : Context used when creating a new pool hose
+Copyright   : © Mignon Pelletier, 2024
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
+module System.Plasma.Pool.Internal.PoolContext
+  ( Context(..)
+  , newContext
+  , getContextOptions
+  ) where
+
+import Control.DeepSeq
+import Control.Exception
+-- import Control.Monad
+-- import qualified Data.ByteString          as B
+import Data.Default.Class
+import Data.Hashable
+import Data.Int
+import Data.String
+import qualified Data.Text                as T
+-- import qualified Data.Text.Encoding       as T
+-- import Data.Word
+-- import Foreign.C.String
+-- import Foreign.C.Types
+import Foreign.ForeignPtr
+-- import Foreign.Marshal.Alloc
+import Foreign.Ptr
+-- import Foreign.Storable
+import GHC.Stack
+import System.IO.Unsafe
+
+import Data.Slaw
+import Data.Slaw.Util
+import System.Loam.Hash
+import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.Misc
+import System.Loam.Internal.Marshal
+import System.Loam.Retorts
+import System.Loam.Retorts.Constants
+
+kContext :: IsString a => a
+kContext = "Context"
+
+data Context = Context
+  { ctxName :: !T.Text
+  , ctxPtr  :: !(ForeignPtr ())
+  } deriving (Eq, Ord)
+
+instance NFData Context where
+  rnf x = ctxName x `deepseq` (ctxPtr x `seq` ())
+
+instance Hashable Context where
+  hash                ctx = hashInt        $ fPtrToIntegral (ctxPtr ctx)
+  salt `hashWithSalt` ctx = salt `hash2xInt` fPtrToIntegral (ctxPtr ctx)
+
+instance Show Context where
+  show ctx = fmtForeignObj kContext (ctxName ctx) [] (ctxPtr ctx)
+
+foreign import capi safe "ze-hs-ctx.h ze_hs_new_context"
+    c_new_context :: C.ConstPtr () -> Ptr Int64 -> IO (Ptr ())
+
+foreign import capi unsafe "ze-hs-ctx.h &ze_hs_free_context"
+    c_free_context :: FunPtr (Ptr () -> IO ())
+
+foreign import capi safe "ze-hs-ctx.h ze_hs_ctx_get_options"
+    c_ctx_get_options :: Ptr () -> Ptr Int64 -> IO (Ptr ())
+
+newContext
+  :: (HasCallStack, ToSlaw a)
+  => T.Text     -- ^ name of this RandState (only used in 'Show' instance)
+  -> a
+  -> IO Context
+newContext name0 opts = do
+  let cs   = callStack
+      addn = Just "newContext"
+  name <- nonEmptyName kContext name0 cs
+  ptr  <- withSlaw (š opts) $ \slawPtr -> do
+    withReturnedRetortCS EtPools addn Nothing cs $ \tortPtr -> do
+      c_new_context slawPtr tortPtr
+  fptr   <- newForeignPtr c_free_context ptr
+  return $ Context { ctxName = name
+                   , ctxPtr  = fptr
+                   }
+
+-- FIXME: this is kinda ugly...
+noMem :: PlasmaException
+noMem = unsafePerformIO $ do
+  let addn = Just "getContextOptions"
+  retortToPlasmaException EtPools addn OB_NO_MEM Nothing
+
+getContextOptions
+  :: (HasCallStack, FromSlaw a)
+  => Context
+  -> IO a
+getContextOptions ctx = withFrozenCallStack $ do
+  withForeignPtr (ctxPtr ctx) $ \ptr -> do
+    mSlaw <- withReturnedSlaw def $ c_ctx_get_options ptr
+    case fmap ŝee mSlaw ?> Left noMem of
+      Left  exc -> throwIO $ exc { peCallstack = Just callStack }
+      Right x   -> return x
