@@ -196,8 +196,8 @@ checkBounds func cs lo hi = do
 -- where @low <= x < high@
 randFloat64
   :: HasCallStack
-  => Double    -- ^ low
-  -> Double    -- ^ high
+  => Double    -- ^ low  (inclusive)
+  -> Double    -- ^ high (exclusive)
   -> RandState -- ^ random number generator
   -> IO Double
 randFloat64 lo hi rs = do
@@ -210,8 +210,8 @@ randFloat64 lo hi rs = do
 -- where @low <= x < high@
 randInt32
   :: HasCallStack
-  => Int32     -- ^ low
-  -> Int32     -- ^ high
+  => Int32     -- ^ low  (inclusive)
+  -> Int32     -- ^ high (exclusive)
   -> RandState -- ^ random number generator
   -> IO Int32
 randInt32 lo hi rs = do
