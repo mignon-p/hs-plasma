@@ -30,7 +30,7 @@ module System.Loam.Log
   , lvInfo
   , lvDebug
     --
-  , makeLogLevel
+  , newLogLevel
   , levelSetPrefix
   , levelGetPrefix
   , levelModifyFlags
@@ -469,12 +469,12 @@ fmtThread = do
       capSfx    = if locked then ":C" ++ show cap else ""
   return $ pfxChr : (tidStr' ++ capSfx)
 
-makeLogLevel :: HasCallStack => T.Text -> IO LogLevel
-makeLogLevel name0 = do
+newLogLevel :: HasCallStack => T.Text -> IO LogLevel
+newLogLevel name0 = do
   name <- nonEmptyName "LogLevel" name0 callStack
   ptr  <- c_log_level_alloc
   when (ptr == nullPtr) $ do
-    let addn = Just "makeLogLevel"
+    let addn = Just "newLogLevel"
     throwRetortCS EtOther addn OB_NO_MEM Nothing callStack
   fptr <- newForeignPtr c_log_level_free ptr
   let lvl = LogLevel { llName = name

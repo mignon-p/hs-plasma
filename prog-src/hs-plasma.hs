@@ -170,7 +170,7 @@ main = do
   logMsg lvError "Logging an error!"
   logMsg lvInfo  "A two-line\nmessage."
 
-  myLev <- makeLogLevel "Custom"
+  myLev <- newLogLevel "Custom"
   levelSetDestFile myLev DestStdout
   levelModifyFlags myLev [FlgShowTime, FlgShowPid, FlgShowProg] []
   logMsg myLev "Logging a message\nto a custom LogLevel\n"
@@ -273,7 +273,7 @@ main = do
   putStrLn ""
 
   emptyRand <- newRandState "" Nothing
-  emptyLog  <- makeLogLevel ""
+  emptyLog  <- newLogLevel  ""
   emptyCtx  <- newContext   "" ()
 
   putStrLn $ show emptyRand
