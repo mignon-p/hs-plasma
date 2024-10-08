@@ -43,6 +43,8 @@ build-type:          Simple
 extra-source-files:  CHANGELOG.md
                    , stack.yaml
                    , cbits/*.h
+                   , test-files/*.slaw
+                   , test-files/*.yaml
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
@@ -76,6 +78,7 @@ library
                      , System.Loam.Retorts.Internal.IoeRetorts
                      , System.Loam.Retorts.Internal.RetortUtil
                      , System.Plasma.Pool.Internal.PoolContext
+                     , System.Plasma.Pool.Internal.PoolHose
                      , System.Plasma.Pool.Internal.PoolName
                      , System.Plasma.Pool.Internal.PoolOpts
 
@@ -100,6 +103,7 @@ library
 
   c-sources:           cbits/ze-hs-cleanup.c
                      , cbits/ze-hs-ctx.c
+                     , cbits/ze-hs-hose.c
                      , cbits/ze-hs-log.c
                      , cbits/ze-hs-misc.c
                      , cbits/ze-hs-rand.c
