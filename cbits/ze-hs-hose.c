@@ -60,3 +60,26 @@ void ze_hs_finalize_hose (ze_hs_hose *zHose)
 {
     ze_hs_submit_finalizer (hose_finalizer, zHose);
 }
+
+HsStablePtr ze_hs_get_context (ze_hs_hose *zHose)
+{
+    return zHose->ctx;
+}
+
+ze_hs_hose *ze_hs_hose_clone (ze_hs_hose *orig,
+                              HsStablePtr ctx,
+                              const char *name,
+                              ob_retort  *tort_out)
+{
+    pool_hose orig_hose = orig->hose;
+    pool_hose new_hose  = NULL;
+
+    ob_retort tort = pool_hose_clone (orig_hose, &new_hose);
+    if (tort < OB_OK) {
+        hs_free_stable_ptr (ctx);
+        *tort_out = tort;
+        return NULL;
+    }
+
+    return ze_hs_make_hose (new_hose, ctx, name, tort_out);
+}
