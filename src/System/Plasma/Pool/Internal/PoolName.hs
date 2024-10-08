@@ -31,6 +31,8 @@ module System.Plasma.Pool.Internal.PoolName
   , kTcp
   , kTcpo
   , kTcps
+    --
+  , erlFromPoolName
   ) where
 
 import Control.Applicative
@@ -40,6 +42,7 @@ import qualified Data.ByteString                  as B
 import qualified Data.ByteString.Char8            as B8
 import qualified Data.ByteString.Short            as SBS
 import Data.Char
+import Data.Default.Class
 import Data.Hashable
 import Data.Int
 import Data.String
@@ -48,7 +51,7 @@ import GHC.Generics (Generic)
 import System.IO.Unsafe
 import Text.Printf
 
--- import Data.Slaw.Internal
+import Data.Slaw
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr    as C
 
@@ -321,3 +324,7 @@ kLocal = "local"
 kTcp   = "tcp"
 kTcpo  = "tcpo"
 kTcps  = "tcps"
+
+erlFromPoolName :: PoolName -> ErrLocation
+erlFromPoolName pname =
+  def { elSource = DsPool (toString pname) Nothing }
