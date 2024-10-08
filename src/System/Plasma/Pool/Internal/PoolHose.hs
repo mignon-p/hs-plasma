@@ -11,6 +11,7 @@ module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
   , newHose
   , withdraw
+  , cloneHose
   ) where
 
 import Control.DeepSeq
@@ -58,7 +59,7 @@ foreign import capi unsafe "ze-hs-hose.h ze_hs_get_context"
     c_get_context :: Ptr () -> IO (StablePtr Context)
 
 foreign import capi safe "ze-hs-hose.h ze_hs_hose_clone"
-    c_hose_clone :: Ptr () -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr ())
+    c_hose_clone :: Ptr () -> Ptr Int64 -> IO (Ptr ())
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -114,15 +115,19 @@ withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
   tort <- c_withdraw ptr
   throwRetortCS EtPools addn (Retort tort) erl callStack
 
-getHoseContext :: Hose -> IO Context
-getHoseContext h = c_get_context h >>= deRefStablePtr
-
 cloneHose
   :: HasCallStack
   => T.Text       -- ^ name of new Hose
   -> Hose         -- ^ hose to clone
   -> IO Hose
 cloneHose name orig = withForeignPtr (hosePtr orig) $ \origPtr -> do
+  let loc  = "cloneHose"
+      addn = Just loc
+      pool = hosePool orig
+      erl  = Just $ erlFromPoolName pool
+      cs   = callStack
   spCtx <- c_get_context origPtr
   ctx   <- deRefStablePtr spCtx
-  new   <- c_hose_clone  origPtr stabPtr 
+  new   <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
+    c_hose_clone origPtr tortPtr
+  newHose loc cs name pool ctx new

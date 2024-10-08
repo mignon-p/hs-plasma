@@ -20,9 +20,7 @@ void ze_hs_finalize_hose (ze_hs_hose *zHose);
 
 HsStablePtr ze_hs_get_context (ze_hs_hose *zHose);
 
-ze_hs_hose *ze_hs_hose_clone (ze_hs_hose *orig,
-                              HsStablePtr ctx,
-                              const char *name,
-                              ob_retort  *tort_out);
+pool_hose ze_hs_hose_clone (ze_hs_hose *orig,
+                            ob_retort  *tort_out);
 
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

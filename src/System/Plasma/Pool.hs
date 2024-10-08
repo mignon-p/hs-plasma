@@ -43,9 +43,16 @@ module System.Plasma.Pool
   , medium
   , large
   , huge
+    -- * Pool hoses
+  , Hose
+  , hoseName
+  , hosePool
+  , withdraw
+  , cloneHose
   ) where
 
 import Data.Slaw.IO.Internal.Options
 import System.Plasma.Pool.Internal.PoolContext
+import System.Plasma.Pool.Internal.PoolHose
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
