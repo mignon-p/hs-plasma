@@ -6,20 +6,32 @@
 
 ze_hs_hose *ze_hs_make_hose (pool_hose   hose,
                              HsStablePtr ctx,
+                             const char *name,
                              ob_retort  *tort_out)
 {
+    ob_retort tort = OB_OK;
+
     ze_hs_check_cleanup();
 
     ze_hs_hose *zHose = (ze_hs_hose *) calloc (1, sizeof (*zHose));
     if (zHose == NULL) {
-        *tort_out = OB_NO_MEM;
-        return NULL;
+        tort = OB_NO_MEM;
+        goto fail;
     }
 
     zHose->hose = hose;
     zHose->ctx  = ctx;
 
-    *tort_out = OB_OK;
+    tort = pool_set_hose_name (hose, name);
+    if (tort < OB_OK) {
+        free (zHose);
+        zHose = NULL;
+    fail:
+        pool_withdraw (hose);
+        hs_free_stable_ptr (ctx);
+    }
+
+    *tort_out = tort;
     return zHose;
 }
 

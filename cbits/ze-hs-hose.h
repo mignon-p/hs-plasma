@@ -11,12 +11,8 @@ typedef struct ze_hs_hose {
 
 ze_hs_hose *ze_hs_make_hose (pool_hose   hose,
                              HsStablePtr ctx,
+                             const char *name,
                              ob_retort  *tort_out);
-
-/*
-ob_retort ze_hs_set_hose_name (ze_hs_hose *zHose,
-                               const char *name);
-*/
 
 ob_retort ze_hs_withdraw (ze_hs_hose *zHose);
 

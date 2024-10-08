@@ -46,16 +46,13 @@ import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolName
 
 foreign import capi safe "ze-hs-hose.h ze_hs_make_hose"
-    c_make_hose :: Ptr () -> StablePtr Context -> Ptr Int64 -> IO (Ptr ())
+    c_make_hose :: Ptr () -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr ())
 
 foreign import capi unsafe "ze-hs-hose.h &ze_hs_finalize_hose"
     c_finalize_hose :: FunPtr (Ptr () -> IO ())
 
 foreign import capi safe "ze-hs-hose.h ze_hs_withdraw"
     c_withdraw :: Ptr () -> IO Int64
-
-foreign import capi safe "libPlasma/c/pool.h pool_set_hose_name"
-    c_set_hose_name :: Ptr () -> C.ConstCString -> IO Int64
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -91,12 +88,10 @@ newHose loc cs name0 pool ctx hPtr = do
   let erl  = Just $ erlFromPoolName pool
       addn = Just loc
   name    <- nonEmptyName kHose name0 cs
-  C.useAsConstCString (T.encodeUtf8 name) $ \namePtr -> do
-    tort  <- c_set_hose_name hPtr namePtr
-    throwRetortCS EtPools addn (Retort tort) erl cs
   stabPtr <- newStablePtr ctx
   zHose   <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
-    c_make_hose hPtr stabPtr tortPtr
+    C.useAsConstCString (T.encodeUtf8 name) $ \namePtr -> do
+      c_make_hose hPtr stabPtr namePtr tortPtr
   fptr    <- newForeignPtr c_finalize_hose zHose
   return $ Hose { hoseName = name
                 , hosePool = pool
