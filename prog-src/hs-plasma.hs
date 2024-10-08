@@ -13,6 +13,7 @@ import Data.Slaw.IO
 import Data.Slaw.IO.Yaml
 import Data.Slaw.Util
 import System.Loam.Dirs
+import System.Loam.File
 import System.Loam.Hash
 import System.Loam.Log
 import System.Loam.Rand
@@ -290,3 +291,7 @@ main = do
 
   putStrLn $ show myCtx
   putStrLn $ show (ctxOpts' :: ContextOptions)
+
+  putStrLn ""
+
+  withTempDir "foo-" putStrLn

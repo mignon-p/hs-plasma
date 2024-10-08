@@ -1,6 +1,8 @@
 #include <stdarg.h>
+#include "ze-hs-cleanup.h"
 #include "ze-hs-misc.h"
 #include "ze-hs-util.h"
+#include "libLoam/c/ob-file.h"
 #include "libLoam/c/ob-hash.h"
 
 static ob_retort my_callback (const char *file, va_list vargies)
@@ -83,4 +85,14 @@ unt64 ze_hs_jenkins_hash64 (const void *key,
     ret |= io2;
 
     return ret;
+}
+
+char *ze_hs_mkdtemp (const char *prefix, ob_retort *tort_out)
+{
+    char *name = NULL;
+
+    ze_hs_check_cleanup ();
+
+    *tort_out = ob_mkdtemp (prefix, &name);
+    return name;
 }

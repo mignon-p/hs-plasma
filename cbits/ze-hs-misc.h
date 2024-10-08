@@ -20,4 +20,6 @@ OB_HOT unt64 ze_hs_jenkins_hash64 (const void *key,
                                    size_t      length,
                                    unt64       seed);
 
+char *ze_hs_mkdtemp (const char *prefix, ob_retort *tort_out);
+
 #endif /* ZE_HS_MISC_H_EF95EBA1 */

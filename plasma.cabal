@@ -53,6 +53,7 @@ library
   exposed-modules:     Data.Slaw.Extras
                      , Data.Slaw.IO.Yaml
                      , System.Loam.Dirs
+                     , System.Loam.File
                      , System.Loam.Hash
                      , System.Loam.Log
                      , System.Loam.Rand
@@ -114,6 +115,7 @@ library
                      , containers           >= 0.6.0.1   && < 0.8
                      , data-default-class   >= 0.1.2.0   && < 0.2
                      , deepseq              >= 1.4.4.0   && < 1.6
+                     , directory            >= 1.3.8.5   && < 1.4
                      , filepath             >= 1.4.300.1 && < 1.6
                      , hashable             >= 1.4.0.0   && < 1.5
                      , slaw
@@ -217,7 +219,7 @@ test-suite test
                      , bytestring           >= 0.11.3.0  && < 0.13
                      , containers           >= 0.6.0.1   && < 0.8
                      , data-default-class   >= 0.1.2.0   && < 0.2
-                     , directory            >= 1.3.3.0   && < 1.4
+                     , directory            >= 1.3.8.5   && < 1.4
                      , plasma
                      , QuickCheck           >= 2.14.3    && < 2.16
                      , quickcheck-unicode   >= 1.0.1.0   && < 1.1
