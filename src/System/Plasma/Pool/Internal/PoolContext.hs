@@ -60,6 +60,9 @@ instance Hashable Context where
 instance Show Context where
   show ctx = fmtForeignObj kContext (ctxName ctx) [] (ctxPtr ctx)
 
+instance Default Context where
+  def = emptyCtx
+
 foreign import capi safe "ze-hs-ctx.h ze_hs_new_context"
     c_new_context :: C.ConstPtr () -> Ptr Int64 -> IO (Ptr ())
 
@@ -69,9 +72,14 @@ foreign import capi unsafe "ze-hs-ctx.h &ze_hs_free_context"
 foreign import capi safe "ze-hs-ctx.h ze_hs_ctx_get_options"
     c_ctx_get_options :: Ptr () -> Ptr Int64 -> IO (Ptr ())
 
+{-# NOINLINE emptyCtx #-}
+emptyCtx :: Context
+emptyCtx = unsafePerformIO $ newContext "(default context)" emptyMap
+  where emptyMap = SlawMap []
+
 newContext
   :: (HasCallStack, ToSlaw a)
-  => T.Text     -- ^ name of this RandState (only used in 'Show' instance)
+  => T.Text     -- ^ name of this Context (only used in 'Show' instance)
   -> a
   -> IO Context
 newContext name0 opts = do
