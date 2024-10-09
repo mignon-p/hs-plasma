@@ -11,6 +11,7 @@ module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
   , newHose
   , withdraw
+  , getHoseContext
   , cloneHose
   ) where
 
@@ -114,6 +115,10 @@ withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
       addn = Just "withdraw"
   tort <- c_withdraw ptr
   throwRetortCS EtPools addn (Retort tort) erl callStack
+
+getHoseContext :: Hose -> IO Context
+getHoseContext h = withForeignPtr (hosePtr h) $ \hPtr -> do
+  c_get_context hPtr >>= deRefStablePtr
 
 cloneHose
   :: HasCallStack

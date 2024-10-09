@@ -45,8 +45,11 @@ module System.Plasma.Pool
   , huge
     -- * Pool hoses
   , Hose
+    -- ** Hose information
   , hoseName
   , hosePool
+  , getHoseContext
+    -- ** Hose operations
   , withdraw
   , cloneHose
   ) where
