@@ -106,6 +106,7 @@ library
                      , cbits/ze-hs-hose.c
                      , cbits/ze-hs-log.c
                      , cbits/ze-hs-misc.c
+                     , cbits/ze-hs-pool.c
                      , cbits/ze-hs-rand.c
                      , cbits/ze-hs-retorts.c
                      , cbits/ze-hs-slawio.c

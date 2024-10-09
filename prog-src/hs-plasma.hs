@@ -4,6 +4,7 @@ import Data.Default.Class
 import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
+import System.Environment (setEnv)
 import System.IO
 import Text.Printf
 
@@ -23,7 +24,12 @@ import System.Loam.Version
 import System.Plasma.Pool
 
 main :: IO ()
-main = do
+main = withTempDir "pool-" $ \dir -> do
+  setEnv "OB_POOLS_DIR" dir
+  main1
+
+main1 :: IO ()
+main1 = do
   w <- x86Features
   let s = printf "%-20s = %016x" ("features" :: String) w
   putStrLn s
@@ -294,4 +300,6 @@ main = do
 
   putStrLn ""
 
-  withTempDir "foo-" putStrLn
+  hose <- participateCreatingly def "My Hose" "my pool" small
+  putStrLn $ show hose
+  withdraw hose
