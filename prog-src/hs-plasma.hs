@@ -303,3 +303,6 @@ main1 = do
   hose <- participateCreatingly def "My Hose" "my pool" small
   putStrLn $ show hose
   withdraw hose
+
+  rename  def "my pool" "dead pool"
+  dispose def "dead pool"

@@ -46,6 +46,8 @@ module System.Plasma.Pool
     -- * Operations on pools
   , participate
   , participateCreatingly
+  , dispose
+  , rename
     -- * Pool hoses
   , Hose
     -- ** Hose information
@@ -70,6 +72,8 @@ import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Marshal
+import System.Loam.Retorts
+import System.Loam.Retorts.Constants
 import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolHose
 import System.Plasma.Pool.Internal.PoolName
@@ -77,6 +81,12 @@ import System.Plasma.Pool.Internal.PoolOpts
 
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
     c_participate :: CBool -> Ptr () -> C.ConstCString -> C.ConstPtr () -> Ptr Int64 -> IO (Ptr ())
+
+foreign import capi safe "libPlasma/c/pool.h pool_dispose_ctx"
+    c_dispose_ctx :: C.ConstCString -> Ptr () -> IO Int64
+
+foreign import capi safe "libPlasma/c/pool.h pool_rename_ctx"
+    c_rename_ctx :: C.ConstCString -> C.ConstCString -> Ptr () -> IO Int64
 
 participate
   :: HasCallStack
@@ -121,3 +131,34 @@ participateInternal loc crtly cs ctx name pool opts = do
           c_participate cbool cPtr pnPtr optPtr tortPtr
   newHose loc cs name pool ctx hPtr
 
+dispose
+  :: HasCallStack
+  => Context  -- ^ pool context
+  -> PoolName -- ^ name of pool to delete
+  -> IO ()
+dispose ctx pool = do
+  let cs    = callStack
+      erl   = Just $ erlFromPoolName pool
+      addn  = Just "dispose"
+  C.useAsConstCString (toByteString pool) $ \pnPtr -> do
+      withForeignPtr (ctxPtr ctx) $ \cPtr -> do
+        tort <- c_dispose_ctx pnPtr cPtr
+        throwRetortCS EtPools addn (Retort tort) erl cs
+
+rename
+  :: HasCallStack
+  => Context  -- ^ pool context
+  -> PoolName -- ^ name of pool to rename
+  -> PoolName -- ^ new name for pool
+  -> IO ()
+rename ctx oldName newName = do
+  let cs     = callStack
+      erlOld = Just $ erlFromPoolName oldName
+      erlNew = Just $ erlFromPoolName newName
+      addn   = Just "rename"
+  C.useAsConstCString (toByteString oldName) $ \oldPtr -> do
+    C.useAsConstCString (toByteString newName) $ \newPtr -> do
+      withForeignPtr (ctxPtr ctx) $ \cPtr -> do
+        tort <- Retort <$> c_rename_ctx oldPtr newPtr cPtr
+        let erl = if tort == POOL_EXISTS then erlNew else erlOld
+        throwRetortCS EtPools addn tort erl cs
