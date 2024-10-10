@@ -46,6 +46,7 @@ module System.Plasma.Pool
     -- * Operations on pools
   , participate
   , participateCreatingly
+  , create
   , dispose
   , rename
     -- * Pool hoses
@@ -81,6 +82,9 @@ import System.Plasma.Pool.Internal.PoolOpts
 
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
     c_participate :: CBool -> Ptr () -> C.ConstCString -> C.ConstPtr () -> Ptr Int64 -> IO (Ptr ())
+
+foreign import capi safe "ze-hs-pool.h ze_hs_create"
+    c_create :: Ptr () -> C.ConstCString -> C.ConstPtr () -> IO Int64
 
 foreign import capi safe "libPlasma/c/pool.h pool_dispose_ctx"
     c_dispose_ctx :: C.ConstCString -> Ptr () -> IO Int64
@@ -130,6 +134,22 @@ participateInternal loc crtly cs ctx name pool opts = do
         withSlaw opts $ \optPtr -> do
           c_participate cbool cPtr pnPtr optPtr tortPtr
   newHose loc cs name pool ctx hPtr
+
+create
+  :: (HasCallStack, ToSlaw a)
+  => Context  -- ^ pool context
+  -> PoolName -- ^ name of pool to create
+  -> a        -- ^ pool create options
+  -> IO ()
+create ctx pool opts = do
+  let cs    = callStack
+      erl   = Just $ erlFromPoolName pool
+      addn  = Just "create"
+  C.useAsConstCString (toByteString pool) $ \pnPtr -> do
+    withForeignPtr (ctxPtr ctx) $ \cPtr -> do
+      withSlaw (š opts) $ \optPtr -> do
+        tort <- c_create cPtr pnPtr optPtr
+        throwRetortCS EtPools addn (Retort tort) erl cs
 
 dispose
   :: HasCallStack

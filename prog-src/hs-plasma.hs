@@ -306,3 +306,6 @@ main1 = do
 
   rename  def "my pool" "dead pool"
   dispose def "dead pool"
+
+  create  def "another pool" small
+  dispose def "another pool"
