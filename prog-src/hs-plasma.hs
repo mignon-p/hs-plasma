@@ -302,6 +302,9 @@ main1 = do
 
   hose <- participateCreatingly def "My Hose" "my pool" small
   putStrLn $ show hose
+  let myProtein = protein "foo bar" [("key", "value")]
+  depPair <- deposit hose myProtein
+  putStrLn $ show depPair
   withdraw hose
 
   putStrLn ""

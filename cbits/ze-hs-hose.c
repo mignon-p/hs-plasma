@@ -2,7 +2,22 @@
 
 #include "ze-hs-cleanup.h"
 #include "ze-hs-hose.h"
+#include "ze-hs-retorts.h"
 #include "ze-hs-util.h"
+
+static pool_hose get_hose (ze_hs_hose *zHose, ob_retort *tort_out)
+{
+    ze_hs_check_cleanup();
+
+    if (zHose->magic[0] != ZE_HS_HOSE_MAGIC) {
+        *tort_out = ZE_HS_INTERNAL_ERROR;
+        return NULL;
+    }
+
+    pool_hose h = zHose->hose;
+    *tort_out = (h ? OB_OK : ZE_HS_ALREADY_CLOSED);
+    return h;
+}
 
 ze_hs_hose *ze_hs_make_hose (pool_hose   hose,
                              HsStablePtr ctx,
@@ -10,6 +25,7 @@ ze_hs_hose *ze_hs_make_hose (pool_hose   hose,
                              ob_retort  *tort_out)
 {
     ob_retort tort = OB_OK;
+    size_t    i;
 
     ze_hs_check_cleanup();
 
@@ -17,6 +33,10 @@ ze_hs_hose *ze_hs_make_hose (pool_hose   hose,
     if (zHose == NULL) {
         tort = OB_NO_MEM;
         goto fail;
+    }
+
+    for (i = 0; i < ZE_HS_N_MAGIC; i++) {
+        zHose->magic[i] = ZE_HS_HOSE_MAGIC;
     }
 
     zHose->hose = hose;
@@ -73,4 +93,19 @@ pool_hose ze_hs_hose_clone (ze_hs_hose *orig,
 
     *tort_out = pool_hose_clone (orig->hose, &new_hose);
     return new_hose;
+}
+
+ob_retort ze_hs_deposit (ze_hs_hose     *zHose,
+                         bprotein        p,
+                         int64          *idx_out,
+                         pool_timestamp *ts_out)
+{
+    ob_retort tort = OB_OK;
+    pool_hose h    = get_hose (zHose, &tort);
+
+    if (!h) {
+        return tort;
+    }
+
+    return pool_deposit_ex (h, p, idx_out, ts_out);
 }

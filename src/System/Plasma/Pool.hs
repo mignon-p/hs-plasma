@@ -52,6 +52,7 @@ module System.Plasma.Pool
   , listPools
     -- * Pool hoses
   , Hose
+  , PoolIndex
     -- ** Hose information
   , hoseName
   , hosePool
@@ -59,6 +60,7 @@ module System.Plasma.Pool
     -- ** Hose operations
   , withdraw
   , cloneHose
+  , deposit
   ) where
 
 import Data.Default.Class

@@ -9,10 +9,12 @@ Portability : GHC
 
 module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
+  , PoolIndex
   , newHose
   , withdraw
   , getHoseContext
   , cloneHose
+  , deposit
   ) where
 
 import Control.DeepSeq
@@ -29,10 +31,10 @@ import qualified Data.Text.Encoding       as T
 -- import Foreign.C.String
 -- import Foreign.C.Types
 import Foreign.ForeignPtr
--- import Foreign.Marshal.Alloc
+import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.StablePtr
--- import Foreign.Storable
+import Foreign.Storable
 import GHC.Stack
 -- import System.IO.Unsafe
 
@@ -40,10 +42,11 @@ import Data.Slaw
 -- import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
-import System.Loam.Internal.Misc
 import System.Loam.Internal.Marshal
+import System.Loam.Internal.Misc
 import System.Loam.Retorts
 -- import System.Loam.Retorts.Constants
+import System.Loam.Time
 import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolName
 
@@ -62,8 +65,13 @@ foreign import capi unsafe "ze-hs-hose.h ze_hs_get_context"
 foreign import capi safe "ze-hs-hose.h ze_hs_hose_clone"
     c_hose_clone :: Ptr () -> Ptr Int64 -> IO (Ptr ())
 
+foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
+    c_deposit :: Ptr () -> C.ConstPtr () -> Ptr Int64 -> Ptr Double -> IO Int64
+
 kHose :: IsString a => a
 kHose = "Hose"
+
+type PoolIndex = Int64
 
 data Hose = Hose
   { hoseName :: !T.Text
@@ -136,3 +144,22 @@ cloneHose name orig = withForeignPtr (hosePtr orig) $ \origPtr -> do
   new   <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
     c_hose_clone origPtr tortPtr
   newHose loc cs name pool ctx new
+
+deposit
+  :: (HasCallStack, ToSlaw a)
+  => Hose
+  -> a
+  -> IO (PoolIndex, WallTime)
+deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
+  let addn = Just "deposit"
+      erl  = erlFromHose h
+  withSlaw (š opts) $ \slawPtr -> do
+    alloca $ \idxPtr -> do
+      alloca $ \timePtr -> do
+        poke idxPtr  minBound
+        poke timePtr (-1)
+        tort <- Retort <$> c_deposit hPtr slawPtr idxPtr timePtr
+        throwRetortCS EtPools addn tort erl callStack
+        idx  <- peek idxPtr
+        ts   <- peek timePtr
+        return (idx, ts)
