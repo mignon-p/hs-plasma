@@ -213,4 +213,4 @@ listPools0 cs ctx erl uriPtr = do
         c_list cPtr uriPtr tortPtr lenPtr
   case mSlaw >>= ŝm of
     Nothing    -> return []
-    Just names -> return $ map fromUtf8 names
+    Just names -> return names

@@ -52,6 +52,7 @@ import System.IO.Unsafe
 import Text.Printf
 
 import Data.Slaw
+import Data.Slaw.Internal
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr    as C
 
@@ -90,6 +91,16 @@ instance TextClass PoolName where
 
 instance PrintfArg PoolName where
   formatArg = formatString . toString
+
+instance Nameable PoolName where
+  typeName _ = "PoolName"
+
+instance ToSlaw PoolName where
+  toSlaw = SlawString . toUtf8
+
+instance FromSlaw PoolName where
+  fromSlaw (SlawString utf8) = Right $ fromUtf8 utf8
+  fromSlaw s                 = handleOthers s
 
 clampString :: String -> [Word8]
 clampString = map (clampByte . ord)
