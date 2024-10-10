@@ -314,3 +314,14 @@ main1 = do
   rename  def "my pool" "dead pool"
   dispose def "dead pool"
   dispose def "another pool"
+
+  putStrLn ""
+
+  create  def "a/man/a/plan/a/canal/panama"   small
+  create  def "a/man/a/plan/a/canal+/company" small
+
+  pnames1 <- listPools def (Just "a/man/a/plan/a")
+  mapM_ (putStrLn . show) pnames1
+
+  dispose def "a/man/a/plan/a/canal/panama"
+  dispose def "a/man/a/plan/a/canal+/company"
