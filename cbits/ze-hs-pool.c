@@ -1,5 +1,6 @@
 #include "ze-hs-cleanup.h"
 #include "ze-hs-pool.h"
+#include "ze-hs-util.h"
 #include "libPlasma/c/protein.h"
 #include "libPlasma/c/slaw.h"
 #include "libPlasma/c/slaw-path.h"
@@ -86,4 +87,15 @@ ob_retort ze_hs_create (pool_context ctx,
     slaw_free (o.freeme);
 
     return tort;
+}
+
+slaw ze_hs_list (pool_context ctx,
+                 const char  *uri,
+                 ob_retort   *tort_out,
+                 int64       *len_out)
+{
+    slaw ret = NULL;
+
+    *tort_out = pool_list_ctx (uri, &ret, ctx);
+    return ze_hs_ret_slaw_len (ret, len_out);
 }

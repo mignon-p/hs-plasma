@@ -304,8 +304,13 @@ main1 = do
   putStrLn $ show hose
   withdraw hose
 
-  rename  def "my pool" "dead pool"
-  dispose def "dead pool"
+  putStrLn ""
 
   create  def "another pool" small
+
+  pnames <- listPools def Nothing
+  mapM_ (putStrLn . show) pnames
+
+  rename  def "my pool" "dead pool"
+  dispose def "dead pool"
   dispose def "another pool"

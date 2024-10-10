@@ -49,6 +49,7 @@ module System.Plasma.Pool
   , create
   , dispose
   , rename
+  , listPools
     -- * Pool hoses
   , Hose
     -- ** Hose information
@@ -60,6 +61,7 @@ module System.Plasma.Pool
   , cloneHose
   ) where
 
+import Data.Default.Class
 import Data.Int
 import qualified Data.Text                as T
 import Foreign.C.Types
@@ -91,6 +93,9 @@ foreign import capi safe "libPlasma/c/pool.h pool_dispose_ctx"
 
 foreign import capi safe "libPlasma/c/pool.h pool_rename_ctx"
     c_rename_ctx :: C.ConstCString -> C.ConstCString -> Ptr () -> IO Int64
+
+foreign import capi safe "ze-hs-pool.h ze_hs_list"
+    c_list :: Ptr () -> C.ConstCString -> Ptr Int64 -> Ptr Int64 -> IO (Ptr ())
 
 participate
   :: HasCallStack
@@ -182,3 +187,30 @@ rename ctx oldName newName = do
         tort <- Retort <$> c_rename_ctx oldPtr newPtr cPtr
         let erl = if tort == POOL_EXISTS then erlNew else erlOld
         throwRetortCS EtPools addn tort erl cs
+
+listPools
+  :: HasCallStack
+  => Context        -- ^ pool context
+  -> Maybe PoolName -- ^ uri to list
+  -> IO [PoolName]
+listPools ctx Nothing    = listPools0 callStack ctx def C.nullConstPtr
+listPools ctx (Just uri) =
+  C.useAsConstCString (toByteString uri) $ listPools0 cs ctx erl
+  where erl = erlFromPoolName uri
+        cs  = callStack
+
+listPools0
+  :: CallStack
+  -> Context           -- ^ pool context
+  -> ErrLocation
+  -> C.ConstCString    -- ^ uri to list
+  -> IO [PoolName]
+listPools0 cs ctx erl uriPtr = do
+  let addn = Just "listPools"
+  mSlaw <- withReturnedSlaw erl $ \lenPtr -> do
+    withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
+      withForeignPtr (ctxPtr ctx) $ \cPtr -> do
+        c_list cPtr uriPtr tortPtr lenPtr
+  case mSlaw >>= ŝm of
+    Nothing    -> return []
+    Just names -> return $ map fromUtf8 names

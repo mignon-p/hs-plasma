@@ -14,4 +14,9 @@ ob_retort ze_hs_create (pool_context ctx,
                         const char  *pool_name,
                         bslaw        create_opts);
 
+slaw ze_hs_list (pool_context ctx,
+                 const char  *uri,
+                 ob_retort   *tort_out,
+                 int64       *len_out);
+
 #endif /* ZE_HS_POOL_H_5BD9401B */
