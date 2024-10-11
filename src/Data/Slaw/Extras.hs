@@ -35,14 +35,15 @@ import Data.Slaw
 import Data.Slaw.Extras.Internal.SpewParser
 -- import Data.Slaw.Internal
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Marshal
 -- import System.Loam.Retorts
 
 foreign import capi "ze-hs-misc.h ze_hs_spew_overview_to_string"
     c_spew_overview_to_string
-      :: C.ConstPtr ()  -- bslaw  s
-      -> Ptr Int64      -- int64 *len_ptr
-      -> IO (Ptr ())    -- slaw   (return value)
+      :: C.ConstPtr FgnSlaw  -- bslaw  s
+      -> Ptr Int64           -- int64 *len_ptr
+      -> IO (Ptr FgnSlaw)    -- slaw   (return value)
 
 spewOverview :: HasCallStack => Slaw -> LT.Text
 spewOverview =

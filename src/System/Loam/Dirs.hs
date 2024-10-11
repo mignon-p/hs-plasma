@@ -33,6 +33,7 @@ import Data.Slaw
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
 import System.Loam.Internal.Filename
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Marshal
 
 foreign import capi unsafe "libLoam/c/ob-dirs.h value OB_PATH_CHAR"
@@ -43,13 +44,13 @@ foreign import capi "libLoam/c/ob-dirs.h ob_get_standard_path"
 
 foreign import capi "ze-hs-misc.h ze_hs_search_standard_path"
     c_search_standard_path
-      :: CInt           -- ob_standard_dir dir
-      -> C.ConstCString -- const char     *filename
-      -> C.ConstCString -- const char     *searchspec
-      -> Int64          -- int64           max_to_return
-      -> Ptr Int64      -- ob_retort      *retort_ptr
-      -> Ptr Int64      -- int64          *len_ptr
-      -> IO (Ptr ())    -- slaw            (return value)
+      :: CInt             -- ob_standard_dir dir
+      -> C.ConstCString   -- const char     *filename
+      -> C.ConstCString   -- const char     *searchspec
+      -> Int64            -- int64           max_to_return
+      -> Ptr Int64        -- ob_retort      *retort_ptr
+      -> Ptr Int64        -- int64          *len_ptr
+      -> IO (Ptr FgnSlaw) -- slaw            (return value)
 
 getStandardPath :: Filename f => StandardDir -> IO f
 getStandardPath sd = from8bitFn <$> getStandardPathBS sd

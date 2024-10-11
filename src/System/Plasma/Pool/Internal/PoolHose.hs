@@ -42,6 +42,7 @@ import Data.Slaw
 -- import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
@@ -66,7 +67,7 @@ foreign import capi safe "ze-hs-hose.h ze_hs_hose_clone"
     c_hose_clone :: Ptr () -> Ptr Int64 -> IO (Ptr ())
 
 foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
-    c_deposit :: Ptr () -> C.ConstPtr () -> Ptr Int64 -> Ptr Double -> IO Int64
+    c_deposit :: Ptr () -> C.ConstPtr FgnSlaw -> Ptr Int64 -> Ptr Double -> IO Int64
 
 kHose :: IsString a => a
 kHose = "Hose"

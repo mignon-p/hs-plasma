@@ -76,6 +76,7 @@ import Data.Slaw
 import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
@@ -85,10 +86,10 @@ import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
 
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
-    c_participate :: CBool -> Ptr () -> C.ConstCString -> C.ConstPtr () -> Ptr Int64 -> IO (Ptr ())
+    c_participate :: CBool -> Ptr () -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr ())
 
 foreign import capi safe "ze-hs-pool.h ze_hs_create"
-    c_create :: Ptr () -> C.ConstCString -> C.ConstPtr () -> IO Int64
+    c_create :: Ptr () -> C.ConstCString -> C.ConstPtr FgnSlaw -> IO Int64
 
 foreign import capi safe "libPlasma/c/pool.h pool_dispose_ctx"
     c_dispose_ctx :: C.ConstCString -> Ptr () -> IO Int64
@@ -97,7 +98,7 @@ foreign import capi safe "libPlasma/c/pool.h pool_rename_ctx"
     c_rename_ctx :: C.ConstCString -> C.ConstCString -> Ptr () -> IO Int64
 
 foreign import capi safe "ze-hs-pool.h ze_hs_list"
-    c_list :: Ptr () -> C.ConstCString -> Ptr Int64 -> Ptr Int64 -> IO (Ptr ())
+    c_list :: Ptr () -> C.ConstCString -> Ptr Int64 -> Ptr Int64 -> IO (Ptr FgnSlaw)
 
 participate
   :: HasCallStack

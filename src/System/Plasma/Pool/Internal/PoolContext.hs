@@ -37,6 +37,7 @@ import Data.Slaw
 import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Misc
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
@@ -64,13 +65,13 @@ instance Default Context where
   def = emptyCtx
 
 foreign import capi safe "ze-hs-ctx.h ze_hs_new_context"
-    c_new_context :: C.ConstPtr () -> Ptr Int64 -> IO (Ptr ())
+    c_new_context :: C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr ())
 
 foreign import capi unsafe "ze-hs-ctx.h &ze_hs_free_context"
     c_free_context :: FunPtr (Ptr () -> IO ())
 
 foreign import capi safe "ze-hs-ctx.h ze_hs_ctx_get_options"
-    c_ctx_get_options :: Ptr () -> Ptr Int64 -> IO (Ptr ())
+    c_ctx_get_options :: Ptr () -> Ptr Int64 -> IO (Ptr FgnSlaw)
 
 {-# NOINLINE emptyCtx #-}
 emptyCtx :: Context

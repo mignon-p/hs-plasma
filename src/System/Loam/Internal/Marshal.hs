@@ -41,11 +41,12 @@ import GHC.Stack
 
 import Data.Slaw
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 
 foreign import capi unsafe "libPlasma/c/slaw.h &slaw_free"
-  finalizerSlaw :: FinalizerPtr ()
+  finalizerSlaw :: FinalizerPtr FgnSlaw
 
 withLazyByteStringAsCString :: L.ByteString
                             -> (CString -> IO a)
@@ -123,12 +124,12 @@ copyLbs1 _ _ _ = return ()
 
 --
 
-withSlaw :: Slaw -> (C.ConstPtr () -> IO a) -> IO a
+withSlaw :: Slaw -> (C.ConstPtr FgnSlaw -> IO a) -> IO a
 withSlaw slaw func = do
   let lbs = encodeSlaw nativeByteOrder slaw
   withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
 
-withBinarySlaw :: BinarySlaw -> (C.ConstPtr () -> IO a) -> IO a
+withBinarySlaw :: BinarySlaw -> (C.ConstPtr FgnSlaw -> IO a) -> IO a
 withBinarySlaw lbs func =
   withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
 
@@ -136,7 +137,7 @@ withBinarySlaw lbs func =
 
 withReturnedSlaw
   :: ErrLocation
-  -> (Ptr Int64 -> IO (Ptr ()))
+  -> (Ptr Int64 -> IO (Ptr FgnSlaw))
   -> IO (Maybe Slaw)
 withReturnedSlaw erl f = do
   mbs <- withReturnedSlaw0 f
@@ -152,7 +153,7 @@ withReturnedSlaw erl f = do
     Nothing -> return Nothing
 
 withReturnedSlaw0
-  :: (Ptr Int64 -> IO (Ptr ()))
+  :: (Ptr Int64 -> IO (Ptr FgnSlaw))
   -> IO (Maybe B.ByteString)
 withReturnedSlaw0 f = alloca $ \lenPtr -> do
   poke lenPtr (-1)
@@ -162,7 +163,7 @@ withReturnedSlaw0 f = alloca $ \lenPtr -> do
     then return Nothing
     else Just <$> unsafePackMallocSlaw (slawPtr, byteLen)
 
-unsafePackMallocSlaw :: (Ptr (), Int64) -> IO B.ByteString
+unsafePackMallocSlaw :: (Ptr FgnSlaw, Int64) -> IO B.ByteString
 unsafePackMallocSlaw (ptr, len) = do
   fp <- newForeignPtr finalizerSlaw ptr
   return $ B.BS (castForeignPtr fp) (fromIntegral len)

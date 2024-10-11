@@ -67,6 +67,7 @@ import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 import System.Loam.Retorts.Internal.RetortUtil
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 
@@ -78,14 +79,14 @@ type ReadPtr  = FunPtr ReadFunc
 type WriteFunc = CChar -> C.ConstPtr Word8 -> CSize -> IO Int64
 type WritePtr  = FunPtr WriteFunc
 
-type InputPtr     = Ptr ()
-type OutputPtr    = Ptr ()
+type InputPtr     = Ptr FgnSlawIn
+type OutputPtr    = Ptr FgnSlawOut
 
-type InputFPtr    = ForeignPtr ()
-type OutputFPtr   = ForeignPtr ()
+type InputFPtr    = ForeignPtr FgnSlawIn
+type OutputFPtr   = ForeignPtr FgnSlawOut
 
-type SlawPtr      = Ptr ()
-type ConstSlawPtr = C.ConstPtr ()
+type SlawPtr      = Ptr FgnSlaw
+type ConstSlawPtr = C.ConstPtr FgnSlaw
 
 foreign import ccall "wrapper" createReadPtr :: ReadFunc -> IO ReadPtr
 
