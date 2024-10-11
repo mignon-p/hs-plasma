@@ -9,7 +9,7 @@ Portability : GHC
 
 module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
-  , PoolIndex
+  -- , PoolIndex
   , newHose
   , withdraw
   , getHoseContext
@@ -71,8 +71,6 @@ foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
 
 kHose :: IsString a => a
 kHose = "Hose"
-
-type PoolIndex = Int64
 
 data Hose = Hose
   { hoseName :: !T.Text

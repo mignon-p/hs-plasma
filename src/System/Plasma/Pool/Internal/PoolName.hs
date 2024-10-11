@@ -32,7 +32,9 @@ module System.Plasma.Pool.Internal.PoolName
   , kTcpo
   , kTcps
     --
+  , PoolIndex
   , erlFromPoolName
+  , erlFromPoolIdx
   ) where
 
 import Control.Applicative
@@ -60,6 +62,8 @@ infixr 5 +/
 
 foreign import capi safe "libPlasma/c/pool.h pool_validate_name"
     c_pool_validate_name :: C.ConstCString -> IO Int64
+
+type PoolIndex = Int64
 
 newtype PoolName = PoolName { unPoolName :: SBS.ShortByteString }
                  deriving newtype (Eq, Ord, Show, Monoid, Semigroup,
@@ -339,3 +343,7 @@ kTcps  = "tcps"
 erlFromPoolName :: PoolName -> ErrLocation
 erlFromPoolName pname =
   def { elSource = DsPool (toString pname) Nothing }
+
+erlFromPoolIdx :: PoolName -> PoolIndex -> ErrLocation
+erlFromPoolIdx pname idx =
+  def { elSource = DsPool (toString pname) (Just idx) }
