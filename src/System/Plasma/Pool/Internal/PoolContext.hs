@@ -71,7 +71,7 @@ foreign import capi unsafe "ze-hs-ctx.h &ze_hs_free_context"
     c_free_context :: FunPtr (Ptr () -> IO ())
 
 foreign import capi safe "ze-hs-ctx.h ze_hs_ctx_get_options"
-    c_ctx_get_options :: Ptr () -> Ptr Int64 -> IO (Ptr FgnSlaw)
+    c_ctx_get_options :: Ptr () -> Ptr SlawLen -> IO (Ptr FgnSlaw)
 
 {-# NOINLINE emptyCtx #-}
 emptyCtx :: Context

@@ -16,7 +16,7 @@ import Control.Exception
 import qualified Data.ByteString.Builder       as R
 import Data.Default.Class
 import Data.Either
-import Data.Int
+-- import Data.Int
 import qualified Data.Text                     as T
 -- import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
@@ -42,7 +42,7 @@ import System.Loam.Internal.Marshal
 foreign import capi "ze-hs-misc.h ze_hs_spew_overview_to_string"
     c_spew_overview_to_string
       :: C.ConstPtr FgnSlaw  -- bslaw  s
-      -> Ptr Int64           -- int64 *len_ptr
+      -> Ptr SlawLen         -- int64 *len_ptr
       -> IO (Ptr FgnSlaw)    -- slaw   (return value)
 
 spewOverview :: HasCallStack => Slaw -> LT.Text

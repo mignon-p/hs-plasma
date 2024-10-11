@@ -49,7 +49,7 @@ foreign import capi "ze-hs-misc.h ze_hs_search_standard_path"
       -> C.ConstCString   -- const char     *searchspec
       -> Int64            -- int64           max_to_return
       -> Ptr Int64        -- ob_retort      *retort_ptr
-      -> Ptr Int64        -- int64          *len_ptr
+      -> Ptr SlawLen      -- int64          *len_ptr
       -> IO (Ptr FgnSlaw) -- slaw            (return value)
 
 getStandardPath :: Filename f => StandardDir -> IO f

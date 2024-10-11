@@ -17,6 +17,7 @@ module System.Loam.Internal.Marshal
   , withSlaw
   , withBinarySlaw
     --
+  , SlawLen
   , withReturnedSlaw
   , withReturnedRetort
   , withReturnedRetortCS
@@ -44,6 +45,8 @@ import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
+
+type SlawLen = Int64
 
 foreign import capi unsafe "libPlasma/c/slaw.h &slaw_free"
   finalizerSlaw :: FinalizerPtr FgnSlaw
@@ -137,7 +140,7 @@ withBinarySlaw lbs func =
 
 withReturnedSlaw
   :: ErrLocation
-  -> (Ptr Int64 -> IO (Ptr FgnSlaw))
+  -> (Ptr SlawLen -> IO (Ptr FgnSlaw))
   -> IO (Maybe Slaw)
 withReturnedSlaw erl f = do
   mbs <- withReturnedSlaw0 f
@@ -153,7 +156,7 @@ withReturnedSlaw erl f = do
     Nothing -> return Nothing
 
 withReturnedSlaw0
-  :: (Ptr Int64 -> IO (Ptr FgnSlaw))
+  :: (Ptr SlawLen -> IO (Ptr FgnSlaw))
   -> IO (Maybe B.ByteString)
 withReturnedSlaw0 f = alloca $ \lenPtr -> do
   poke lenPtr (-1)

@@ -98,7 +98,7 @@ foreign import capi safe "libPlasma/c/pool.h pool_rename_ctx"
     c_rename_ctx :: C.ConstCString -> C.ConstCString -> Ptr () -> IO Int64
 
 foreign import capi safe "ze-hs-pool.h ze_hs_list"
-    c_list :: Ptr () -> C.ConstCString -> Ptr Int64 -> Ptr Int64 -> IO (Ptr FgnSlaw)
+    c_list :: Ptr () -> C.ConstCString -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
 
 participate
   :: HasCallStack
