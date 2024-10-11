@@ -19,8 +19,14 @@ module System.Loam.Internal.Marshal
     --
   , SlawLen
   , withReturnedSlaw
+  , withReturnedSlaw'
+    --
   , withReturnedRetort
   , withReturnedRetortCS
+    --
+  , withRet1
+  , withRet2
+  , withRet3
   ) where
 
 import Control.Monad
@@ -30,6 +36,7 @@ import qualified Data.ByteString.Lazy     as L
 import qualified Data.ByteString.Unsafe   as B
 import Data.Char
 import Data.Int
+import Data.Maybe
 import Data.Word
 import Foreign.C.String
 import Foreign.C.Types
@@ -171,6 +178,14 @@ unsafePackMallocSlaw (ptr, len) = do
   fp <- newForeignPtr finalizerSlaw ptr
   return $ B.BS (castForeignPtr fp) (fromIntegral len)
 
+withReturnedSlaw'
+  :: ErrLocation
+  -> (Ptr SlawLen -> IO (Ptr FgnSlaw))
+  -> IO Slaw
+withReturnedSlaw' erl f = fromMaybe SlawNil <$> withReturnedSlaw erl f
+
+--
+
 withReturnedRetort
   :: HasCallStack
   => PlasmaExceptionType
@@ -194,3 +209,47 @@ withReturnedRetortCS et addn erl cs f = alloca $ \tortPtr -> do
   tort <- Retort <$> peek tortPtr
   throwRetortCS et addn tort erl cs
   return ret
+
+--
+
+withRet1
+  :: Storable a
+  => a
+  -> (Ptr a -> IO z)
+  -> IO (z, a)
+withRet1 dflt func = alloca $ \p1 -> do
+  poke p1 dflt
+  ret <- func p1
+  r1  <- peek p1
+  return (ret, r1)
+
+withRet2
+  :: (Storable a, Storable b)
+  => (a, b)
+  -> (Ptr a -> Ptr b -> IO z)
+  -> IO (z, a, b)
+withRet2 (d1, d2) func = alloca $ \p1 -> do
+  alloca $ \p2 -> do
+    poke p1 d1
+    poke p2 d2
+    ret <- func p1 p2
+    r1  <- peek p1
+    r2  <- peek p2
+    return (ret, r1, r2)
+
+withRet3
+  :: (Storable a, Storable b, Storable c)
+  => (a, b, c)
+  -> (Ptr a -> Ptr b -> Ptr c -> IO z)
+  -> IO (z, a, b, c)
+withRet3 (d1, d2, d3) func = alloca $ \p1 -> do
+  alloca $ \p2 -> do
+    alloca $ \p3 -> do
+      poke p1 d1
+      poke p2 d2
+      poke p3 d3
+      ret <- func p1 p2 p3
+      r1  <- peek p1
+      r2  <- peek p2
+      r3  <- peek p3
+      return (ret, r1, r2, r3)
