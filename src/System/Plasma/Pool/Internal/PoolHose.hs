@@ -52,22 +52,22 @@ import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolName
 
 foreign import capi safe "ze-hs-hose.h ze_hs_make_hose"
-    c_make_hose :: Ptr () -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr ())
+    c_make_hose :: Ptr FgnRawHose -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr FgnHose)
 
 foreign import capi unsafe "ze-hs-hose.h &ze_hs_finalize_hose"
-    c_finalize_hose :: FunPtr (Ptr () -> IO ())
+    c_finalize_hose :: FunPtr (Ptr FgnHose -> IO ())
 
 foreign import capi safe "ze-hs-hose.h ze_hs_withdraw"
-    c_withdraw :: Ptr () -> IO Int64
+    c_withdraw :: Ptr FgnHose -> IO Int64
 
 foreign import capi unsafe "ze-hs-hose.h ze_hs_get_context"
-    c_get_context :: Ptr () -> IO (StablePtr Context)
+    c_get_context :: Ptr FgnHose -> IO (StablePtr Context)
 
 foreign import capi safe "ze-hs-hose.h ze_hs_hose_clone"
-    c_hose_clone :: Ptr () -> Ptr Int64 -> IO (Ptr ())
+    c_hose_clone :: Ptr FgnHose -> Ptr Int64 -> IO (Ptr FgnRawHose)
 
 foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
-    c_deposit :: Ptr () -> C.ConstPtr FgnSlaw -> Ptr Int64 -> Ptr Double -> IO Int64
+    c_deposit :: Ptr FgnHose -> C.ConstPtr FgnSlaw -> Ptr Int64 -> Ptr Double -> IO Int64
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -77,7 +77,7 @@ type PoolIndex = Int64
 data Hose = Hose
   { hoseName :: !T.Text
   , hosePool :: !PoolName
-  , hosePtr  :: !(ForeignPtr ())
+  , hosePtr  :: !(ForeignPtr FgnHose)
   } deriving (Eq, Ord)
 
 instance NFData Hose where
@@ -94,12 +94,12 @@ instance Show Hose where
       info = "pool=" ++ show (hosePool hose)
 
 newHose
-  :: String       -- ^ name of API function
+  :: String         -- ^ name of API function
   -> CallStack
-  -> T.Text       -- ^ name of this Hose
-  -> PoolName     -- ^ name of pool
-  -> Context      -- ^ context used when creating Hose
-  -> Ptr ()       -- ^ actual pointer to the hose
+  -> T.Text         -- ^ name of this Hose
+  -> PoolName       -- ^ name of pool
+  -> Context        -- ^ context used when creating Hose
+  -> Ptr FgnRawHose -- ^ actual pointer to the hose
   -> IO Hose
 newHose loc cs name0 pool ctx hPtr = do
   let erl  = Just $ erlFromPoolName pool

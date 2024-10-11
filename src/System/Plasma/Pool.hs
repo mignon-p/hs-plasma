@@ -86,7 +86,7 @@ import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
 
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
-    c_participate :: CBool -> Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr ())
+    c_participate :: CBool -> Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr FgnRawHose)
 
 foreign import capi safe "ze-hs-pool.h ze_hs_create"
     c_create :: Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> IO Int64
