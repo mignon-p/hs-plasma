@@ -48,7 +48,7 @@ kContext = "Context"
 
 data Context = Context
   { ctxName :: !T.Text
-  , ctxPtr  :: !(ForeignPtr ())
+  , ctxPtr  :: !(ForeignPtr FgnCtx)
   } deriving (Eq, Ord)
 
 instance NFData Context where
@@ -65,13 +65,13 @@ instance Default Context where
   def = emptyCtx
 
 foreign import capi safe "ze-hs-ctx.h ze_hs_new_context"
-    c_new_context :: C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr ())
+    c_new_context :: C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr FgnCtx)
 
 foreign import capi unsafe "ze-hs-ctx.h &ze_hs_free_context"
-    c_free_context :: FunPtr (Ptr () -> IO ())
+    c_free_context :: FunPtr (Ptr FgnCtx -> IO ())
 
 foreign import capi safe "ze-hs-ctx.h ze_hs_ctx_get_options"
-    c_ctx_get_options :: Ptr () -> Ptr SlawLen -> IO (Ptr FgnSlaw)
+    c_ctx_get_options :: Ptr FgnCtx -> Ptr SlawLen -> IO (Ptr FgnSlaw)
 
 {-# NOINLINE emptyCtx #-}
 emptyCtx :: Context

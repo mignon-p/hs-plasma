@@ -86,19 +86,19 @@ import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
 
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
-    c_participate :: CBool -> Ptr () -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr ())
+    c_participate :: CBool -> Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr ())
 
 foreign import capi safe "ze-hs-pool.h ze_hs_create"
-    c_create :: Ptr () -> C.ConstCString -> C.ConstPtr FgnSlaw -> IO Int64
+    c_create :: Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> IO Int64
 
 foreign import capi safe "libPlasma/c/pool.h pool_dispose_ctx"
-    c_dispose_ctx :: C.ConstCString -> Ptr () -> IO Int64
+    c_dispose_ctx :: C.ConstCString -> Ptr FgnCtx -> IO Int64
 
 foreign import capi safe "libPlasma/c/pool.h pool_rename_ctx"
-    c_rename_ctx :: C.ConstCString -> C.ConstCString -> Ptr () -> IO Int64
+    c_rename_ctx :: C.ConstCString -> C.ConstCString -> Ptr FgnCtx -> IO Int64
 
 foreign import capi safe "ze-hs-pool.h ze_hs_list"
-    c_list :: Ptr () -> C.ConstCString -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
+    c_list :: Ptr FgnCtx -> C.ConstCString -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
 
 participate
   :: HasCallStack
