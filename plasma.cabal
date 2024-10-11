@@ -72,6 +72,7 @@ library
                      , System.Loam.Internal.ConstPtr
                      , System.Loam.Internal.Enums
                      , System.Loam.Internal.Filename
+                     , System.Loam.Internal.FgnTypes
                      , System.Loam.Internal.Marshal
                      , System.Loam.Internal.Misc
                      , System.Loam.Retorts.Internal.Descriptions

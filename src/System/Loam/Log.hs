@@ -94,6 +94,7 @@ import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
 import System.Loam.Internal.Filename
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
@@ -101,40 +102,40 @@ import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level"
-    c_log_level :: CChar -> IO (Ptr ())
+    c_log_level :: CChar -> IO (Ptr FgnLogLvl)
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_alloc"
-    c_log_level_alloc :: IO (Ptr ())
+    c_log_level_alloc :: IO (Ptr FgnLogLvl)
 
 foreign import capi "ze-hs-log.h &ze_hs_log_level_free"
-    c_log_level_free :: FunPtr (Ptr () -> IO ())
+    c_log_level_free :: FunPtr (Ptr FgnLogLvl -> IO ())
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_flags"
-    c_log_level_set_flags :: Ptr () -> Word32 -> Word32 -> IO ()
+    c_log_level_set_flags :: Ptr FgnLogLvl -> Word32 -> Word32 -> IO ()
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_flags"
-    c_log_level_get_flags :: Ptr () -> IO Word32
+    c_log_level_get_flags :: Ptr FgnLogLvl -> IO Word32
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_prefix"
-    c_log_level_set_prefix :: Ptr () -> C.ConstCString -> CSize -> IO ()
+    c_log_level_set_prefix :: Ptr FgnLogLvl -> C.ConstCString -> CSize -> IO ()
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_prefix"
-    c_log_level_get_prefix :: Ptr () -> CString -> CSize -> IO ()
+    c_log_level_get_prefix :: Ptr FgnLogLvl -> CString -> CSize -> IO ()
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_level_set_dest"
-    c_log_level_set_dest :: Ptr () -> CChar -> C.ConstCString -> IO Int64
+    c_log_level_set_dest :: Ptr FgnLogLvl -> CChar -> C.ConstCString -> IO Int64
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_sl_priority"
-    c_log_level_set_sl_priority :: Ptr () -> Int32 -> IO ()
+    c_log_level_set_sl_priority :: Ptr FgnLogLvl -> Int32 -> IO ()
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_priority"
-    c_log_level_get_sl_priority :: Ptr () -> IO Int32
+    c_log_level_get_sl_priority :: Ptr FgnLogLvl -> IO Int32
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_sl_facility"
-    c_log_level_set_sl_facility :: Ptr () -> Int32 -> IO ()
+    c_log_level_set_sl_facility :: Ptr FgnLogLvl -> Int32 -> IO ()
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_sl_facility"
-    c_log_level_get_sl_facility :: Ptr () -> IO Int32
+    c_log_level_get_sl_facility :: Ptr FgnLogLvl -> IO Int32
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_facility_name"
     c_facility_name :: CSize -> Ptr Int32 -> IO C.ConstCString
@@ -158,7 +159,7 @@ foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
     c_log_loc
       :: C.ConstCString -- file name
       -> Int64          -- line number
-      -> Ptr ()         -- log level
+      -> Ptr FgnLogLvl  -- log level
       -> Word64         -- code
       -> CString        -- message (writable)
       -> C.ConstCString -- thread
@@ -167,7 +168,7 @@ foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
 
 data LogLevel = LogLevel
   { llName :: !T.Text
-  , llPtr  :: !(ForeignPtr ())
+  , llPtr  :: !(ForeignPtr FgnLogLvl)
   } deriving (Eq, Ord)
 
 instance NFData LogLevel where

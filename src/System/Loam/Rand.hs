@@ -43,45 +43,46 @@ import Data.Slaw
 -- import Data.Slaw.Internal
 import System.Loam.Hash
 -- import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
 
 foreign import capi safe "ze-hs-rand.h ze_hs_truly_random"
-    c_truly_random :: Ptr () -> CSize -> IO Int64
+    c_truly_random :: Ptr FgnRand -> CSize -> IO Int64
 
 foreign import capi unsafe "libLoam/c/ob-rand.h value OB_RAND_COMPLETELY_RANDOM_PLEASE"
     c_completely_random :: Int32
 
 foreign import capi safe "ze-hs-rand.h ze_hs_rand_allocate_state"
-    c_rand_allocate_state :: Int32 -> IO (Ptr ())
+    c_rand_allocate_state :: Int32 -> IO (Ptr FgnRand)
 
 foreign import capi unsafe "ze-hs-rand.h &ze_hs_rand_free_state"
-    c_rand_free_state :: FunPtr (Ptr () -> IO ())
+    c_rand_free_state :: FunPtr (Ptr FgnRand -> IO ())
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_state_float64"
-    c_rand_state_float64 :: Double -> Double -> Ptr () -> IO Double
+    c_rand_state_float64 :: Double -> Double -> Ptr FgnRand -> IO Double
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_state_int32"
-    c_rand_state_int32 :: Int32 -> Int32 -> Ptr () -> IO Int32
+    c_rand_state_int32 :: Int32 -> Int32 -> Ptr FgnRand -> IO Int32
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_state_unt32"
-    c_rand_state_unt32 :: Ptr () -> IO Word32
+    c_rand_state_unt32 :: Ptr FgnRand -> IO Word32
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_state_unt64"
-    c_rand_state_unt64 :: Ptr () -> IO Word64
+    c_rand_state_unt64 :: Ptr FgnRand -> IO Word64
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_rand_normal_state"
-    c_rand_normal_state :: Ptr () -> Ptr Double -> IO Double
+    c_rand_normal_state :: Ptr FgnRand -> Ptr Double -> IO Double
 
 foreign import capi unsafe "libLoam/c/ob-rand.h ob_random_bytes_state"
-    c_random_bytes_state :: Ptr () -> Ptr Word8 -> CSize -> IO ()
+    c_random_bytes_state :: Ptr FgnRand -> Ptr Word8 -> CSize -> IO ()
 
 -- | Encapsulates the state of a random number generator.
 data RandState = RandState
   { rsName :: !T.Text
   , rsSeed :: !(Maybe Int)
-  , rsPtr  :: !(ForeignPtr ())
+  , rsPtr  :: !(ForeignPtr FgnRand)
   } deriving (Eq, Ord)
 
 instance NFData RandState where
