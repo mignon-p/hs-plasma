@@ -65,4 +65,16 @@ int64 ze_hs_get_index (char        op,
                        ze_hs_hose *zHose,
                        ob_retort  *tort_out);
 
+/* "op" character:
+ *   pool_re(w)ind
+ *   pool_to(l)ast
+ *   pool_run(o)ut
+ *   pool_(f)rwdby
+ *   pool_(b)ackby
+ *   pool_(s)eekto
+ */
+ob_retort ze_hs_seek_op (char        op,
+                         ze_hs_hose *zHose,
+                         int64       idx);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

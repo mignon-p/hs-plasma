@@ -28,6 +28,13 @@ module System.Plasma.Pool.Internal.PoolHose
   , newestIndex
   , oldestIndex
   , currIndex
+    --
+  , rewind
+  , toLast
+  , runout
+  , frwdBy
+  , backBy
+  , seekTo
   ) where
 
 import Control.DeepSeq
@@ -104,6 +111,13 @@ foreign import capi safe "ze-hs-hose.h ze_hs_get_index"
       -> Ptr FgnHose        -- zHose
       -> Ptr Int64          -- tort_out
       -> IO PoolIndex
+
+foreign import capi safe "ze-hs-hose.h ze_hs_seek_op"
+    c_seek_op
+      :: CChar              -- op
+      -> Ptr FgnHose        -- zHose
+      -> PoolIndex          -- idx
+      -> IO Int64           -- retort
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -325,3 +339,57 @@ currIndex
   => Hose
   -> IO PoolIndex
 currIndex = indexOp callStack "currIndex" 'i'
+
+seekOp
+  :: CallStack
+  -> String     -- loc
+  -> Char       -- op
+  -> Hose
+  -> PoolIndex
+  -> IO ()
+seekOp cs loc op h idx = do
+  let addn = Just loc
+      erl  = erlFromHose h
+      c    = toCChar op
+  withForeignPtr (hosePtr h) $ \hPtr -> do
+    tort <- c_seek_op c hPtr idx
+    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+
+rewind
+  :: HasCallStack
+  => Hose
+  -> IO ()
+rewind h = seekOp callStack "rewind" 'w' h minBound
+
+toLast
+  :: HasCallStack
+  => Hose
+  -> IO ()
+toLast h = seekOp callStack "toLast" 'l' h minBound
+
+runout
+  :: HasCallStack
+  => Hose
+  -> IO ()
+runout h = seekOp callStack "runout" 'o' h minBound
+
+frwdBy
+  :: HasCallStack
+  => Hose
+  -> PoolIndex -- offset
+  -> IO ()
+frwdBy = seekOp callStack "frwdBy" 'f'
+
+backBy
+  :: HasCallStack
+  => Hose
+  -> PoolIndex -- offset
+  -> IO ()
+backBy = seekOp callStack "backBy" 'b'
+
+seekTo
+  :: HasCallStack
+  => Hose
+  -> PoolIndex
+  -> IO ()
+seekTo = seekOp callStack "seekTo" 's'

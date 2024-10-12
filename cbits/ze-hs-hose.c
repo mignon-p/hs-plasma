@@ -214,3 +214,40 @@ int64 ze_hs_get_index (char        op,
     *tort_out = tort;
     return idx;
 }
+
+/*
+pool_re(w)ind
+pool_to(l)ast
+pool_run(o)ut
+pool_(f)rwdby
+pool_(b)ackby
+pool_(s)eekto
+ */
+ob_retort ze_hs_seek_op (char        op,
+                         ze_hs_hose *zHose,
+                         int64       idx)
+{
+    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    pool_hose h    = get_hose (zHose, &tort);
+
+    if (!h) {
+        return tort;
+    }
+
+    switch (op) {
+    case 'r':
+        return pool_rewind (h);
+    case 'l':
+        return pool_tolast (h);
+    case 'o':
+        return pool_runout (h);
+    case 'f':
+        return pool_frwdby (h, idx);
+    case 'b':
+        return pool_backby (h, idx);
+    case 's':
+        return pool_seekto (h, idx);
+    }
+
+    return ZE_HS_INTERNAL_ERROR;
+}

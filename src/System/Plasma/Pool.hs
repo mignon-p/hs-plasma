@@ -71,10 +71,17 @@ module System.Plasma.Pool
   , probeFrwd
   , awaitProbeFrwd
   , probeBack
-    -- *** Information
+    -- *** Getting position
   , newestIndex
   , oldestIndex
   , currIndex
+    -- *** Setting position
+  , rewind
+  , toLast
+  , runout
+  , frwdBy
+  , backBy
+  , seekTo
   ) where
 
 import Data.Default.Class
