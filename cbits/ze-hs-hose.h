@@ -32,4 +32,10 @@ ob_retort ze_hs_deposit (ze_hs_hose     *zHose,
                          int64          *idx_out,
                          pool_timestamp *ts_out);
 
+protein ze_hs_nth_protein (ze_hs_hose     *zHose,
+                           int64           idx,
+                           pool_timestamp *ts_out,
+                           ob_retort      *tort_out,
+                           int64          *len_out);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

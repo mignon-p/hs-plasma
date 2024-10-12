@@ -51,8 +51,9 @@ module System.Plasma.Pool
   , rename
   , listPools
     -- * Pool hoses
-  , Hose
+  , Hose               -- opaque
   , PoolIndex
+  , RetProtein(..)
     -- ** Hose information
   , hoseName
   , hosePool
@@ -61,6 +62,7 @@ module System.Plasma.Pool
   , withdraw
   , cloneHose
   , deposit
+  , nthProtein
   ) where
 
 import Data.Default.Class

@@ -109,3 +109,25 @@ ob_retort ze_hs_deposit (ze_hs_hose     *zHose,
 
     return pool_deposit_ex (h, p, idx_out, ts_out);
 }
+
+protein ze_hs_nth_protein (ze_hs_hose     *zHose,
+                           int64           idx,
+                           pool_timestamp *ts_out,
+                           ob_retort      *tort_out,
+                           int64          *len_out)
+{
+    pool_hose h = get_hose (zHose, tort_out);
+
+    if (!h) {
+        return NULL;
+    }
+
+    protein p = NULL;
+    ob_retort tort = pool_nth_protein (h, idx, &p, ts_out);
+    *tort_out = tort;
+    if (tort < OB_OK) {
+        return NULL;
+    }
+
+    return ze_hs_ret_slaw_len (p, len_out);
+}

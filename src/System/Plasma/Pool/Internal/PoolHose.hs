@@ -9,12 +9,13 @@ Portability : GHC
 
 module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
-  -- , PoolIndex
+  , RetProtein(..)
   , newHose
   , withdraw
   , getHoseContext
   , cloneHose
   , deposit
+  , nthProtein
   ) where
 
 import Control.DeepSeq
@@ -35,6 +36,7 @@ import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.StablePtr
 import Foreign.Storable
+import GHC.Generics (Generic)
 import GHC.Stack
 -- import System.IO.Unsafe
 
@@ -69,6 +71,9 @@ foreign import capi safe "ze-hs-hose.h ze_hs_hose_clone"
 foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
     c_deposit :: Ptr FgnHose -> C.ConstPtr FgnSlaw -> Ptr Int64 -> Ptr Double -> IO Int64
 
+foreign import capi safe "ze-hs-hose.h ze_hs_nth_protein"
+    c_nth_protein :: Ptr FgnHose -> Int64 -> Ptr WallTime -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
+
 kHose :: IsString a => a
 kHose = "Hose"
 
@@ -90,6 +95,12 @@ instance Show Hose where
   show hose = fmtForeignObj kHose (hoseName hose) [info] (hosePtr hose)
     where
       info = "pool=" ++ show (hosePool hose)
+
+data RetProtein = RetProtein
+  { rpProtein   ::                Slaw
+  , rpIndex     :: {-# UNPACK #-} !PoolIndex
+  , rpTimestamp :: {-# UNPACK #-} !WallTime
+  } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 newHose
   :: String         -- ^ name of API function
@@ -113,15 +124,18 @@ newHose loc cs name0 pool ctx hPtr = do
                 , hosePtr  = fptr
                 }
 
-erlFromHose :: Hose -> Maybe ErrLocation
-erlFromHose = Just . erlFromPoolName . hosePool
+erlFromHose :: Hose -> ErrLocation
+erlFromHose = erlFromPoolName . hosePool
+
+erlFromHoseIdx :: Hose -> PoolIndex -> ErrLocation
+erlFromHoseIdx h idx = erlFromPoolIdx (hosePool h) idx
 
 withdraw :: HasCallStack => Hose -> IO ()
 withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
   let erl  = erlFromHose hose
       addn = Just "withdraw"
   tort <- c_withdraw ptr
-  throwRetortCS EtPools addn (Retort tort) erl callStack
+  throwRetortCS EtPools addn (Retort tort) (Just erl) callStack
 
 getHoseContext :: Hose -> IO Context
 getHoseContext h = withForeignPtr (hosePtr h) $ \hPtr -> do
@@ -158,7 +172,25 @@ deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
         poke idxPtr  minBound
         poke timePtr (-1)
         tort <- Retort <$> c_deposit hPtr slawPtr idxPtr timePtr
-        throwRetortCS EtPools addn tort erl callStack
+        throwRetortCS EtPools addn tort (Just erl) callStack
         idx  <- peek idxPtr
         ts   <- peek timePtr
         return (idx, ts)
+
+nthProtein
+  :: HasCallStack
+  => Hose
+  -> PoolIndex
+  -> IO RetProtein
+nthProtein h idx = withForeignPtr (hosePtr h) $ \hPtr -> do
+  let addn = Just "deposit"
+      erl  = erlFromHoseIdx h idx
+      cs   = callStack
+  (p, ts) <- withRet1 (-1) $ \tsPtr -> do
+    withReturnedSlaw' erl $ \lenPtr -> do
+      withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
+        c_nth_protein hPtr idx tsPtr tortPtr lenPtr
+  return $ RetProtein { rpProtein   = p
+                      , rpIndex     = idx
+                      , rpTimestamp = ts
+                      }

@@ -305,7 +305,12 @@ main1 = do
   let myProtein = protein "foo bar" [("key", "value")]
   depPair <- deposit hose myProtein
   putStrLn $ show depPair
+  (RetProtein myProt2 _ _) <- nthProtein hose (fst depPair)
   withdraw hose
+
+  putStrLn ""
+
+  putStrLn $ LT.unpack $ spewOverview myProt2
 
   putStrLn ""
 
