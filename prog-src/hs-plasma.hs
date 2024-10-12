@@ -306,11 +306,12 @@ main1 = do
   depPair <- deposit hose myProtein
   putStrLn $ show depPair
   (RetProtein myProt2 _ _) <- nthProtein hose (fst depPair)
+  (RetProtein myProt3 _ _) <- next       hose
   withdraw hose
 
-  putStrLn ""
-
-  putStrLn $ LT.unpack $ spewOverview myProt2
+  forM_ [myProt2, myProt3] $ \prot -> do
+    putStrLn ""
+    putStrLn $ LT.unpack $ spewOverview prot
 
   putStrLn ""
 
