@@ -15,11 +15,13 @@ module System.Loam.Internal.Marshal
   , copyLazyByteStringToBuffer
     --
   , withSlaw
+  , withMaybeSlaw
   , withBinarySlaw
     --
   , SlawLen
   , withReturnedSlaw
   , withReturnedSlaw'
+  , withReturnedSlawIdx
     --
   , withReturnedRetort
   , withReturnedRetortCS
@@ -27,6 +29,8 @@ module System.Loam.Internal.Marshal
   , withRet1
   , withRet2
   , withRet3
+    --
+  , toCChar
   ) where
 
 import Control.Monad
@@ -48,6 +52,7 @@ import Foreign.Storable
 import GHC.Stack
 
 import Data.Slaw
+import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
 import System.Loam.Retorts
@@ -139,6 +144,10 @@ withSlaw slaw func = do
   let lbs = encodeSlaw nativeByteOrder slaw
   withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
 
+withMaybeSlaw :: Maybe Slaw -> (C.ConstPtr FgnSlaw -> IO a) -> IO a
+withMaybeSlaw Nothing  func = func C.nullConstPtr
+withMaybeSlaw (Just s) func = withSlaw s func
+
 withBinarySlaw :: BinarySlaw -> (C.ConstPtr FgnSlaw -> IO a) -> IO a
 withBinarySlaw lbs func =
   withLazyByteStringAsCString lbs (func . C.ConstPtr . castPtr)
@@ -151,6 +160,13 @@ withReturnedSlaw
   -> IO (Maybe Slaw)
 withReturnedSlaw erl f = do
   mbs <- withReturnedSlaw0 f
+  handleReturnedSlaw erl mbs
+
+handleReturnedSlaw
+  :: ErrLocation
+  -> Maybe B.ByteString
+  -> IO (Maybe Slaw)
+handleReturnedSlaw erl mbs = do
   case mbs of
     Just bs
       | B.null bs -> do
@@ -183,6 +199,25 @@ withReturnedSlaw'
   -> (Ptr SlawLen -> IO (Ptr FgnSlaw))
   -> IO Slaw
 withReturnedSlaw' erl f = fromMaybe SlawNil <$> withReturnedSlaw erl f
+
+withReturnedSlawIdx
+  :: ErrLocation
+  -> (Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw))
+  -> IO (Slaw, Int64)
+withReturnedSlawIdx erl f = alloca $ \idxPtr -> do
+  poke idxPtr minBound
+  mbs <- withReturnedSlaw0 (f idxPtr)
+  idx <- peek idxPtr
+  let erl' = erl `setIndex` idx
+  mSlaw <- handleReturnedSlaw erl' mbs
+  return (mSlaw ?> SlawNil, idx)
+
+setIndex :: ErrLocation -> Int64 -> ErrLocation
+setIndex erl idx = erl { elSource = elSource erl `setIndexDS` idx }
+
+setIndexDS :: DataSource -> Int64 -> DataSource
+setIndexDS (DsPool name _) idx = DsPool name (Just idx)
+setIndexDS erl             _   = erl
 
 --
 
@@ -253,3 +288,7 @@ withRet3 (d1, d2, d3) func = alloca $ \p1 -> do
       r2  <- peek p2
       r3  <- peek p3
       return (ret, r1, r2, r3)
+
+{-# INLINE toCChar #-}
+toCChar :: Char -> CChar
+toCChar = fromIntegral . ord
