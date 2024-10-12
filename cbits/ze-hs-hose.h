@@ -56,4 +56,13 @@ protein ze_hs_protein_op (char            op,
                           ob_retort      *tort_out,
                           int64          *len_out);
 
+/* "op" character:
+ *   pool_(n)ewest_index
+ *   pool_(o)ldest_index
+ *   pool_(i)ndex
+ */
+int64 ze_hs_get_index (char        op,
+                       ze_hs_hose *zHose,
+                       ob_retort  *tort_out);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

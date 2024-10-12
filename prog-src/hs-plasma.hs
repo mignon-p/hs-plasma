@@ -305,6 +305,11 @@ main1 = do
   let myProtein = protein "foo bar" [("key", "value")]
   depPair <- deposit hose myProtein
   putStrLn $ show depPair
+
+  forM_ [newestIndex, oldestIndex, currIndex] $ \func -> do
+    n <- func hose
+    putStrLn $ show n
+
   (RetProtein myProt2 _ _) <- nthProtein hose (fst depPair)
   (RetProtein myProt3 _ _) <- next       hose
   withdraw hose

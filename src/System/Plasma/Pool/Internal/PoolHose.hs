@@ -24,6 +24,10 @@ module System.Plasma.Pool.Internal.PoolHose
   , probeFrwd
   , awaitProbeFrwd
   , probeBack
+    --
+  , newestIndex
+  , oldestIndex
+  , currIndex
   ) where
 
 import Control.DeepSeq
@@ -93,6 +97,13 @@ foreign import capi safe "ze-hs-hose.h ze_hs_protein_op"
       -> Ptr Int64          -- tort_out
       -> Ptr SlawLen        -- len_out
       -> IO (Ptr FgnSlaw)
+
+foreign import capi safe "ze-hs-hose.h ze_hs_get_index"
+    c_get_index
+      :: CChar              -- op
+      -> Ptr FgnHose        -- zHose
+      -> Ptr Int64          -- tort_out
+      -> IO PoolIndex
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -282,3 +293,35 @@ probeBack
   -> Slaw -- search
   -> IO RetProtein
 probeBack h srch = proteinOp callStack "probeBack" 'b' h (Just srch) (-1)
+
+indexOp
+  :: CallStack
+  -> String     -- loc
+  -> Char       -- op
+  -> Hose
+  -> IO PoolIndex
+indexOp cs loc op h = do
+  let addn = Just loc
+      erl  = erlFromHose h
+      c    = toCChar op
+  withForeignPtr (hosePtr h) $ \hPtr -> do
+    withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
+      c_get_index c hPtr tortPtr
+
+newestIndex
+  :: HasCallStack
+  => Hose
+  -> IO PoolIndex
+newestIndex = indexOp callStack "newestIndex" 'n'
+
+oldestIndex
+  :: HasCallStack
+  => Hose
+  -> IO PoolIndex
+oldestIndex = indexOp callStack "oldestIndex" 'o'
+
+currIndex
+  :: HasCallStack
+  => Hose
+  -> IO PoolIndex
+currIndex = indexOp callStack "currIndex" 'i'

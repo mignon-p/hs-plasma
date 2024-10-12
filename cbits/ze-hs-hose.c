@@ -185,3 +185,32 @@ protein ze_hs_protein_op (char            op,
 
     return ze_hs_ret_slaw_len (p, len_out);
 }
+
+int64 ze_hs_get_index (char        op,
+                       ze_hs_hose *zHose,
+                       ob_retort  *tort_out)
+{
+    pool_hose h = get_hose (zHose, tort_out);
+
+    if (!h) {
+        return -1;
+    }
+
+    int64 idx      = -1;
+    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+
+    switch (op) {
+    case 'n':
+        tort = pool_newest_index (h, &idx);
+        break;
+    case 'o':
+        tort = pool_oldest_index (h, &idx);
+        break;
+    case 'i':
+        tort = pool_index (h, &idx);
+        break;
+    }
+
+    *tort_out = tort;
+    return idx;
+}
