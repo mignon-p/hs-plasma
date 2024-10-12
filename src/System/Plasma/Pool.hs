@@ -62,7 +62,15 @@ module System.Plasma.Pool
   , withdraw
   , cloneHose
   , deposit
+    -- *** Reading proteins
   , nthProtein
+  , next
+  , awaitNext
+  , curr
+  , prev
+  , probeFrwd
+  , awaitProbeFrwd
+  , probeBack
   ) where
 
 import Data.Default.Class

@@ -15,7 +15,15 @@ module System.Plasma.Pool.Internal.PoolHose
   , getHoseContext
   , cloneHose
   , deposit
+    --
   , nthProtein
+  , next
+  , awaitNext
+  , curr
+  , prev
+  , probeFrwd
+  , awaitProbeFrwd
+  , probeBack
   ) where
 
 import Control.DeepSeq
@@ -30,7 +38,7 @@ import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
 -- import Data.Word
 -- import Foreign.C.String
--- import Foreign.C.Types
+import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
@@ -73,6 +81,18 @@ foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
 
 foreign import capi safe "ze-hs-hose.h ze_hs_nth_protein"
     c_nth_protein :: Ptr FgnHose -> Int64 -> Ptr WallTime -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
+
+foreign import capi safe "ze-hs-hose.h ze_hs_protein_op"
+    c_protein_op
+      :: CChar              -- op
+      -> Ptr FgnHose        -- zHose
+      -> C.ConstPtr FgnSlaw -- search
+      -> WallTime           -- timeout
+      -> Ptr WallTime       -- ts_out
+      -> Ptr PoolIndex      -- idx_out
+      -> Ptr Int64          -- tort_out
+      -> Ptr SlawLen        -- len_out
+      -> IO (Ptr FgnSlaw)
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -194,3 +214,71 @@ nthProtein h idx = withForeignPtr (hosePtr h) $ \hPtr -> do
                       , rpIndex     = idx
                       , rpTimestamp = ts
                       }
+
+proteinOp
+  :: CallStack
+  -> String     -- loc
+  -> Char       -- op
+  -> Hose
+  -> Maybe Slaw -- search
+  -> WallTime   -- timeout
+  -> IO RetProtein
+proteinOp cs loc op h srch tmout = do
+  let addn = Just loc
+      erl  = erlFromHose h
+      c    = toCChar op
+  withForeignPtr (hosePtr h) $ \hPtr -> do
+    withMaybeSlaw srch $ \srchPtr -> do
+      ((p, idx), ts) <- withRet1 (-1) $ \tsPtr -> do
+        withReturnedSlawIdx erl $ \idxPtr lenPtr -> do
+          withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
+            c_protein_op c hPtr srchPtr tmout tsPtr idxPtr tortPtr lenPtr
+      return $ RetProtein p idx ts
+
+next
+  :: HasCallStack
+  => Hose
+  -> IO RetProtein
+next h = proteinOp callStack "next" 'n' h Nothing (-1)
+
+awaitNext
+  :: HasCallStack
+  => Hose
+  -> WallTime -- timeout
+  -> IO RetProtein
+awaitNext h = proteinOp callStack "awaitNext" 'a' h Nothing
+
+curr
+  :: HasCallStack
+  => Hose
+  -> IO RetProtein
+curr h = proteinOp callStack "curr" 'c' h Nothing (-1)
+
+prev
+  :: HasCallStack
+  => Hose
+  -> IO RetProtein
+prev h = proteinOp callStack "prev" 'p' h Nothing (-1)
+
+probeFrwd
+  :: HasCallStack
+  => Hose
+  -> Slaw -- search
+  -> IO RetProtein
+probeFrwd h srch = proteinOp callStack "probeFrwd" 'f' h (Just srch) (-1)
+
+awaitProbeFrwd
+  :: HasCallStack
+  => Hose
+  -> Slaw     -- search
+  -> WallTime -- timeout
+  -> IO RetProtein
+awaitProbeFrwd h srch =
+  proteinOp callStack "awaitProbeFrwd" 'w' h (Just srch)
+
+probeBack
+  :: HasCallStack
+  => Hose
+  -> Slaw -- search
+  -> IO RetProtein
+probeBack h srch = proteinOp callStack "probeBack" 'b' h (Just srch) (-1)

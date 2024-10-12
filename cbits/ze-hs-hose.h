@@ -38,4 +38,22 @@ protein ze_hs_nth_protein (ze_hs_hose     *zHose,
                            ob_retort      *tort_out,
                            int64          *len_out);
 
+/* "op" character:
+ *   pool_(n)ext
+ *   pool_(a)await_next
+ *   pool_(c)urr
+ *   pool_(p)rev
+ *   pool_probe_(f)rwd
+ *   pool_a(w)ait_probe_frwd
+ *   pool_probe_(b)ack
+ */
+protein ze_hs_protein_op (char            op,
+                          ze_hs_hose     *zHose,
+                          bslaw           search,
+                          pool_timestamp  timeout,
+                          pool_timestamp *ts_out,
+                          int64          *idx_out,
+                          ob_retort      *tort_out,
+                          int64          *len_out);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

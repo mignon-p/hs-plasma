@@ -131,3 +131,57 @@ protein ze_hs_nth_protein (ze_hs_hose     *zHose,
 
     return ze_hs_ret_slaw_len (p, len_out);
 }
+
+protein ze_hs_protein_op (char            op,
+                          ze_hs_hose     *zHose,
+                          bslaw           search,
+                          pool_timestamp  timeout,
+                          pool_timestamp *ts_out,
+                          int64          *idx_out,
+                          ob_retort      *tort_out,
+                          int64          *len_out)
+{
+    pool_hose h = get_hose (zHose, tort_out);
+
+    if (!h) {
+        return NULL;
+    }
+
+    protein   p    = NULL;
+    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+
+    switch (op) {
+    case 'n':
+        tort = pool_next (h, &p, ts_out, idx_out);
+        break;
+    case 'a':
+        tort = pool_await_next (h, timeout, &p, ts_out, idx_out);
+        break;
+    case 'c':
+        tort = pool_index (h, idx_out);
+        if (tort >= OB_OK) {
+            tort = pool_curr (h, &p, ts_out);
+        }
+        break;
+    case 'p':
+        tort = pool_prev (h, &p, ts_out, idx_out);
+        break;
+    case 'f':
+        tort = pool_probe_frwd (h, search, &p, ts_out, idx_out);
+        break;
+    case 'w':
+        tort = pool_await_probe_frwd (h, search, timeout,
+                                      &p, ts_out, idx_out);
+        break;
+    case 'b':
+        tort = pool_probe_back (h, search, &p, ts_out, idx_out);
+        break;
+    }
+
+    *tort_out = tort;
+    if (tort < OB_OK) {
+        return NULL;
+    }
+
+    return ze_hs_ret_slaw_len (p, len_out);
+}
