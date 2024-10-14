@@ -4,6 +4,8 @@ import Data.Default.Class
 import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy           as LT
+import Data.Word
+import Numeric.Half
 import System.Environment (setEnv)
 import System.IO
 import Text.Printf
@@ -339,3 +341,28 @@ main1 = do
 
   dispose def "a/man/a/plan/a/canal/panama"
   dispose def "a/man/a/plan/a/canal+/company"
+
+  putStrLn ""
+
+  printf "%s\n" (SlawBool True)
+  printf "%u\n" (SlawBool True)
+  printf "%v\n" (SlawBool True)
+
+  printf "%v\n" ("hello" :: Slaw)
+  printf "%.4s\n" ("hello" :: Slaw)
+
+  let num = 3 :: Word8
+      den = 4 :: Word8
+
+  printf "%s\n" SlawNil
+  printf "%d\n" (SlawSymbol 8675309)
+  printf "%x\n" ("16067382063509719774" :: Slaw)
+  printf "%v\n" $ SlawCons (š num) (š den)
+
+  printf "%v\n" $ š (pi :: Double)
+  printf "%v\n" $ š (pi :: Float)
+  printf "%v\n" $ š (pi :: Half)
+  printf "%03u\n" $ š den
+
+  printf "%s\n" $ š num
+  printf "%c\n" $ SlawBool True
