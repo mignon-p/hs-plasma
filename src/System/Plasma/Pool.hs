@@ -54,6 +54,8 @@ module System.Plasma.Pool
   , Hose               -- opaque
   , PoolIndex
   , RetProtein(..)
+  , PoolTimestamp
+  , PoolTimeout
     -- ** Hose information
   , hoseName
   , hosePool
@@ -105,6 +107,7 @@ import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolHose
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
+import System.Plasma.Pool.Internal.PoolTimeout
 
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
     c_participate :: CBool -> Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr FgnRawHose)

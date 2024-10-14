@@ -82,6 +82,7 @@ library
                      , System.Plasma.Pool.Internal.PoolHose
                      , System.Plasma.Pool.Internal.PoolName
                      , System.Plasma.Pool.Internal.PoolOpts
+                     , System.Plasma.Pool.Internal.PoolTimeout
 
   -- LANGUAGE extensions enabled for all modules in this package.
   default-extensions:  BangPatterns

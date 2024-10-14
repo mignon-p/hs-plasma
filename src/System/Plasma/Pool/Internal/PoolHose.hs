@@ -10,6 +10,7 @@ Portability : GHC
 module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
   , RetProtein(..)
+  , PoolTimestamp
   , newHose
   , withdraw
   , getHoseContext
@@ -38,10 +39,10 @@ module System.Plasma.Pool.Internal.PoolHose
   ) where
 
 import Control.DeepSeq
--- import Control.Exception
+import Control.Exception
 -- import Control.Monad
 -- import qualified Data.ByteString          as B
--- import Data.Default.Class
+import Data.Default.Class
 import Data.Hashable
 import Data.Int
 import Data.String
@@ -71,6 +72,10 @@ import System.Loam.Retorts
 import System.Loam.Time
 import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolName
+import System.Plasma.Pool.Internal.PoolTimeout
+
+-- | Number of seconds since the UNIX epoch (January 1, 1970)
+type PoolTimestamp = WallTime
 
 foreign import capi safe "ze-hs-hose.h ze_hs_make_hose"
     c_make_hose :: Ptr FgnRawHose -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr FgnHose)
@@ -91,15 +96,15 @@ foreign import capi safe "ze-hs-hose.h ze_hs_deposit"
     c_deposit :: Ptr FgnHose -> C.ConstPtr FgnSlaw -> Ptr Int64 -> Ptr Double -> IO Int64
 
 foreign import capi safe "ze-hs-hose.h ze_hs_nth_protein"
-    c_nth_protein :: Ptr FgnHose -> Int64 -> Ptr WallTime -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
+    c_nth_protein :: Ptr FgnHose -> Int64 -> Ptr PoolTimestamp -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
 
 foreign import capi safe "ze-hs-hose.h ze_hs_protein_op"
     c_protein_op
       :: CChar              -- op
       -> Ptr FgnHose        -- zHose
       -> C.ConstPtr FgnSlaw -- search
-      -> WallTime           -- timeout
-      -> Ptr WallTime       -- ts_out
+      -> Double             -- timeout
+      -> Ptr PoolTimestamp  -- ts_out
       -> Ptr PoolIndex      -- idx_out
       -> Ptr Int64          -- tort_out
       -> Ptr SlawLen        -- len_out
@@ -144,7 +149,7 @@ instance Show Hose where
 data RetProtein = RetProtein
   { rpProtein   ::                Slaw
   , rpIndex     :: {-# UNPACK #-} !PoolIndex
-  , rpTimestamp :: {-# UNPACK #-} !WallTime
+  , rpTimestamp :: {-# UNPACK #-} !PoolTimestamp
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 newHose
@@ -207,7 +212,7 @@ deposit
   :: (HasCallStack, ToSlaw a)
   => Hose
   -> a
-  -> IO (PoolIndex, WallTime)
+  -> IO (PoolIndex, PoolTimestamp)
 deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
   let addn = Just "deposit"
       erl  = erlFromHose h
@@ -242,16 +247,24 @@ nthProtein h idx = withForeignPtr (hosePtr h) $ \hPtr -> do
 
 proteinOp
   :: CallStack
-  -> String     -- loc
-  -> Char       -- op
+  -> String      -- loc
+  -> Char        -- op
   -> Hose
-  -> Maybe Slaw -- search
-  -> WallTime   -- timeout
+  -> Maybe Slaw  -- search
+  -> PoolTimeout -- timeout
   -> IO RetProtein
-proteinOp cs loc op h srch tmout = do
+proteinOp cs loc op h srch timeout = do
   let addn = Just loc
       erl  = erlFromHose h
       c    = toCChar op
+  tmout <- case encodePoolTimeout timeout of
+    Right t  -> return t
+    Left msg ->
+      throwIO $ def { peType      = EtPools
+                    , peMessage   = loc ++ ": " ++ msg
+                    , peCallstack = Just cs
+                    , peLocation  = Just erl
+                    }
   withForeignPtr (hosePtr h) $ \hPtr -> do
     withMaybeSlaw srch $ \srchPtr -> do
       ((p, idx), ts) <- withRet1 (-1) $ \tsPtr -> do
@@ -264,12 +277,12 @@ next
   :: HasCallStack
   => Hose
   -> IO RetProtein
-next h = proteinOp callStack "next" 'n' h Nothing (-1)
+next h = proteinOp callStack "next" 'n' h Nothing def
 
 awaitNext
   :: HasCallStack
   => Hose
-  -> WallTime -- timeout
+  -> PoolTimeout -- timeout
   -> IO RetProtein
 awaitNext h = proteinOp callStack "awaitNext" 'a' h Nothing
 
@@ -277,26 +290,26 @@ curr
   :: HasCallStack
   => Hose
   -> IO RetProtein
-curr h = proteinOp callStack "curr" 'c' h Nothing (-1)
+curr h = proteinOp callStack "curr" 'c' h Nothing def
 
 prev
   :: HasCallStack
   => Hose
   -> IO RetProtein
-prev h = proteinOp callStack "prev" 'p' h Nothing (-1)
+prev h = proteinOp callStack "prev" 'p' h Nothing def
 
 probeFrwd
   :: HasCallStack
   => Hose
   -> Slaw -- search
   -> IO RetProtein
-probeFrwd h srch = proteinOp callStack "probeFrwd" 'f' h (Just srch) (-1)
+probeFrwd h srch = proteinOp callStack "probeFrwd" 'f' h (Just srch) def
 
 awaitProbeFrwd
   :: HasCallStack
   => Hose
-  -> Slaw     -- search
-  -> WallTime -- timeout
+  -> Slaw        -- search
+  -> PoolTimeout -- timeout
   -> IO RetProtein
 awaitProbeFrwd h srch =
   proteinOp callStack "awaitProbeFrwd" 'w' h (Just srch)
@@ -306,7 +319,7 @@ probeBack
   => Hose
   -> Slaw -- search
   -> IO RetProtein
-probeBack h srch = proteinOp callStack "probeBack" 'b' h (Just srch) (-1)
+probeBack h srch = proteinOp callStack "probeBack" 'b' h (Just srch) def
 
 indexOp
   :: CallStack
