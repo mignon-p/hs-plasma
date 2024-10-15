@@ -64,6 +64,9 @@ instance Show Context where
 instance Default Context where
   def = emptyCtx
 
+instance Nameable Context where
+  typeName _ = "Context"
+
 foreign import capi safe "ze-hs-ctx.h ze_hs_new_context"
     c_new_context :: C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr FgnCtx)
 

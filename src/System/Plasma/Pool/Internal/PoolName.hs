@@ -151,15 +151,24 @@ data ParsedPoolUri = ParsedPoolUri
   , poolPath     :: !PoolName
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
+instance Nameable ParsedPoolUri where
+  typeName _ = "ParsedPoolUri"
+
 data PoolLocation = PoolLocation
   { poolScheme    :: !PoolName
   , poolAuthority :: Maybe PoolAuthority
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
+instance Nameable PoolLocation where
+  typeName _ = "PoolLocation"
+
 data PoolAuthority = PoolAuthority
   { poolHost :: !PoolName
   , poolPort :: Maybe Int
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+
+instance Nameable PoolAuthority where
+  typeName _ = "PoolAuthority"
 
 parsePoolUri :: PoolName -> ParsedPoolUri
 parsePoolUri (PoolName sbs) =

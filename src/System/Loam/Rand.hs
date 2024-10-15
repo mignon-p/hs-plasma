@@ -100,6 +100,9 @@ instance Show RandState where
                Nothing -> "random"
                Just x  -> show x
 
+instance Nameable RandState where
+  typeName _ = "RandState"
+
 -- | Produces true random numbers from a platform-specific
 -- source, such as @\/dev\/urandom@.
 trulyRandom

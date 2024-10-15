@@ -18,6 +18,7 @@ import Data.Hashable
 import GHC.Generics (Generic)
 import Text.Printf
 
+import Data.Slaw
 import Data.Slaw.Internal
 import Data.Slaw.Util
 
@@ -43,6 +44,9 @@ instance Hashable PoolTimeout where
 
 instance Default PoolTimeout where
   def = WaitForever
+
+instance Nameable PoolTimeout where
+  typeName _ = "PoolTimeout"
 
 zero :: Double
 zero = 0

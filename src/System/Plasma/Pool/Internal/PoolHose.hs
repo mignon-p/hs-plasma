@@ -146,11 +146,17 @@ instance Show Hose where
     where
       info = "pool=" ++ show (hosePool hose)
 
+instance Nameable Hose where
+  typeName _ = "Hose"
+
 data RetProtein = RetProtein
   { rpProtein   ::                Slaw
   , rpIndex     :: {-# UNPACK #-} !PoolIndex
   , rpTimestamp :: {-# UNPACK #-} !PoolTimestamp
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
+
+instance Nameable RetProtein where
+  typeName _ = "RetProtein"
 
 newHose
   :: String         -- ^ name of API function

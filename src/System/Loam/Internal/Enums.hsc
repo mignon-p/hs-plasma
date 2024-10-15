@@ -46,6 +46,8 @@ import Data.Word
 import Foreign.C.Types
 import GHC.Generics (Generic)
 
+import Data.Slaw
+
 #include "libLoam/c/ob-dirs.h"
 #include "libLoam/c/ob-log.h"
 #include "libLoam/c/ob-vers.h"
@@ -63,6 +65,9 @@ data VersionOfWhat =
   | AbiVersion
   | BuildConfiguration
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+instance Nameable VersionOfWhat where
+  typeName _ = "VersionOfWhat"
 
 versionOfWhat2int :: VersionOfWhat -> CInt
 versionOfWhat2int GspeakVersion      = #{const OB_VERSION_OF_GSPEAK}
@@ -82,6 +87,9 @@ data SystemInfo =
   | SysPhysicalMegabytes
   | SysSwapMegabytes
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+instance Nameable SystemInfo where
+  typeName _ = "SystemInfo"
 
 systemInfo2int :: SystemInfo -> CInt
 systemInfo2int SysNumCores          = #{const OB_SYSINFO_NUM_CORES}
@@ -103,6 +111,9 @@ data SyslogPriority =
 instance Default SyslogPriority where
   def = LogInfo
 
+instance Nameable SyslogPriority where
+  typeName _ = "SyslogPriority"
+
 syslogPriority2int :: SyslogPriority -> Int32
 syslogPriority2int LogEmerg   = #{const LOG_EMERG}
 syslogPriority2int LogAlert   = #{const LOG_ALERT}
@@ -121,6 +132,9 @@ data SyslogFlag =
   | LogNowait
   | LogPerror
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+instance Nameable SyslogFlag where
+  typeName _ = "SyslogFlag"
 
 syslogFlag2int :: SyslogFlag -> CInt
 syslogFlag2int LogPid    = #{const LOG_PID}
@@ -146,6 +160,9 @@ data StandardDir =
     -- | The @--prefix@ specified to “configure”
   | PrefixDir
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+instance Nameable StandardDir where
+  typeName _ = "StandardDir"
 
 standardDir2int :: StandardDir -> CInt
 standardDir2int SharePath  = #{const ob_share_path}
@@ -186,6 +203,9 @@ data LogFlag =
     -- | Print the thread id if it is not the main thread.
   | FlgShowTidNonmain
   deriving (Eq, Ord, Show, Read, Bounded, Enum, Generic, NFData, Hashable)
+
+instance Nameable LogFlag where
+  typeName _ = "LogFlag"
 
 logFlag2w32 :: LogFlag -> Word32
 logFlag2w32 DstFd              = #{const OB_DST_FD}

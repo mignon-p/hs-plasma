@@ -184,6 +184,9 @@ instance Default LogLevel where
 instance Show LogLevel where
   show lev = fmtForeignObj "LogLevel" (llName lev) [] (llPtr lev)
 
+instance Nameable LogLevel where
+  typeName _ = "LogLevel"
+
 lev2Int :: LogLevel -> Int
 lev2Int = fPtrToIntegral . llPtr
 
