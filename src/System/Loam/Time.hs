@@ -14,6 +14,11 @@ module System.Loam.Time
   , monotonicTime
   , formatTime
   , parseTime
+    --
+  , loamTimeToPosixTime
+  , loamTimeToUtcTime
+  , posixTimeToLoamTime
+  , utcTimeToLoamTime
   ) where
 
 -- import Control.Exception
@@ -22,6 +27,8 @@ import qualified Data.ByteString          as B
 import Data.Int
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
+import Data.Time.Clock
+import Data.Time.Clock.POSIX
 import Data.Word
 import Foreign.C.String
 import Foreign.C.Types
@@ -73,3 +80,15 @@ parseTime txt = unsafePerformIO $ do
           let addn = Just "parseTime"
           exc <- retortToPlasmaException EtOther addn tort Nothing
           return $ Left $ exc { peCallstack = Just callStack }
+
+loamTimeToPosixTime :: LoamTime -> POSIXTime
+loamTimeToPosixTime = realToFrac
+
+loamTimeToUtcTime :: LoamTime -> UTCTime
+loamTimeToUtcTime = posixSecondsToUTCTime . loamTimeToPosixTime
+
+posixTimeToLoamTime :: POSIXTime -> LoamTime
+posixTimeToLoamTime = realToFrac
+
+utcTimeToLoamTime :: UTCTime -> LoamTime
+utcTimeToLoamTime = posixTimeToLoamTime . utcTimeToPOSIXSeconds
