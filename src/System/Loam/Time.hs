@@ -8,7 +8,7 @@ Portability : GHC
 -}
 
 module System.Loam.Time
-  ( WallTime
+  ( LoamTime
   , MonotonicTime
   , currentTime
   , monotonicTime
@@ -35,12 +35,12 @@ import System.IO.Unsafe
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts
 
-type WallTime = Double
+type LoamTime = Double
 
 type MonotonicTime = Word64
 
 foreign import capi unsafe "libLoam/c/ob-time.h ob_current_time"
-    currentTime :: IO WallTime
+    currentTime :: IO LoamTime
 
 foreign import capi unsafe "libLoam/c/ob-time.h ob_monotonic_time"
     monotonicTime :: IO MonotonicTime
@@ -54,14 +54,14 @@ foreign import capi unsafe "libLoam/c/ob-time.h ob_strptime"
 bufSize :: Integral a => a
 bufSize = 112
 
-formatTime :: WallTime -> T.Text
+formatTime :: LoamTime -> T.Text
 formatTime t = unsafePerformIO $ do
   allocaBytes bufSize $ \bufPtr -> do
     fillBytes bufPtr 0 bufSize
     c_format_time_f bufPtr bufSize t
     T.decodeUtf8Lenient <$> B.packCString bufPtr
 
-parseTime :: HasCallStack => T.Text -> Either PlasmaException WallTime
+parseTime :: HasCallStack => T.Text -> Either PlasmaException LoamTime
 parseTime txt = unsafePerformIO $ do
   C.useAsConstCString (T.encodeUtf8 txt) $ \ccs -> do
     alloca $ \dblPtr -> do

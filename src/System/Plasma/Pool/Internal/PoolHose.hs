@@ -76,7 +76,7 @@ import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolTimeout
 
 -- | Number of seconds since the UNIX epoch (January 1, 1970)
-type PoolTimestamp = WallTime
+type PoolTimestamp = LoamTime
 
 foreign import capi safe "ze-hs-hose.h ze_hs_make_hose"
     c_make_hose :: Ptr FgnRawHose -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr FgnHose)
