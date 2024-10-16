@@ -79,6 +79,7 @@ library
                      , System.Loam.Retorts.Internal.Descriptions
                      , System.Loam.Retorts.Internal.IoeRetorts
                      , System.Loam.Retorts.Internal.RetortUtil
+                     , System.Plasma.Pool.Internal.FetchOp
                      , System.Plasma.Pool.Internal.PoolContext
                      , System.Plasma.Pool.Internal.PoolHose
                      , System.Plasma.Pool.Internal.PoolName
@@ -106,6 +107,7 @@ library
 
   c-sources:           cbits/ze-hs-cleanup.c
                      , cbits/ze-hs-ctx.c
+                     , cbits/ze-hs-fetch.c
                      , cbits/ze-hs-hose.c
                      , cbits/ze-hs-log.c
                      , cbits/ze-hs-misc.c
