@@ -22,6 +22,7 @@ module System.Loam.Internal.Marshal
   , withReturnedSlaw
   , withReturnedSlaw'
   , withReturnedSlawIdx
+  , unsafePackMallocSlaw
     --
   , withReturnedRetort
   , withReturnedRetortCS
@@ -187,12 +188,19 @@ withReturnedSlaw0 f = alloca $ \lenPtr -> do
   byteLen <- peek lenPtr
   if slawPtr == nullPtr || byteLen < 0
     then return Nothing
-    else Just <$> unsafePackMallocSlaw (slawPtr, byteLen)
+    else Just <$> unsafePackMallocSlaw0 (slawPtr, byteLen)
 
-unsafePackMallocSlaw :: (Ptr FgnSlaw, Int64) -> IO B.ByteString
-unsafePackMallocSlaw (ptr, len) = do
+unsafePackMallocSlaw0 :: (Ptr FgnSlaw, SlawLen) -> IO B.ByteString
+unsafePackMallocSlaw0 (ptr, len) = do
   fp <- newForeignPtr finalizerSlaw ptr
   return $ B.BS (castForeignPtr fp) (fromIntegral len)
+
+unsafePackMallocSlaw :: ErrLocation -> (Ptr FgnSlaw, SlawLen) -> IO Slaw
+unsafePackMallocSlaw erl (slawPtr, byteLen) = do
+  mbs <- if slawPtr == nullPtr || byteLen < 0
+         then return Nothing
+         else Just <$> unsafePackMallocSlaw0 (slawPtr, byteLen)
+  fromMaybe SlawNil <$> handleReturnedSlaw erl mbs
 
 withReturnedSlaw'
   :: ErrLocation
