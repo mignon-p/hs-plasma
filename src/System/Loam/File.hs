@@ -24,6 +24,7 @@ import qualified System.Directory.OsPath       as O
 import Data.Slaw
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Filename
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 
 foreign import capi safe "ze-hs-misc.h ze_hs_mkdtemp"
@@ -34,6 +35,7 @@ makeTempDir pfx = from8bitFn <$> makeTempDir0 callStack "makeTempDir" pfx
 
 makeTempDir0 :: Filename a => CallStack -> String -> a -> IO B.ByteString
 makeTempDir0 cs addn pfx = do
+  initialize
   let erl  = Just $ fnAsErl pfx
   ptr <- C.useAsConstCString (to8bitFn pfx) $ \pfxPtr -> do
     withReturnedRetortCS EtOther (Just addn) erl cs $ \tortPtr -> do

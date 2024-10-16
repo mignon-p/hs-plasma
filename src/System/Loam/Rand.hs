@@ -44,6 +44,7 @@ import Data.Slaw
 import System.Loam.Hash
 -- import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
@@ -109,7 +110,15 @@ trulyRandom
   :: HasCallStack
   => Int             -- ^ number of bytes to generate
   -> IO B.ByteString
-trulyRandom nBytes
+trulyRandom nBytes = withFrozenCallStack $ do
+  initialize
+  trulyRandom0 nBytes
+
+trulyRandom0
+  :: HasCallStack
+  => Int             -- ^ number of bytes to generate
+  -> IO B.ByteString
+trulyRandom0 nBytes
   | nBytes < 0 = do
       let msg = "trulyRandom: nBytes " ++ show nBytes ++ " < 0"
       throwIO $ def { peType      = EtInvalidArgument
@@ -148,6 +157,7 @@ newRandState
   -> Maybe Int -- ^ seed
   -> IO RandState
 newRandState name0 seed = do
+  initialize
   name <- nonEmptyName "RandState" name0 callStack
   ptr  <- c_rand_allocate_state (makeSeed seed)
   when (ptr == nullPtr) $ do

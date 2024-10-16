@@ -68,6 +68,7 @@ import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.IoeRetorts
 import System.Loam.Retorts.Internal.RetortUtil
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 
@@ -365,6 +366,7 @@ openYamlSlawInput1
   -> b      -- options (ignored)
   -> IO SlawInputStream
 openYamlSlawInput1 addn nam rdr _ = do
+  initialize
   offRef <- newIORef Nothing
   let yin = YInput { yinName       = nam
                    , yinReader     = rdr
@@ -442,6 +444,7 @@ openYamlSlawOutput1 :: FileClass a
                     -> CallStack
                     -> IO SlawOutputStream
 openYamlSlawOutput1 addn file opts cs = do
+  initialize
   let nam   = fcName file
       addn' = Just addn
   (h, shouldClose) <- fcOpenWrite file
@@ -697,6 +700,7 @@ slawOpenYamlString
   -> CallStack
   -> IO (SlawOutputStream, YStrOut1)
 slawOpenYamlString addn nam opts cs = do
+  initialize
   ref <- newIORef $ YStrOut0 { yStr0Str = []
                              , yStr0Off = YOutOffsets 0 0
                              }

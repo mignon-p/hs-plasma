@@ -36,6 +36,7 @@ import Data.Slaw.Extras.Internal.SpewParser
 -- import Data.Slaw.Internal
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 -- import System.Loam.Retorts
 
@@ -51,6 +52,7 @@ spewOverview =
 
 spewOverview0 :: HasCallStack => Slaw -> IO (LT.Text, Word64)
 spewOverview0 slaw = do
+  initialize
   let slawErl            = def { elSource = DsOther sErlStr }
       sErlStr            = "<internal:spewOverview>"
       (slawBld, byteLen) = encodeSlawToBuilderAndLen nativeByteOrder slaw

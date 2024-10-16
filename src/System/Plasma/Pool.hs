@@ -100,6 +100,7 @@ import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
@@ -157,6 +158,7 @@ participateInternal
   -> Slaw     -- ^ pool create options
   -> IO Hose
 participateInternal loc crtly cs ctx name pool opts = do
+  initialize
   let cbool = fromBool crtly
       erl   = Just $ erlFromPoolName pool
       addn  = Just loc
@@ -174,6 +176,7 @@ create
   -> a        -- ^ pool create options
   -> IO ()
 create ctx pool opts = do
+  initialize
   let cs    = callStack
       erl   = Just $ erlFromPoolName pool
       addn  = Just "create"
@@ -189,6 +192,7 @@ dispose
   -> PoolName -- ^ name of pool to delete
   -> IO ()
 dispose ctx pool = do
+  initialize
   let cs    = callStack
       erl   = Just $ erlFromPoolName pool
       addn  = Just "dispose"
@@ -204,6 +208,7 @@ rename
   -> PoolName -- ^ new name for pool
   -> IO ()
 rename ctx oldName newName = do
+  initialize
   let cs     = callStack
       erlOld = Just $ erlFromPoolName oldName
       erlNew = Just $ erlFromPoolName newName
@@ -233,6 +238,7 @@ listPools0
   -> C.ConstCString    -- ^ uri to list
   -> IO [PoolName]
 listPools0 cs ctx erl uriPtr = do
+  initialize
   let addn = Just "listPools"
   mSlaw <- withReturnedSlaw erl $ \lenPtr -> do
     withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do

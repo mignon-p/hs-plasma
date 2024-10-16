@@ -38,6 +38,7 @@ import Data.Word
 import Foreign.C
 
 import System.Loam.Internal.Enums
+import System.Loam.Internal.Initialize
 
 foreign import capi "libLoam/c/ob-vers.h ob_x86_features"
     x86Features :: IO Word64
@@ -52,7 +53,11 @@ mallocStr2txt :: CString -> IO T.Text
 mallocStr2txt cs = T.decodeUtf8Lenient <$> B.unsafePackMallocCString cs
 
 getVersion :: VersionOfWhat -> IO T.Text
-getVersion v = c_get_version (versionOfWhat2int v) >>= mallocStr2txt
+getVersion v = do
+  initialize
+  c_get_version (versionOfWhat2int v) >>= mallocStr2txt
 
 getSystemInfo :: SystemInfo -> IO Int64
-getSystemInfo = c_get_system_info . systemInfo2int
+getSystemInfo si = do
+  initialize
+  c_get_system_info $ systemInfo2int si

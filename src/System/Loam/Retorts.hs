@@ -50,6 +50,7 @@ import System.IO.Error
 import Data.Slaw
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.Initialize
 -- import System.Loam.Retorts.Constants
 import System.Loam.Retorts.Internal.Descriptions
 import System.Loam.Retorts.Internal.IoeRetorts
@@ -87,6 +88,7 @@ retortMap = M.fromList $ map f tortTuples
 
 getRetortStringFromC :: Retort -> IO T.Text
 getRetortStringFromC (Retort r) = do
+  initialize
   cs <- c_error_string_literal r
   if cs == C.nullConstPtr
     then return T.empty

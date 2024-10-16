@@ -38,6 +38,7 @@ import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Misc
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
@@ -87,6 +88,7 @@ newContext
   -> a
   -> IO Context
 newContext name0 opts = do
+  initialize
   let cs   = callStack
       addn = Just "newContext"
   name <- nonEmptyName kContext name0 cs

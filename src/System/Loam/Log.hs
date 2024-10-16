@@ -95,6 +95,7 @@ import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
 import System.Loam.Internal.Filename
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
@@ -192,6 +193,7 @@ lev2Int = fPtrToIntegral . llPtr
 
 mkStaticLevel :: Char -> T.Text -> IO LogLevel
 mkStaticLevel c name = do
+  initialize
   ptr  <- c_log_level $ fromIntegral $ ord c
   when (ptr == nullPtr) $ do
     fail $ "mkStaticLevel: nullPtr for " ++ show c
@@ -475,6 +477,7 @@ fmtThread = do
 
 newLogLevel :: HasCallStack => T.Text -> IO LogLevel
 newLogLevel name0 = do
+  initialize
   name <- nonEmptyName "LogLevel" name0 callStack
   ptr  <- c_log_level_alloc
   when (ptr == nullPtr) $ do
@@ -645,6 +648,7 @@ facilityToName (SyslogFacility n) =
 
 syslogOpen :: Maybe T.Text -> [SyslogFlag] -> SyslogFacility -> IO ()
 syslogOpen ident flags (SyslogFacility fac) = do
+  initialize
   let flagMask = orList $ map syslogFlag2int flags
   syslogOpen0 ident flagMask fac
 

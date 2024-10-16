@@ -34,6 +34,7 @@ import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
 import System.Loam.Internal.Filename
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 
 foreign import capi unsafe "libLoam/c/ob-dirs.h value OB_PATH_CHAR"
@@ -65,6 +66,7 @@ splitStandardPath sd = do
 
 getStandardPathBS :: StandardDir -> IO B.ByteString
 getStandardPathBS sd = do
+  initialize
   cs <- c_get_standard_path $ standardDir2int sd
   if cs == C.nullConstPtr
     then return B.empty
@@ -119,6 +121,7 @@ searchStandardPath1
   -> Int64
   -> IO (Maybe Slaw)
 searchStandardPath1 wh sd fn spec limit = do
+  initialize
   let sd'     = standardDir2int  sd
       fn'     = to8bitFn         fn
       spec'   = T.encodeUtf8     spec

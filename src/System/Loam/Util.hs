@@ -27,6 +27,7 @@ import Foreign.Marshal.Alloc
 import GHC.Stack
 
 import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.Initialize
 import System.Loam.Retorts
 
 foreign import capi "libLoam/c/ob-util.h ob_generate_uuid"
@@ -43,19 +44,21 @@ foreign import capi  "libLoam/c/ob-util.h ob_set_prog_name"
 
 generateUuid :: HasCallStack => IO T.Text
 generateUuid = withFrozenCallStack $ do
+  initialize
   allocaBytes 40 $ \ptr -> do
     tort <- Retort <$> c_generate_uuid ptr
     throwRetort EtOther (Just "generateUuid") tort Nothing
     T.decodeUtf8Lenient <$> B.packCString ptr
 
 getUserName :: IO T.Text
-getUserName = c_get_user_name >>= constCStrToTxt
+getUserName = initialize >> c_get_user_name >>= constCStrToTxt
 
 getProgName :: IO T.Text
-getProgName = c_get_prog_name >>= constCStrToTxt
+getProgName = initialize >> c_get_prog_name >>= constCStrToTxt
 
 setProgName :: T.Text -> IO ()
 setProgName txt = do
+  initialize
   B.useAsCString (T.encodeUtf8 txt) $ \ptr -> do
     c_set_prog_name (C.ConstPtr ptr)
 

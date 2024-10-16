@@ -65,6 +65,7 @@ import Data.Slaw
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
@@ -167,6 +168,7 @@ newHose
   -> Ptr FgnRawHose -- ^ actual pointer to the hose
   -> IO Hose
 newHose loc cs name0 pool ctx hPtr = do
+  initialize
   let erl  = Just $ erlFromPoolName pool
       addn = Just loc
   name    <- nonEmptyName kHose name0 cs
