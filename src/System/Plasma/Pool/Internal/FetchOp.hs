@@ -24,12 +24,14 @@ import Foreign.Ptr
 import Foreign.Storable
 import Foreign.Marshal.Utils
 import GHC.Generics (Generic)
+import GHC.Stack
 -- import Text.Printf
 
 import Data.Slaw
 -- import Data.Slaw.Internal
 -- import Data.Slaw.Util
 import System.Loam.Internal.Marshal
+import System.Loam.Retorts
 import System.Loam.Time
 import System.Plasma.Pool.Internal.PoolName
 
@@ -106,7 +108,6 @@ instance Default FetchOp where
 
 data FetchResult = FetchResult
   { frIdx          :: {-# UNPACK #-} !Int64
-  , frTort         :: {-# UNPACK #-} !Int64
   , frTimestamp    :: {-# UNPACK #-} !PoolTimestamp
   , frTotalBytes   :: {-# UNPACK #-} !Int64
   , frDescripBytes :: {-# UNPACK #-} !Int64
@@ -123,7 +124,6 @@ instance Nameable FetchResult where
 instance Default FetchResult where
   def = FetchResult
     { frIdx          = 0
-    , frTort         = 0
     , frTimestamp    = 0
     , frTotalBytes   = 0
     , frDescripBytes = 0
@@ -157,11 +157,35 @@ pokeFetchOp fo ptr = do
   pokeInt64Elem ptr c_field_rude_offset        (foRudeOffset   fo)
   pokeInt64Elem ptr c_field_rude_length        (foRudeLength   fo)
 
-peekFetchResult :: PoolName -> Ptr Int64 -> IO FetchResult
-peekFetchResult pool ptr = do
+peekFetchResult
+  :: String
+  -> CallStack
+  -> PoolName
+  -> Ptr Int64
+  -> IO (Either PlasmaException FetchResult)
+peekFetchResult loc cs pool ptr = do
+  idx  <-            peekInt64Elem ptr c_field_idx
+  tort <- Retort <$> peekInt64Elem ptr c_field_tort
+  if isSuccess tort
+    then Right <$> peekFetchResult1 pool ptr
+    else Left  <$> makeExc   loc cs pool idx tort
+
+makeExc
+  :: String
+  -> CallStack
+  -> PoolName
+  -> PoolIndex
+  -> Retort
+  -> IO PlasmaException
+makeExc loc cs pool idx tort = do
+  let erl = erlFromPoolIdx pool idx
+  pe <- retortToPlasmaException EtPools (Just loc) tort (Just erl)
+  return $ pe { peCallstack = Just cs }
+
+peekFetchResult1 :: PoolName -> Ptr Int64 -> IO FetchResult
+peekFetchResult1 pool ptr = do
   let fltPtr = castPtr ptr
   xxIdx          <- peekInt64Elem   ptr    c_field_idx
-  xxTort         <- peekInt64Elem   ptr    c_field_tort
   xxTs           <- peekFloat64Elem fltPtr c_field_ts
   xxTotalBytes   <- peekInt64Elem   ptr    c_field_total_bytes
   xxDescripBytes <- peekInt64Elem   ptr    c_field_descrip_bytes
@@ -179,7 +203,6 @@ peekFetchResult pool ptr = do
 
   return $ FetchResult
     { frIdx          = xxIdx
-    , frTort         = xxTort
     , frTimestamp    = xxTs
     , frTotalBytes   = xxTotalBytes
     , frDescripBytes = xxDescripBytes
