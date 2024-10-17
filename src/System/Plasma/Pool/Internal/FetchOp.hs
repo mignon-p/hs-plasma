@@ -33,7 +33,7 @@ import GHC.Stack
 
 import Data.Slaw
 -- import Data.Slaw.Internal
--- import Data.Slaw.Util
+import Data.Slaw.Util
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Time
@@ -92,22 +92,25 @@ type PoolTimestamp = LoamTime
 
 data FetchOp = FetchOp
   { foIdx          :: {-# UNPACK #-} !Int64
-  , foWantDescrips ::                !Bool
-  , foWantIngests  ::                !Bool
-  , foRudeOffset   :: {-# UNPACK #-} !Int64
-  , foRudeLength   :: {-# UNPACK #-} !Int64
+  , foWantDescrips :: !Bool
+  , foWantIngests  :: !Bool
+    -- | 'Nothing' means no rude data
+  , foRudeOffset   :: Maybe Int64
+    -- | 'Nothing' means "until end"
+  , foRudeLength   :: Maybe Int64
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance Nameable FetchOp where
   typeName _ = "FetchOp"
 
+-- | default is to get the whole protein
 instance Default FetchOp where
   def = FetchOp
     { foIdx          = 0
-    , foWantDescrips = False
-    , foWantIngests  = False
-    , foRudeOffset   = 0
-    , foRudeLength   = 0
+    , foWantDescrips = True
+    , foWantIngests  = True
+    , foRudeOffset   = Just 0
+    , foRudeLength   = Nothing
     }
 
 data FetchResult = FetchResult
@@ -117,9 +120,11 @@ data FetchResult = FetchResult
   , frDescripBytes :: {-# UNPACK #-} !Int64
   , frIngestBytes  :: {-# UNPACK #-} !Int64
   , frRudeBytes    :: {-# UNPACK #-} !Int64
-  , frNumDescrips  :: {-# UNPACK #-} !Int64
-  , frNumIngests   :: {-# UNPACK #-} !Int64
-  , frProtein      ::                Slaw
+    -- | 'Nothing' if descrips is not a list
+  , frNumDescrips  :: Maybe Int64
+    -- | 'Nothing' if ingests is not a map
+  , frNumIngests   :: Maybe Int64
+  , frProtein      :: Slaw
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance Nameable FetchResult where
@@ -133,8 +138,8 @@ instance Default FetchResult where
     , frDescripBytes = 0
     , frIngestBytes  = 0
     , frRudeBytes    = 0
-    , frNumDescrips  = 0
-    , frNumIngests   = 0
+    , frNumDescrips  = Nothing
+    , frNumIngests   = Nothing
     , frProtein      = SlawNil
     }
 
@@ -158,8 +163,8 @@ pokeFetchOp fo ptr = do
   pokeInt64Elem ptr c_field_idx                (foIdx          fo)
   pokeInt64Elem ptr c_field_want_descrips (fb $ foWantDescrips fo)
   pokeInt64Elem ptr c_field_want_ingests  (fb $ foWantIngests  fo)
-  pokeInt64Elem ptr c_field_rude_offset        (foRudeOffset   fo)
-  pokeInt64Elem ptr c_field_rude_length        (foRudeLength   fo)
+  pokeInt64Elem ptr c_field_rude_offset        (foRudeOffset   fo ?> -1)
+  pokeInt64Elem ptr c_field_rude_length        (foRudeLength   fo ?> -1)
 
 stride :: Int
 stride = fieldsPerFetchRecord * sizeOf (0 :: Int64)
@@ -220,10 +225,15 @@ peekFetchResult1 pool ptr = do
     , frDescripBytes = xxDescripBytes
     , frIngestBytes  = xxIngestBytes
     , frRudeBytes    = xxRudeBytes
-    , frNumDescrips  = xxNumDescrips
-    , frNumIngests   = xxNumIngests
+    , frNumDescrips  = negNothing xxNumDescrips
+    , frNumIngests   = negNothing xxNumIngests
     , frProtein      = prot
   }
+
+negNothing :: Int64 -> Maybe Int64
+negNothing x
+  | x < 0     = Nothing
+  | otherwise = Just x
 
 peekFetchResults
   :: String
