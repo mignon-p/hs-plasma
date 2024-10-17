@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "ze-hs-cleanup.h"
+#include "ze-hs-fetch.h"
 #include "ze-hs-hose.h"
 #include "ze-hs-retorts.h"
 #include "ze-hs-util.h"
@@ -215,14 +216,6 @@ int64 ze_hs_get_index (char        op,
     return idx;
 }
 
-/*
-pool_re(w)ind
-pool_to(l)ast
-pool_run(o)ut
-pool_(f)rwdby
-pool_(b)ackby
-pool_(s)eekto
- */
 ob_retort ze_hs_seek_op (char        op,
                          ze_hs_hose *zHose,
                          int64       idx)
@@ -250,4 +243,53 @@ ob_retort ze_hs_seek_op (char        op,
     }
 
     return ZE_HS_INTERNAL_ERROR;
+}
+
+void ze_hs_fetch (ze_hs_hose     *zHose,
+                  bool            clamp,
+                  int64          *ops,
+                  size_t          nops,
+                  int64          *oldest_idx_out,
+                  int64          *newest_idx_out)
+{
+    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    pool_hose h    = get_hose (zHose, &tort);
+    size_t    i;
+
+    if (!h) {
+    splatter_retort:
+        *oldest_idx_out = tort;
+        *newest_idx_out = tort;
+
+        for (i = 0; i < nops; i++) {
+            const size_t j = i * ZE_HS_FETCH_MAX;
+            ops[j + ZE_HS_FETCH_TORT]  = tort;
+            ops[j + ZE_HS_FETCH_P]     = 0;
+            ops[j + ZE_HS_FETCH_P_LEN] = -1;
+        }
+
+        return;
+    }
+
+    pool_fetch_op *fops = (pool_fetch_op *)
+        calloc (nops * ZE_HS_FETCH_MAX, sizeof (int64));
+
+    if (!fops) {
+        tort = OB_NO_MEM;
+        goto splatter_retort;
+    }
+
+    for (i = 0; i < nops; i++) {
+        const size_t j = i * ZE_HS_FETCH_MAX;
+        ze_hs_encode_fetch_op (fops + i, ops + j);
+    }
+
+    pool_fetch_ex (h, fops, nops, oldest_idx_out, newest_idx_out, clamp);
+
+    for (i = 0; i < nops; i++) {
+        const size_t j = i * ZE_HS_FETCH_MAX;
+        ze_hs_decode_fetch_op (ops + j, fops + i);
+    }
+
+    free (fops);
 }

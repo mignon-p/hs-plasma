@@ -1,6 +1,7 @@
 #ifndef ZE_HS_HOSE_H_57ED2E1F
 #define ZE_HS_HOSE_H_57ED2E1F
 
+#include <stddef.h>
 #include <HsFFI.h>
 #include "libPlasma/c/pool.h"
 
@@ -76,5 +77,12 @@ int64 ze_hs_get_index (char        op,
 ob_retort ze_hs_seek_op (char        op,
                          ze_hs_hose *zHose,
                          int64       idx);
+
+void ze_hs_fetch (ze_hs_hose     *zHose,
+                  bool            clamp,
+                  int64          *ops,
+                  size_t          nops,
+                  int64          *oldest_idx_out,
+                  int64          *newest_idx_out);
 
 #endif /* ZE_HS_HOSE_H_57ED2E1F */
