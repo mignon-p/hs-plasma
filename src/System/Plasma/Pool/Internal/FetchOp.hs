@@ -9,6 +9,7 @@ Portability : GHC
 
 module System.Plasma.Pool.Internal.FetchOp
   ( fieldsPerFetchRecord
+  , PoolTimestamp
   , FetchOp(..)
   , pokeFetchOp
   , FetchResult(..)
@@ -107,7 +108,7 @@ instance Default FetchOp where
     }
 
 data FetchResult = FetchResult
-  { frIdx          :: {-# UNPACK #-} !Int64
+  { frIdx          :: {-# UNPACK #-} !PoolIndex
   , frTimestamp    :: {-# UNPACK #-} !PoolTimestamp
   , frTotalBytes   :: {-# UNPACK #-} !Int64
   , frDescripBytes :: {-# UNPACK #-} !Int64

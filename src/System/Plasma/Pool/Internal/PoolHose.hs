@@ -70,13 +70,11 @@ import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
 -- import System.Loam.Retorts.Constants
-import System.Loam.Time
+-- import System.Loam.Time
+import System.Plasma.Pool.Internal.FetchOp
 import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolTimeout
-
--- | Number of seconds since the UNIX epoch (January 1, 1970)
-type PoolTimestamp = LoamTime
 
 foreign import capi safe "ze-hs-hose.h ze_hs_make_hose"
     c_make_hose :: Ptr FgnRawHose -> StablePtr Context -> C.ConstCString -> Ptr Int64 -> IO (Ptr FgnHose)

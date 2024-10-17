@@ -73,6 +73,9 @@ module System.Plasma.Pool
   , probeFrwd
   , awaitProbeFrwd
   , probeBack
+    -- **** Fetch
+  , FetchOp(..)
+  , FetchResult(..)
     -- *** Getting position
   , newestIndex
   , oldestIndex
@@ -104,6 +107,7 @@ import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
+import System.Plasma.Pool.Internal.FetchOp
 import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolHose
 import System.Plasma.Pool.Internal.PoolName
