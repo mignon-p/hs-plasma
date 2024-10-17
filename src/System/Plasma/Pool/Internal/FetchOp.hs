@@ -11,12 +11,15 @@ module System.Plasma.Pool.Internal.FetchOp
   ( fieldsPerFetchRecord
   , PoolTimestamp
   , FetchOp(..)
-  , pokeFetchOp
+  -- , pokeFetchOp
+  , pokeFetchOps
   , FetchResult(..)
-  , peekFetchResult
+  -- , peekFetchResult
+  , peekFetchResults
   ) where
 
 import Control.DeepSeq
+import Control.Monad
 import Data.Default.Class
 import Data.Hashable
 import Data.Int
@@ -158,6 +161,14 @@ pokeFetchOp fo ptr = do
   pokeInt64Elem ptr c_field_rude_offset        (foRudeOffset   fo)
   pokeInt64Elem ptr c_field_rude_length        (foRudeLength   fo)
 
+stride :: Int
+stride = fieldsPerFetchRecord * sizeOf (0 :: Int64)
+
+pokeFetchOps :: [FetchOp] -> Ptr Int64 -> IO ()
+pokeFetchOps fops ptr = do
+  forM_ (zip fops [0..]) $ \(fop, n) -> do
+    pokeFetchOp fop $ ptr `plusPtr` (stride * n)
+
 peekFetchResult
   :: String
   -> CallStack
@@ -213,3 +224,14 @@ peekFetchResult1 pool ptr = do
     , frNumIngests   = xxNumIngests
     , frProtein      = prot
   }
+
+peekFetchResults
+  :: String
+  -> CallStack
+  -> PoolName
+  -> Ptr Int64
+  -> Int
+  -> IO [Either PlasmaException FetchResult]
+peekFetchResults loc cs pool ptr count = do
+  forM [0 .. (count - 1)] $ \n -> do
+    peekFetchResult loc cs pool $ ptr `plusPtr` (stride * n)

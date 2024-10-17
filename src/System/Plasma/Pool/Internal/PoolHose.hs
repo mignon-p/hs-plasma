@@ -25,6 +25,7 @@ module System.Plasma.Pool.Internal.PoolHose
   , probeFrwd
   , awaitProbeFrwd
   , probeBack
+  , fetch
     --
   , newestIndex
   , oldestIndex
@@ -53,6 +54,8 @@ import qualified Data.Text.Encoding       as T
 import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
+import Foreign.Marshal.Array
+import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.StablePtr
 import Foreign.Storable
@@ -122,6 +125,16 @@ foreign import capi safe "ze-hs-hose.h ze_hs_seek_op"
       -> Ptr FgnHose        -- zHose
       -> PoolIndex          -- idx
       -> IO Int64           -- retort
+
+foreign import capi safe "ze-hs-hose.h ze_hs_fetch"
+    c_fetch
+      :: Ptr FgnHose        -- zHose
+      -> CBool              -- clamp
+      -> Ptr Int64          -- ops
+      -> CSize              -- nops
+      -> Ptr Int64          -- oldest_idx_out
+      -> Ptr Int64          -- newest_idx_out
+      -> IO ()
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -210,9 +223,9 @@ cloneHose name orig = withForeignPtr (hosePtr orig) $ \origPtr -> do
       cs   = callStack
   spCtx <- c_get_context origPtr
   ctx   <- deRefStablePtr spCtx
-  new   <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
+  newH  <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
     c_hose_clone origPtr tortPtr
-  newHose loc cs name pool ctx new
+  newHose loc cs name pool ctx newH
 
 deposit
   :: (HasCallStack, ToSlaw a)
@@ -412,3 +425,29 @@ seekTo
   -> PoolIndex
   -> IO ()
 seekTo = seekOp callStack "seekTo" 's'
+
+fetch
+  :: HasCallStack
+  => Hose
+  -> Bool
+  -> [FetchOp]
+  -> IO ( [Either PlasmaException FetchResult]
+        , Maybe (PoolIndex, PoolIndex)
+        )
+fetch h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
+  let nops   = length fops
+      nElems = nops * fieldsPerFetchRecord
+      b      = fromBool clamp
+      loc    = "fetch"
+      cs     = callStack
+      pool   = hosePool h
+  allocaArray nElems $ \opPtr -> do
+    fillBytes opPtr 0 $ nElems * sizeOf (0 :: Int64)
+    pokeFetchOps fops opPtr
+    (_, oldest, newest) <- withRet2 (-1, -1) $ \oldPtr newPtr -> do
+      c_fetch hPtr b opPtr (fromIntegral nops) oldPtr newPtr
+    rs <- peekFetchResults loc cs pool opPtr nops
+    let indices = if oldest >= 0 && newest >= 0
+                  then Just (oldest, newest)
+                  else Nothing
+    return (rs, indices)
