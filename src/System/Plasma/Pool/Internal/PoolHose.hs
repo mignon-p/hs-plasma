@@ -432,7 +432,7 @@ fetch
   -> Bool
   -> [FetchOp]
   -> IO ( [Either PlasmaException FetchResult]
-        , Maybe (PoolIndex, PoolIndex)
+        , Either PlasmaException (PoolIndex, PoolIndex)
         )
 fetch h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
   let nops   = length fops
@@ -447,7 +447,19 @@ fetch h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
     (_, oldest, newest) <- withRet2 (-1, -1) $ \oldPtr newPtr -> do
       c_fetch hPtr b opPtr (fromIntegral nops) oldPtr newPtr
     rs <- peekFetchResults loc cs pool opPtr nops
-    let indices = if oldest >= 0 && newest >= 0
-                  then Just (oldest, newest)
-                  else Nothing
+    let minIndex = oldest `min` newest
+    indices <- if minIndex < 0
+                  then Left <$> makeExc loc cs pool (Retort minIndex)
+                  else return $ Right (oldest, newest)
     return (rs, indices)
+
+makeExc
+  :: String
+  -> CallStack
+  -> PoolName
+  -> Retort
+  -> IO PlasmaException
+makeExc loc cs pool tort = do
+  let erl = erlFromPoolName pool
+  pe <- retortToPlasmaException EtPools (Just loc) tort (Just erl)
+  return $ pe { peCallstack = Just cs }
