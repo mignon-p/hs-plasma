@@ -680,12 +680,18 @@ slawToYamlStringIO'
   -> b      -- ^ options map/protein
   -> IO LT.Text
 slawToYamlStringIO' addn ss opts = do
-  let nam  = "<string>"
-      opn  = slawOpenYamlString addn nam (š opts) callStack
+  let nam   = "<string>"
+      opts' = defaultCommentsOff $ coerceToMap $ š opts
+      opn   = slawOpenYamlString addn nam opts' callStack
   y1 <- bracket opn (soClose . fst) (stys1 ss)
   y0 <- readIORef $ yStr1Ref y1
   let lbs = L.fromChunks $ reverse $ yStr0Str y0
   return $ fromUtf8 lbs
+
+defaultCommentsOff :: Slaw -> Slaw
+defaultCommentsOff (SlawMap pairs) = SlawMap pairs'
+  where pairs' = pairs `preferLeft` [(š kComment, š False)]
+defaultCommentsOff s = s
 
 stys1 :: [Slaw] -> (SlawOutputStream, YStrOut1) -> IO YStrOut1
 stys1 ss (sos, y1) = do

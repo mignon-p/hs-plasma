@@ -15,6 +15,7 @@ module Data.Slaw.IO.Internal.Options
   , PoolCreateOptions(..)
   , ContextOptions(..)
     --
+  , kComment
   , kType
   , kSize
   , kMmap
@@ -163,10 +164,14 @@ writeYamlOptions =
   [ FIELD("tag_numbers|tag-numbers",   wyoTagNumbers      )
   , FIELD("directives",                wyoDirectives      )
   , FIELD("ordered_maps|ordered-maps", wyoOrderedMaps     )
-  , FIELD("comment",                   wyoComment         )
+  , FIELD(kComment,                    wyoComment         )
   , NFELD("max-array-elements",        wyoMaxArrayElements, NumInt64)
   , FIELD("auto-flush",                wyoAutoFlush       )
   ]
+
+-- | The string “comment”.
+kComment :: T.Text
+kComment = "comment"
 
 --
 
