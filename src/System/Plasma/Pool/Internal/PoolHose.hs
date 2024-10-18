@@ -26,6 +26,7 @@ module System.Plasma.Pool.Internal.PoolHose
   , awaitProbeFrwd
   , probeBack
   , fetch
+  , fetch'
     --
   , newestIndex
   , oldestIndex
@@ -64,7 +65,7 @@ import GHC.Stack
 -- import System.IO.Unsafe
 
 import Data.Slaw
--- import Data.Slaw.Util
+import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
@@ -72,7 +73,7 @@ import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
--- import System.Loam.Retorts.Constants
+import System.Loam.Retorts.Constants
 -- import System.Loam.Time
 import System.Plasma.Pool.Internal.FetchOp
 import System.Plasma.Pool.Internal.PoolContext
@@ -426,7 +427,25 @@ seekTo
   -> IO ()
 seekTo = seekOp callStack "seekTo" 's'
 
+-- | Throws an exception if a significant error (any 'Retort'
+-- other than 'POOL_NO_SUCH_PROTEIN') occurs.
+-- If 'POOL_NO_SUCH_PROTEIN' occurs for a particular part of the
+-- query, returns 'Nothing' for that part of the query.
 fetch
+  :: HasCallStack
+  => Hose
+  -> Bool
+  -> [FetchOp]
+  -> IO ([Maybe FetchResult], Maybe (PoolIndex, PoolIndex))
+fetch h clamp fops = do
+  let loc = "fetch"
+      cs  = callStack
+  ret <- fetchCS loc cs h clamp fops
+  handleExc loc cs ret
+
+-- | Instead of throwing exceptions, returns the exception which
+-- occurred (as a 'Left') for each part of the query.
+fetch'
   :: HasCallStack
   => Hose
   -> Bool
@@ -434,12 +453,21 @@ fetch
   -> IO ( [Either PlasmaException FetchResult]
         , Either PlasmaException (PoolIndex, PoolIndex)
         )
-fetch h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
+fetch' = fetchCS "fetch'" callStack
+
+fetchCS
+  :: String
+  -> CallStack
+  -> Hose
+  -> Bool
+  -> [FetchOp]
+  -> IO ( [Either PlasmaException FetchResult]
+        , Either PlasmaException (PoolIndex, PoolIndex)
+        )
+fetchCS loc cs h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
   let nops   = length fops
       nElems = nops * fieldsPerFetchRecord
       b      = fromBool clamp
-      loc    = "fetch"
-      cs     = callStack
       pool   = hosePool h
   allocaArray nElems $ \opPtr -> do
     fillBytes opPtr 0 $ nElems * sizeOf (0 :: Int64)
@@ -463,3 +491,30 @@ makeExc loc cs pool tort = do
   let erl = erlFromPoolName pool
   pe <- retortToPlasmaException EtPools (Just loc) tort (Just erl)
   return $ pe { peCallstack = Just cs }
+
+handleExc
+  :: String
+  -> CallStack
+  -> ( [Either PlasmaException FetchResult]
+     , Either PlasmaException (PoolIndex, PoolIndex)
+     )
+  -> IO ([Maybe FetchResult], Maybe (PoolIndex, PoolIndex))
+handleExc loc cs (ethResults, ethIdx) = do
+  mbyIdx     <-       seriousException loc cs  ethIdx
+  mbyResults <- mapM (seriousException loc cs) ethResults
+  return (mbyResults, mbyIdx)
+
+seriousException
+  :: String
+  -> CallStack
+  -> Either PlasmaException a
+  -> IO (Maybe a)
+seriousException _   _  (Right x) = return $ Just x
+seriousException loc cs (Left pe)
+  | peRetort pe == Just POOL_NO_SUCH_PROTEIN = return Nothing
+  | peRetort pe == Nothing                   = throwIO pe
+  | otherwise = do
+      let tort = peRetort    pe ?> OB_UNKNOWN_ERR
+          erl  = peLocation  pe
+      throwRetortCS EtPools (Just loc) tort erl cs
+      return Nothing -- should never reach this
