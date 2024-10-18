@@ -47,6 +47,8 @@ import Control.Exception
 import Data.Default.Class
 import Data.Hashable
 import Data.Int
+import Data.List
+import Data.Ord
 import Data.String
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
@@ -475,7 +477,7 @@ fetchCS loc cs h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
     (_, oldest, newest) <- withRet2 (-1, -1) $ \oldPtr newPtr -> do
       c_fetch hPtr b opPtr (fromIntegral nops) oldPtr newPtr
     rs <- peekFetchResults loc cs pool opPtr nops
-    let minIndex = oldest `min` newest
+    let minIndex = minimumBy (comparing keyForIndex) [oldest, newest]
     indices <- if minIndex < 0
                   then Left <$> makeExc loc cs pool (Retort minIndex)
                   else return $ Right (oldest, newest)
@@ -518,3 +520,9 @@ seriousException loc cs (Left pe)
           erl  = peLocation  pe
       throwRetortCS EtPools (Just loc) tort erl cs
       return Nothing -- should never reach this
+
+keyForIndex :: PoolIndex -> (Int, PoolIndex)
+keyForIndex idx
+  | idx == unRetort POOL_NO_SUCH_PROTEIN = (2, idx)
+  | idx < 0                              = (1, idx)
+  | otherwise                            = (3, idx)
