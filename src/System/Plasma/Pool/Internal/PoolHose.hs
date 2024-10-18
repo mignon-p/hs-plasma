@@ -16,6 +16,7 @@ module System.Plasma.Pool.Internal.PoolHose
   , getHoseContext
   , cloneHose
   , deposit
+  , getInfo
     --
   , nthProtein
   , next
@@ -138,6 +139,14 @@ foreign import capi safe "ze-hs-hose.h ze_hs_fetch"
       -> Ptr Int64          -- oldest_idx_out
       -> Ptr Int64          -- newest_idx_out
       -> IO ()
+
+foreign import capi safe "ze-hs-hose.h ze_hs_get_info"
+    c_get_info
+      :: Ptr FgnHose        -- zHose
+      -> Int64              -- hops
+      -> Ptr Int64          -- tort_out
+      -> Ptr SlawLen        -- len_out
+      -> IO (Ptr FgnSlaw)
 
 kHose :: IsString a => a
 kHose = "Hose"
@@ -526,3 +535,20 @@ keyForIndex idx
   | idx == unRetort POOL_NO_SUCH_PROTEIN = (2, idx)
   | idx < 0                              = (1, idx)
   | otherwise                            = (3, idx)
+
+getInfo
+  :: (HasCallStack, FromSlaw a)
+  => Hose
+  -> Maybe Int   -- ^ number of hops
+  -> IO a
+getInfo h mHops = withForeignPtr (hosePtr h) $ \hPtr -> do
+  let cs   = callStack
+      addn = Just "getInfo"
+      hops = fromIntegral (mHops ?> -1)
+      erl  = erlFromHose h
+  p <- withReturnedSlaw' erl $ \lenPtr -> do
+    withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
+      c_get_info hPtr hops tortPtr lenPtr
+  case withFrozenCallStack (ŝee p) of
+    Left exc -> throwIO exc
+    Right x  -> return x

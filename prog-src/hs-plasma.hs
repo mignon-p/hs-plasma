@@ -312,6 +312,16 @@ main1 = do
     n <- func hose
     putStrLn $ show n
 
+  let simple = def { wyoTagNumbers  = Just False
+                   , wyoOrderedMaps = Just False
+                   , wyoComment     = Just False
+                   }
+
+  putStrLn ""
+  info    <- getInfo hose Nothing
+  infoTxt <- slawToYamlStringIO [info] simple
+  putStr $ LT.unpack infoTxt
+
   (RetProtein myProt2 _ _) <- nthProtein hose (fst depPair)
   (RetProtein myProt3 _ _) <- next       hose
   withdraw hose

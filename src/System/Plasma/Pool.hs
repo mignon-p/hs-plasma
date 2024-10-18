@@ -60,6 +60,7 @@ module System.Plasma.Pool
   , hoseName
   , hosePool
   , getHoseContext
+  , getInfo
     -- ** Hose operations
   , withdraw
   , cloneHose
@@ -76,6 +77,8 @@ module System.Plasma.Pool
     -- **** Fetch
   , FetchOp(..)
   , FetchResult(..)
+  , fetch
+  , fetch'
     -- *** Getting position
   , newestIndex
   , oldestIndex

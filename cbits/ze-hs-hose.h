@@ -85,4 +85,9 @@ void ze_hs_fetch (ze_hs_hose     *zHose,
                   int64          *oldest_idx_out,
                   int64          *newest_idx_out);
 
+protein ze_hs_get_info (ze_hs_hose *zHose,
+                        int64       hops,
+                        ob_retort  *tort_out,
+                        int64      *len_out);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */
