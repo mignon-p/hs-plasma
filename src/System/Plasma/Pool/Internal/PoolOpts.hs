@@ -21,7 +21,7 @@ import qualified Data.Text                as T
 import Data.Word
 
 import Data.Slaw
-import Data.Slaw.Internal
+-- import Data.Slaw.Internal
 import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Path
 import Data.Slaw.Util
@@ -58,14 +58,10 @@ huge = size2opts c_pool_size_huge
 typeAndOptions :: ToSlaw a => a -> (T.Text, Slaw)
 typeAndOptions opts = (typ, s)
   where
-    origPairs = getPairs $ coerceToMap $ š opts
-    dfltPairs = [ (š kType, š kMmap)
-                , (š kSize, š c_pool_size_small)
-                ]
-    pairs     = origPairs `preferLeftCI` dfltPairs
-    s         = SlawMap pairs
+    s         = š opts `prefLeft` dfltOpts
     typ       = (s !? kType) ?> kMmap
 
-getPairs :: Slaw -> [(Slaw, Slaw)]
-getPairs (SlawMap pairs) = pairs
-getPairs _               = []
+dfltOpts :: Slaw
+dfltOpts = SlawMap [ (š kType, š kMmap)
+                   , (š kSize, š c_pool_size_small)
+                   ]

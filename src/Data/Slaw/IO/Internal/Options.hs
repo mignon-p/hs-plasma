@@ -19,6 +19,8 @@ module Data.Slaw.IO.Internal.Options
   , kType
   , kSize
   , kMmap
+    --
+  , prefLeft
   ) where
 
 import Control.DeepSeq
@@ -429,3 +431,13 @@ contextOptions =
   [ CFELD("certificate", coCertificate, SlawString, ŝm)
   , CFELD("private-key", coPrivateKey,  SlawString, ŝm)
   ]
+
+--
+
+prefLeft :: Slaw -> Slaw -> Slaw
+prefLeft s1 s2 =
+  case (coerceToMap s1, coerceToMap s2) of
+    (SlawMap m1, SlawMap m2) -> SlawMap (m1 `preferLeft` m2)
+    (_         , SlawMap m2) -> SlawMap m2
+    (SlawMap m1, _         ) -> SlawMap m1
+    _                        -> s1
