@@ -10,20 +10,23 @@ Portability : GHC
 {-# LANGUAGE ImpredicativeTypes         #-}
 {-# LANGUAGE RankNTypes                 #-}
 
+import Control.Exception
 import Control.Monad
--- import qualified Data.ByteString.Lazy     as L
+import qualified Data.ByteString.Lazy     as L
 -- import Data.Char
 -- import Data.Complex
 import Data.Default.Class
--- import Data.Either
+import Data.Either
 import Data.Int
 -- import qualified Data.IntMap.Strict       as IM
 -- import Data.List
 -- import qualified Data.Map.Strict          as M
+import Data.Maybe
+import qualified Data.Set                 as S
 -- import qualified Data.Text                as T
 -- import qualified Data.Vector              as V
 -- import qualified Data.Vector.Storable     as S
--- import Data.Word
+import Data.Word
 -- import Foreign.Storable
 -- import Numeric.Half
 -- import System.Directory
@@ -40,8 +43,10 @@ import Data.Slaw.IO.Yaml
 -- import Data.Slaw.Path
 -- import Data.Slaw.Semantic
 import Data.Slaw.Util
+import System.Loam.File
 import System.Loam.Hash
 import System.Loam.Rand
+import System.Loam.Retorts.Constants
 import System.Plasma.Pool
 
 import Comprehensive
@@ -50,7 +55,8 @@ import PlasmaTestUtil
 import SlawInstances ()
 
 main :: IO ()
-main = do
+main = withTempDir "pool-" $ \dir -> do
+  setEnv      "OB_POOLS_DIR" dir
   setIfNotSet "TASTY_COLOR" "always"
   defaultMain tests
 
@@ -83,6 +89,8 @@ unitTests = testGroup "HUnit tests"
   , testCase "cityHash64"                 $ testCityHash64
   , testCase "hash functions"             $ testHash
   , testCase "pool name validation"       $ testPoolName
+  , testCase "listPools"                  $ testListPools
+  , testCase "fetch"                      $ testFetch
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -272,3 +280,116 @@ testPoolName = do
   (False, False) @=? both "tcp://[blech]/stuff"
   (False, False) @=? both "local://example.com/foo"
   (True , True ) @=? both "local:/var/some/where"
+
+mkPoolNameSet :: [PoolName] -> S.Set PoolName
+mkPoolNameSet = S.fromList
+
+testListPools :: Assertion
+testListPools = do
+  let fullNames  = mkPoolNameSet [ "a/man/a/plan/a/canal/panama"
+                                 , "a/man/a/plan/a/canal+/company"
+                                 ]
+      shortNames = mkPoolNameSet [ "canal/panama"
+                                 , "canal+/company"
+                                 ]
+
+  forM_ (S.toList fullNames) $ \pool -> do
+    create def pool small
+
+  pnames0 <- listPools def Nothing
+  fullNames @=? mkPoolNameSet pnames0
+
+  pnames1 <- listPools def (Just "a/man/a/plan/a")
+  shortNames @=? mkPoolNameSet pnames1
+
+  forM_ (S.toList fullNames) (dispose def)
+
+  pnames2 <- listPools def Nothing
+  [] @=? pnames2
+
+  pnames3 <- listPools def (Just "a/man/a/plan/a")
+  [] @=? pnames3
+
+mkProt :: L.ByteString -> Word8 -> Slaw
+mkProt name num = SlawProtein (Just des) (Just ing) name
+  where
+    des = SlawList ["test", SlawString name]
+    ing = SlawMap  [("n", š num)]
+
+noDes :: Slaw -> Slaw
+noDes p = p { slawDescrips = Nothing }
+
+noIng :: Slaw -> Slaw
+noIng p = p { slawIngests  = Nothing }
+
+trimRude :: Slaw -> Int64 -> Int64 -> Slaw
+trimRude p start len = p { slawRudeData = rude }
+  where rude = L.take len $ L.drop start $ slawRudeData p
+
+testFetch :: Assertion
+testFetch = do
+  let p1    = mkProt "keratin"    1
+      p2    = mkProt "hemoglobin" 2
+      p3    = mkProt "casein"     3
+      p4    = mkProt "insulin"    4
+      p5    = mkProt "lactase"    5
+      prots = [p1, p2, p3, p4, p5]
+      pool  = "testFetch"
+
+  hose  <- participateCreatingly def "testFetch" pool small
+  pairs <- forM (zip prots [0..]) $ \(p, expectedIdx) -> do
+    (actualIdx, ts) <- deposit hose p
+    expectedIdx @=? actualIdx
+    return (actualIdx, ts)
+
+  let fops = [ def { foIdx          = 0 }
+             , def { foIdx          = 1
+                   , foRudeOffset   = Nothing
+                   }
+             , def { foIdx          = 2
+                   , foWantDescrips = False
+                   }
+             , def { foIdx          = 3
+                   , foWantIngests  = False
+                   }
+             , def { foIdx          = 4
+                   , foRudeLength   = Just 4
+                   }
+             , def { foIdx          = 0
+                   , foRudeOffset   = Just 1
+                   }
+             , def { foIdx          = 1
+                   , foRudeOffset   = Just 2
+                   , foRudeLength   = Just 5
+                   }
+             ]
+
+  (frs, idxPair) <- fetch hose False fops
+
+  withdraw hose
+  dispose  def  pool
+
+  Just (0, 4) @=? idxPair
+  7           @=? length frs
+
+  let frs' = catMaybes frs
+  7           @=? length frs'
+
+  forM_ (zip frs' (cycle pairs)) $ \(fr, (idx, ts)) -> do
+    idx    @=? frIdx         fr
+    ts     @=? frTimestamp   fr
+    Just 2 @=? frNumDescrips fr
+    Just 1 @=? frNumIngests  fr
+
+  let [rp1, rp2, rp3, rp4, rp5, rp6, rp7] = map frProtein frs'
+
+  p1              @=? rp1
+  trimRude p2 0 0 @=? rp2
+  noDes    p3     @=? rp3
+  noIng    p4     @=? rp4
+  trimRude p5 0 4 @=? rp5
+  trimRude p1 1 6 @=? rp6
+  trimRude p2 2 5 @=? rp7
+
+  badness <- try $ currIndex hose
+  [Just ZE_HS_ALREADY_CLOSED] @=? map peRetort (lefts [badness])
