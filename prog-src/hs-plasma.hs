@@ -376,3 +376,8 @@ main1 = do
 
   printf "%s\n" $ š num
   printf "%c\n" $ SlawBool True
+
+  putStrLn ""
+
+  withTemporaryPool def Nothing small $ \tmpPool -> do
+    putStrLn $ toString tmpPool

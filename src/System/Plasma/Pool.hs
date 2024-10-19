@@ -53,6 +53,7 @@ module System.Plasma.Pool
     -- ** Convenient resource management
   , withHose
   , withHoseCreatingly
+  , withTemporaryPool
     -- * Pool hoses
   , Hose               -- opaque
   , PoolIndex
@@ -115,6 +116,7 @@ import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Retorts
 import System.Loam.Retorts.Constants
+import System.Loam.Util
 import System.Plasma.Pool.Internal.FetchOp
 import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolHose
@@ -280,3 +282,45 @@ listPools0 cs ctx erl uriPtr = do
   case mSlaw >>= ŝm of
     Nothing    -> return []
     Just names -> return names
+
+withTemporaryPool
+  :: (HasCallStack, ToSlaw a)
+  => Context            -- ^ pool context
+  -> Maybe PoolName     -- ^ optional directory/server to create pool in
+  -> a                  -- ^ pool create options
+  -> (PoolName -> IO b) -- ^ action to run with temporary pool
+  -> IO b
+withTemporaryPool ctx mPool opts action =
+  bracket (makeTemporaryPool 10 ctx mPool (š opts)) (dispose ctx) action
+
+makeTemporaryPool
+  :: HasCallStack
+  => Int
+  -> Context
+  -> Maybe PoolName
+  -> Slaw
+  -> IO PoolName
+makeTemporaryPool 0 _ mPool _ = do
+  let msg = "unable to create temporary pool"
+  throwIO $ PlasmaException { peType      = EtPools
+                            , peRetort    = Nothing
+                            , peMessage   = msg
+                            , peCallstack = Just callStack
+                            , peLocation  = fmap erlFromPoolName mPool
+                            }
+makeTemporaryPool !tries ctx mPool opts = do
+  uuid <- generateUuid
+  let tmpName = toPoolName $ "tmp!" <> uuid
+      pool    = case mPool of
+                  Nothing  -> tmpName
+                  Just pfx -> pfx +/ tmpName
+  eth <- tryJust chkExc $ create ctx pool opts
+  case eth of
+    Left  _ -> makeTemporaryPool (tries - 1) ctx mPool opts
+    Right _ -> return pool
+
+chkExc :: PlasmaException -> Maybe ()
+chkExc pe =
+  case peRetort pe of
+    Just POOL_EXISTS -> Just ()
+    _                -> Nothing
