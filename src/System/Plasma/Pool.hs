@@ -50,6 +50,9 @@ module System.Plasma.Pool
   , dispose
   , rename
   , listPools
+    -- ** Convenient resource management
+  , withHose
+  , withHoseCreatingly
     -- * Pool hoses
   , Hose               -- opaque
   , PoolIndex
@@ -93,6 +96,7 @@ module System.Plasma.Pool
   , seekTo
   ) where
 
+import Control.Exception
 import Data.Default.Class
 import Data.Int
 import qualified Data.Text                as T
@@ -176,6 +180,27 @@ participateInternal loc crtly cs ctx name pool opts = do
         withSlaw opts $ \optPtr -> do
           c_participate cbool cPtr pnPtr optPtr tortPtr
   newHose loc cs name pool ctx hPtr
+
+withHose
+  :: HasCallStack
+  => Context         -- ^ pool context
+  -> T.Text          -- ^ name for new hose
+  -> PoolName        -- ^ name of pool to participate in
+  -> (Hose -> IO a)  -- ^ action to run with hose
+  -> IO a
+withHose ctx name pool action =
+  bracket (participate ctx name pool) withdraw action
+
+withHoseCreatingly
+  :: (HasCallStack, ToSlaw a)
+  => Context         -- ^ pool context
+  -> T.Text          -- ^ name for new hose
+  -> PoolName        -- ^ name of pool to participate in
+  -> a               -- ^ pool create options
+  -> (Hose -> IO b)  -- ^ action to run with hose
+  -> IO b
+withHoseCreatingly ctx name pool opts action =
+  bracket (participateCreatingly ctx name pool opts) withdraw action
 
 create
   :: (HasCallStack, ToSlaw a)
