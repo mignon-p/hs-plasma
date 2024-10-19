@@ -240,6 +240,8 @@ ob_retort ze_hs_seek_op (char        op,
         return pool_backby (h, idx);
     case 's':
         return pool_seekto (h, idx);
+    case 'a':
+        return pool_advance_oldest (h, idx);
     }
 
     return ZE_HS_INTERNAL_ERROR;

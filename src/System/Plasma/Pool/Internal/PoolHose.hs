@@ -17,6 +17,7 @@ module System.Plasma.Pool.Internal.PoolHose
   , cloneHose
   , deposit
   , getInfo
+  , advanceOldest
     --
   , nthProtein
   , next
@@ -437,6 +438,13 @@ seekTo
   -> PoolIndex
   -> IO ()
 seekTo = seekOp callStack "seekTo" 's'
+
+advanceOldest
+  :: HasCallStack
+  => Hose
+  -> PoolIndex
+  -> IO ()
+advanceOldest = seekOp callStack "advanceOldest" 'a'
 
 -- | Throws an exception if a significant error (any 'Retort'
 -- other than 'POOL_NO_SUCH_PROTEIN') occurs.

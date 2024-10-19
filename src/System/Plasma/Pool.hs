@@ -65,6 +65,7 @@ module System.Plasma.Pool
   , withdraw
   , cloneHose
   , deposit
+  , advanceOldest
     -- *** Reading proteins
   , nthProtein
   , next

@@ -73,6 +73,10 @@ int64 ze_hs_get_index (char        op,
  *   pool_(f)rwdby
  *   pool_(b)ackby
  *   pool_(s)eekto
+ *   pool_(a)dvance_oldest
+ *
+ * Note: although pool_advance_oldest() isn't a "seek" operation,
+ * it takes the same arguments, so we're shoving it in there.
  */
 ob_retort ze_hs_seek_op (char        op,
                          ze_hs_hose *zHose,
