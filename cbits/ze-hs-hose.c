@@ -317,3 +317,40 @@ protein ze_hs_get_info (ze_hs_hose *zHose,
 
     return ze_hs_ret_slaw_len (p, len_out);
 }
+
+ob_retort ze_hs_seek_time_op (char        op,
+                              ze_hs_hose *zHose,
+                              float64     timestamp,
+                              HsChar      timeCmp)
+{
+    time_comparison tc;
+    ob_retort       tort = OB_UNKNOWN_ERR;
+    pool_hose       h    = get_hose (zHose, &tort);
+
+    if (!h) {
+        return tort;
+    }
+
+    switch (timeCmp) {
+    case U_2248_ALMOST_EQUAL_TO:          /* ≈ */
+        tc = OB_CLOSEST;
+        break;
+    case U_2264_LESS_THAN_OR_EQUAL_TO:    /* ≤ */
+        tc = OB_CLOSEST_LOWER;
+        break;
+    case U_2265_GREATER_THAN_OR_EQUAL_TO: /* ≥ */
+        tc = OB_CLOSEST_HIGHER;
+        break;
+    default:
+        return ZE_HS_INTERNAL_ERROR;
+    }
+
+    switch (op) {
+    case 't':
+        return pool_seekto_time (h, timestamp, tc);
+    case 'b':
+        return pool_seekby_time (h, timestamp, tc);
+    }
+
+    return ZE_HS_INTERNAL_ERROR;
+}

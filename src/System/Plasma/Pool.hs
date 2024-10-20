@@ -59,6 +59,7 @@ module System.Plasma.Pool
   , PoolIndex
   , RetProtein(..)
   , PoolTimestamp
+  , TimeComparison(..)
   , PoolTimeout
     -- ** Hose information
   , hoseName
@@ -95,6 +96,8 @@ module System.Plasma.Pool
   , frwdBy
   , backBy
   , seekTo
+  , seekToTime
+  , seekByTime
   ) where
 
 import Control.Exception

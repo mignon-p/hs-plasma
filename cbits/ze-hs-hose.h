@@ -94,4 +94,18 @@ protein ze_hs_get_info (ze_hs_hose *zHose,
                         ob_retort  *tort_out,
                         int64      *len_out);
 
+/* "op" character:
+ *   pool_seek(t)o_time
+ *   pool_seek(b)y_time
+ *
+ * "timeCmp" character:
+ *   '≈' (U+2248) OB_CLOSEST
+ *   '≤' (U+2264) OB_CLOSEST_LOWER
+ *   '≥' (U+2265) OB_CLOSEST_HIGHER
+ */
+ob_retort ze_hs_seek_time_op (char        op,
+                              ze_hs_hose *zHose,
+                              float64     timestamp,
+                              HsChar      timeCmp);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

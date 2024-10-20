@@ -11,6 +11,7 @@ module System.Plasma.Pool.Internal.PoolHose
   ( Hose(..)
   , RetProtein(..)
   , PoolTimestamp
+  , TimeComparison(..)
   , newHose
   , withdraw
   , getHoseContext
@@ -18,7 +19,7 @@ module System.Plasma.Pool.Internal.PoolHose
   , deposit
   , getInfo
   , advanceOldest
-    --
+    -- Reading proteins
   , nthProtein
   , next
   , awaitNext
@@ -29,17 +30,19 @@ module System.Plasma.Pool.Internal.PoolHose
   , probeBack
   , fetch
   , fetch'
-    --
+    -- Getting position
   , newestIndex
   , oldestIndex
   , currIndex
-    --
+    -- Setting position
   , rewind
   , toLast
   , runout
   , frwdBy
   , backBy
   , seekTo
+  , seekToTime
+  , seekByTime
   ) where
 
 import Control.DeepSeq
@@ -149,6 +152,14 @@ foreign import capi safe "ze-hs-hose.h ze_hs_get_info"
       -> Ptr SlawLen        -- len_out
       -> IO (Ptr FgnSlaw)
 
+foreign import capi safe "ze-hs-hose.h ze_hs_seek_time_op"
+    c_seek_time_op
+      :: CChar              -- op         ('t' or 'b')
+      -> Ptr FgnHose        -- zHose
+      -> PoolTimestamp      -- timestamp
+      -> Char               -- timeCmp    (one of: ≈ ≤ ≥)
+      -> IO Int64           -- retort
+
 kHose :: IsString a => a
 kHose = "Hose"
 
@@ -182,6 +193,25 @@ data RetProtein = RetProtein
 
 instance Nameable RetProtein where
   typeName _ = "RetProtein"
+
+-- | When seeking by time (i.e., positioning the pool's index pointing to
+-- a protein whose timestamp is close to a given timestamp), there
+-- are three possible strategies.
+data TimeComparison =
+    -- | Closest value less or equal to the desired one
+    ClosestLower
+    -- | Closest value, either above or below
+  | Closest
+    -- | Closest value greater or equal to the desired one
+  | ClosestHigher
+  deriving (Eq, Ord, Show, Read, Bounded, Enum,
+             Generic, NFData, Hashable)
+
+instance Nameable TimeComparison where
+  typeName _ = "TimeComparison"
+
+instance Default TimeComparison where
+  def = Closest
 
 newHose
   :: String         -- ^ name of API function
@@ -560,3 +590,40 @@ getInfo h mHops = withForeignPtr (hosePtr h) $ \hPtr -> do
   case withFrozenCallStack (ŝee p) of
     Left exc -> throwIO exc
     Right x  -> return x
+
+timeCmpChar :: TimeComparison -> Char
+timeCmpChar Closest       = '≈'
+timeCmpChar ClosestLower  = '≤'
+timeCmpChar ClosestHigher = '≥'
+
+seekTimeOp
+  :: CallStack
+  -> String     -- loc
+  -> Char       -- op
+  -> Hose
+  -> PoolTimestamp
+  -> TimeComparison
+  -> IO ()
+seekTimeOp cs loc op h ts tc = do
+  let addn = Just loc
+      erl  = erlFromHose h
+      c    = toCChar op
+  withForeignPtr (hosePtr h) $ \hPtr -> do
+    tort <- c_seek_time_op c hPtr ts (timeCmpChar tc)
+    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+
+seekToTime
+  :: HasCallStack
+  => Hose
+  -> PoolTimestamp
+  -> TimeComparison
+  -> IO ()
+seekToTime = seekTimeOp callStack "seekToTime" 't'
+
+seekByTime
+  :: HasCallStack
+  => Hose
+  -> PoolTimestamp
+  -> TimeComparison
+  -> IO ()
+seekByTime = seekTimeOp callStack "seekByTime" 'b'
