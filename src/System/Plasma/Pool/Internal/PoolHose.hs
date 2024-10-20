@@ -47,7 +47,7 @@ module System.Plasma.Pool.Internal.PoolHose
 
 import Control.DeepSeq
 import Control.Exception
--- import Control.Monad
+import Control.Monad
 -- import qualified Data.ByteString          as B
 import Data.Default.Class
 import Data.Hashable
@@ -63,6 +63,7 @@ import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
+-- import Foreign.Marshal.Error
 import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.StablePtr
@@ -421,60 +422,71 @@ seekOp
   -> Char       -- op
   -> Hose
   -> PoolIndex
-  -> IO ()
+  -> IO Retort
 seekOp cs loc op h idx = do
   let addn = Just loc
       erl  = erlFromHose h
       c    = toCChar op
   withForeignPtr (hosePtr h) $ \hPtr -> do
     tort <- c_seek_op c hPtr idx
-    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+    throwRetortCS' EtPools addn (Retort tort) (Just erl) cs
 
 rewind
   :: HasCallStack
   => Hose
   -> IO ()
-rewind h = seekOp callStack "rewind" 'w' h minBound
+rewind h = void $ seekOp callStack "rewind" 'w' h minBound
 
 toLast
   :: HasCallStack
   => Hose
   -> IO ()
-toLast h = seekOp callStack "toLast" 'l' h minBound
+toLast h = void $ seekOp callStack "toLast" 'l' h minBound
 
 runout
   :: HasCallStack
   => Hose
   -> IO ()
-runout h = seekOp callStack "runout" 'o' h minBound
+runout h = void $ seekOp callStack "runout" 'o' h minBound
 
 frwdBy
   :: HasCallStack
   => Hose
   -> PoolIndex -- offset
   -> IO ()
-frwdBy = seekOp callStack "frwdBy" 'f'
+frwdBy h idx = void $ seekOp callStack "frwdBy" 'f' h idx
 
 backBy
   :: HasCallStack
   => Hose
   -> PoolIndex -- offset
   -> IO ()
-backBy = seekOp callStack "backBy" 'b'
+backBy h idx = void $ seekOp callStack "backBy" 'b' h idx
 
 seekTo
   :: HasCallStack
   => Hose
   -> PoolIndex
   -> IO ()
-seekTo = seekOp callStack "seekTo" 's'
+seekTo h idx = void $ seekOp callStack "seekTo" 's' h idx
 
+-- | Sets the “oldest” index of a pool, essentially erasing any
+-- proteins prior to that index.  Returns 'True' if at least one
+-- protein was erased.  Returns 'False' if the given index is older
+-- than the current oldest index.
+--
+-- Throws a 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN' if the given
+-- index is newer than the newest index.
 advanceOldest
   :: HasCallStack
   => Hose
-  -> PoolIndex
-  -> IO ()
-advanceOldest = seekOp callStack "advanceOldest" 'a'
+  -> PoolIndex -- ^ lowest index that should be preserved
+  -> IO Bool   -- ^ Were any proteins erased?
+advanceOldest h idx = do
+  tort <- seekOp callStack "advanceOldest" 'a' h idx
+  -- At this point, tort should be either OB_OK (one or more
+  -- proteins erased) or OB_NOTHING_TO_DO (no proteins erased).
+  return $ tort == OB_OK
 
 -- | Throws an exception if a significant error (any 'Retort'
 -- other than 'POOL_NO_SUCH_PROTEIN') occurs.
