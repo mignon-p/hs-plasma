@@ -71,6 +71,7 @@ module System.Plasma.Pool
   , cloneHose
   , deposit
   , advanceOldest
+  , changeOptions
     -- *** Reading proteins
   , nthProtein
   , next

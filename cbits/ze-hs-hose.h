@@ -108,4 +108,7 @@ ob_retort ze_hs_seek_time_op (char        op,
                               float64     timestamp,
                               HsChar      timeCmp);
 
+ob_retort ze_hs_change_options (ze_hs_hose *zHose,
+                                bslaw       opts);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

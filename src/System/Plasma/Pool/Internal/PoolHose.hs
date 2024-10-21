@@ -19,6 +19,7 @@ module System.Plasma.Pool.Internal.PoolHose
   , deposit
   , getInfo
   , advanceOldest
+  , changeOptions
     -- Reading proteins
   , nthProtein
   , next
@@ -159,6 +160,12 @@ foreign import capi safe "ze-hs-hose.h ze_hs_seek_time_op"
       -> Ptr FgnHose        -- zHose
       -> PoolTimestamp      -- timestamp
       -> Char               -- timeCmp    (one of: ≈ ≤ ≥)
+      -> IO Int64           -- retort
+
+foreign import capi safe "ze-hs-hose.h ze_hs_change_options"
+    c_change_options
+      :: Ptr FgnHose        -- zHose
+      -> C.ConstPtr FgnSlaw -- options
       -> IO Int64           -- retort
 
 kHose :: IsString a => a
@@ -639,3 +646,17 @@ seekByTime
   -> TimeComparison
   -> IO ()
 seekByTime = seekTimeOp callStack "seekByTime" 'b'
+
+changeOptions
+  :: (HasCallStack, ToSlaw a)
+  => Hose
+  -> a         -- ^ options to change (usually a 'PoolCreateOptions')
+  -> IO ()
+changeOptions h opts = do
+  let addn = Just "changeOptions"
+      erl  = erlFromHose h
+      cs   = callStack
+  withForeignPtr (hosePtr h) $ \hPtr -> do
+    withSlaw (š opts) $ \slawPtr -> do
+      tort <- c_change_options hPtr slawPtr
+      throwRetortCS EtPools addn (Retort tort) (Just erl) cs

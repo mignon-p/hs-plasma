@@ -354,3 +354,16 @@ ob_retort ze_hs_seek_time_op (char        op,
 
     return ZE_HS_INTERNAL_ERROR;
 }
+
+ob_retort ze_hs_change_options (ze_hs_hose *zHose,
+                                bslaw       opts)
+{
+    ob_retort       tort = OB_UNKNOWN_ERR;
+    pool_hose       h    = get_hose (zHose, &tort);
+
+    if (!h) {
+        return tort;
+    }
+
+    return pool_change_options (h, opts);
+}
