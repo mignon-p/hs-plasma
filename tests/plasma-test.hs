@@ -92,6 +92,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "pool name validation"       $ testPoolName
   , testCase "listPools"                  $ testListPools
   , testCase "fetch"                      $ testFetch
+  , testCase "advanceOldest"              $ testAdvanceOldest
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -334,4 +335,39 @@ testFetch = do
     Just 1 @=? frNumIngests  fr
 
   forM_ (zip frs' expProteins) $ \(fr, expected) -> do
+    expected @=? frProtein fr
+
+testAdvanceOldest :: Assertion
+testAdvanceOldest = do
+  (depProts, (frs, idxPair)) <- poolTestFixture $ \hose deps -> do
+    forM_ (zip deps [0..]) $ \(rp, expectedIdx) -> do
+      expectedIdx @=? rpIndex rp
+
+    erased1 <- advanceOldest hose 3
+    fPair   <- fetch hose False tstFops
+    erased2 <- advanceOldest hose 3
+
+    True  @=? erased1
+    False @=? erased2
+
+    return (deps, fPair)
+
+  Just (3, 4) @=? idxPair
+  7           @=? length frs
+
+  let frs' = catMaybes frs
+  2           @=? length frs'
+
+  let depProts'    = take 2 $ drop 3 depProts
+      expProteins' = take 2 $ drop 3 expProteins
+
+  forM_ (zip frs' depProts') $ \(fr, depProt) -> do
+    let idx = rpIndex     depProt
+        ts  = rpTimestamp depProt
+    idx    @=? frIdx         fr
+    ts     @=? frTimestamp   fr
+    Just 2 @=? frNumDescrips fr
+    Just 1 @=? frNumIngests  fr
+
+  forM_ (zip frs' expProteins') $ \(fr, expected) -> do
     expected @=? frProtein fr
