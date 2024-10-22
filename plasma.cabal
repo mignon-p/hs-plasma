@@ -215,6 +215,7 @@ test-suite test
   other-modules:       Comprehensive
                      , OtherInstances
                      , PlasmaTestUtil
+                     , PoolTestFixture
                      , SlawInstances
 
   default-extensions:  BangPatterns
