@@ -19,8 +19,6 @@ module Data.Slaw.IO.Internal.Options
   , kType
   , kSize
   , kMmap
-    --
-  , prefLeft
   ) where
 
 import Control.DeepSeq
@@ -160,6 +158,10 @@ instance FromSlaw WriteYamlOptions where
 
 instance ToSlaw WriteYamlOptions where
   toSlaw = recordToMapWithFmt writeYamlOptions YamlFile
+
+instance Merge WriteYamlOptions where
+  prefLeft  = prefLeftAsSlaw
+  prefRight = prefRightAsSlaw
 
 writeYamlOptions :: Options WriteYamlOptions
 writeYamlOptions =
@@ -374,6 +376,10 @@ instance FromSlaw PoolCreateOptions where
 instance ToSlaw PoolCreateOptions where
   toSlaw = recordToMap poolCreateOptions
 
+instance Merge PoolCreateOptions where
+  prefLeft  = prefLeftAsSlaw
+  prefRight = prefRightAsSlaw
+
 poolCreateOptions :: Options PoolCreateOptions
 poolCreateOptions =
   [ FIELD(kType,                         pcoType        )
@@ -426,18 +432,12 @@ instance FromSlaw ContextOptions where
 instance ToSlaw ContextOptions where
   toSlaw = recordToMap contextOptions
 
+instance Merge ContextOptions where
+  prefLeft  = prefLeftAsSlaw
+  prefRight = prefRightAsSlaw
+
 contextOptions :: Options ContextOptions
 contextOptions =
   [ CFELD("certificate", coCertificate, SlawString, ŝm)
   , CFELD("private-key", coPrivateKey,  SlawString, ŝm)
   ]
-
---
-
-prefLeft :: Slaw -> Slaw -> Slaw
-prefLeft s1 s2 =
-  case (coerceToMap s1, coerceToMap s2) of
-    (SlawMap m1, SlawMap m2) -> SlawMap (m1 `preferLeft` m2)
-    (_         , SlawMap m2) -> SlawMap m2
-    (SlawMap m1, _         ) -> SlawMap m1
-    _                        -> s1
