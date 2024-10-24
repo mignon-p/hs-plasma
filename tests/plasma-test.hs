@@ -82,6 +82,10 @@ qcProps = testGroup "QuickCheck tests"
   , QC.testProperty "ParsedPoolUri round-trip" $ poolUriProp
   , QC.testProperty "ParsedPoolUri validity"   $ uriValidityProp
   , QC.testProperty "ContextOptions"           $ ctxOptsProp
+  , QC.testProperty "WriteYamlOptions Merge"   $ wyoMergeProp
+  , QC.testProperty "PoolCreateOptions Merge"  $ pcoMergeProp
+  , QC.testProperty "WriteYamlOptions Merge id"  $ wyoMergeIdProp
+  , QC.testProperty "PoolCreateOptions Merge id" $ pcoMergeIdProp
   ]
 
 unitTests :: TestTree
@@ -170,6 +174,35 @@ uriValidityProp ppu = True QC.=== isParsedPoolUriValid ppu
 
 ctxOptsProp :: ContextOptions -> QC.Property
 ctxOptsProp opts = opts QC.=== roundTripCtxOpts opts
+
+mergeProp
+  :: (QC.Arbitrary a, Merge a, Eq a, Show a)
+  => (a, a)
+  -> QC.Property
+mergeProp (x, y) = (x `prefLeft` y) QC.=== (y `prefRight` x)
+
+mergeIdentityProp
+  :: (QC.Arbitrary a, Merge a, Eq a, Show a, Default a)
+  => (a, Bool, Word)
+  -> QC.Property
+mergeIdentityProp (x, b, w) =
+  let op = if b then prefLeft else prefRight
+  in case w `mod` 3 of
+       0 -> x QC.=== (x   `op` x)
+       1 -> x QC.=== (x   `op` def)
+       _ -> x QC.=== (def `op` x)
+
+wyoMergeProp :: (WriteYamlOptions, WriteYamlOptions) -> QC.Property
+wyoMergeProp = mergeProp
+
+pcoMergeProp :: (PoolCreateOptions, PoolCreateOptions) -> QC.Property
+pcoMergeProp = mergeProp
+
+wyoMergeIdProp :: (WriteYamlOptions, Bool, Word) -> QC.Property
+wyoMergeIdProp = mergeIdentityProp
+
+pcoMergeIdProp :: (PoolCreateOptions, Bool, Word) -> QC.Property
+pcoMergeIdProp = mergeIdentityProp
 
 testSlawIO :: Assertion
 testSlawIO = do

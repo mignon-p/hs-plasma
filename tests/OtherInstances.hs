@@ -14,9 +14,12 @@ import qualified Data.ByteString.Lazy     as L
 import Data.Char
 import Data.List
 import qualified Data.Set                 as S
+import qualified Data.Text                as T
 import Test.QuickCheck
 import Text.Printf
 
+import Data.Slaw.IO
+import Data.Slaw.IO.Yaml
 import Data.Slaw.Util
 import System.Plasma.Pool
 
@@ -178,3 +181,48 @@ genMaybeLBS = frequency
 
 instance Arbitrary ContextOptions where
   arbitrary = ContextOptions <$> genMaybeLBS <*> genMaybeLBS
+
+--
+
+instance Arbitrary AutoFlush where
+  arbitrary = chooseEnum (minBound, maxBound)
+
+instance Arbitrary WriteYamlOptions where
+  arbitrary = WriteYamlOptions
+              <$> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+
+--
+
+genMaybeTxt :: Gen (Maybe T.Text)
+genMaybeTxt = frequency
+  [ (2, (Just . T.pack) <$> genSimpleName (0, 15) nameMidChars)
+  , (1, return Nothing)
+  ]
+
+instance Arbitrary StrOrInt where
+  arbitrary = oneof
+    [ (StringValue . T.pack) <$> genSimpleName (0, 15) nameMidChars
+    , NumericValue <$> chooseInteger (0, 4096)
+    ]
+
+instance Arbitrary PoolCreateOptions where
+  arbitrary = PoolCreateOptions
+              <$> genMaybeTxt
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
+              <*> arbitrary
