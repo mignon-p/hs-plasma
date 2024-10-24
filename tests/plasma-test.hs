@@ -20,13 +20,13 @@ import Data.Default.Class
 import Data.Int
 -- import qualified Data.IntMap.Strict       as IM
 -- import Data.List
--- import qualified Data.Map.Strict          as M
+import qualified Data.Map.Strict          as M
 import Data.Maybe
 import qualified Data.Set                 as S
 -- import qualified Data.Text                as T
 -- import qualified Data.Vector              as V
 -- import qualified Data.Vector.Storable     as S
--- import Data.Word
+import Data.Word
 -- import Foreign.Storable
 -- import Numeric.Half
 -- import System.Directory
@@ -89,6 +89,7 @@ unitTests = testGroup "HUnit tests"
   [ testCase "YAML slaw IO"               $ testSlawIO
   , testCase "cityHash64"                 $ testCityHash64
   , testCase "hash functions"             $ testHash
+  , testCase "Merge typeclass"            $ testMerge
   , testCase "pool name validation"       $ testPoolName
   , testCase "listPools"                  $ testListPools
   , testCase "fetch"                      $ testFetch
@@ -252,6 +253,19 @@ testHash = do
   0x833870d4da30a39e @=? c64
   0xcfda188d7ad9ec2c @=? c64s
   0xf2cf4e6d03f7137a @=? c64s2
+
+testMerge :: Assertion
+testMerge = do
+  let (keratin : hemoglobin : _) = tstProteins
+      pLeft                      = ŝ (keratin `prefLeft`  hemoglobin)
+      pRight                     = ŝ (keratin `prefRight` hemoglobin)
+
+  ["test", "keratin", "hemoglobin"] @=? pDescrips             pLeft
+  ["test", "keratin", "hemoglobin"] @=? pDescrips             pRight
+  [("n", š (1 :: Word8))]           @=? (M.toList . pIngests) pLeft
+  [("n", š (2 :: Word8))]           @=? (M.toList . pIngests) pRight
+  "keratin"                         @=? pRudeData             pLeft
+  "hemoglobin"                      @=? pRudeData             pRight
 
 testPoolName :: Assertion
 testPoolName = do
