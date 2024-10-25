@@ -19,7 +19,7 @@ import Data.Default.Class
 -- import Data.Either
 import Data.Int
 -- import qualified Data.IntMap.Strict       as IM
--- import Data.List
+import Data.List
 import qualified Data.Map.Strict          as M
 import Data.Maybe
 import qualified Data.Set                 as S
@@ -99,6 +99,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "fetch"                      $ testFetch
   , testCase "advanceOldest"              $ testAdvanceOldest
   , testCase "probe"                      $ testProbe
+  , testCase "seekToTime"                 $ testSeekToTime
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -445,3 +446,63 @@ testProbe = do
 
     cIdx1 <- currIndex hose
     1 @=? cIdx1
+
+interpolateTime
+  :: PoolTimestamp
+  -> PoolTimestamp
+  -> Double
+  -> PoolTimestamp
+interpolateTime x y frac =
+  let diff = y - x
+  in x + diff * frac
+
+type SeekTimeTriple = (PoolTimestamp, TimeComparison, PoolIndex)
+
+checkSeekTime
+  :: HasCallStack
+  => Hose
+  -> SeekTimeTriple
+  -> IO ()
+checkSeekTime hose (ts, tc, expectedIdx) = do
+  seekToTime hose ts tc
+  actualIdx <- currIndex hose
+  expectedIdx @=? actualIdx
+
+myShuffle :: Int -> [a] -> IO [a]
+myShuffle seed xs = do
+  r <- newRandState "" (Just seed)
+  pairs <- forM xs $ \x -> do
+    n <- randWord64 r
+    return (n, x)
+  return $ map snd $ sortOn fst pairs
+
+testSeekToTime :: Assertion
+testSeekToTime = do
+  poolTestFixture $ \hose deps -> do
+    let [_, dep2, dep3, dep4, _] = deps
+        ts2     = rpTimestamp dep2
+        ts2a    = interpolateTime ts2 ts3 0.3
+        ts2b    = interpolateTime ts2 ts3 0.7
+        ts3     = rpTimestamp dep3
+        ts3a    = interpolateTime ts3 ts4 0.3
+        ts3b    = interpolateTime ts3 ts4 0.7
+        ts4     = rpTimestamp dep4
+        idx2    = 1
+        idx3    = 2
+        idx4    = 3
+        triples = [ (ts2a, ClosestLower,  idx2)
+                  , (ts2b, ClosestLower,  idx2)
+                  , (ts3a, ClosestLower,  idx3)
+                  , (ts3b, ClosestLower,  idx3)
+                  , (ts2a, ClosestHigher, idx3)
+                  , (ts2b, ClosestHigher, idx3)
+                  , (ts3a, ClosestHigher, idx4)
+                  , (ts3b, ClosestHigher, idx4)
+                  , (ts2a, Closest,       idx2)
+                  , (ts2b, Closest,       idx3)
+                  , (ts3a, Closest,       idx3)
+                  , (ts3b, Closest,       idx4)
+                  ]
+
+    triples' <- myShuffle 1993 triples
+    mapM_ (checkSeekTime hose) triples'
