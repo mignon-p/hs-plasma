@@ -98,6 +98,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "listPools"                  $ testListPools
   , testCase "fetch"                      $ testFetch
   , testCase "advanceOldest"              $ testAdvanceOldest
+  , testCase "probe"                      $ testProbe
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -418,3 +419,29 @@ testAdvanceOldest = do
 
   forM_ (zip frs' expProteins') $ \(fr, expected) -> do
     expected @=? frProtein fr
+
+testProbe :: Assertion
+testProbe = do
+  poolTestFixture $ \hose deps -> do
+    let [_, dep2, _, dep4, _] = deps
+        p2 = tstProteins !! 1
+        p4 = tstProteins !! 3
+
+    cIdx0 <- currIndex hose
+    0 @=? cIdx0
+
+    rp4 <- probeFrwd hose "insulin"
+    3   @=? rpIndex   rp4
+    p4  @=? rpProtein rp4
+    rp4 @=? dep4
+
+    cIdx4 <- currIndex hose
+    4 @=? cIdx4
+
+    rp2 <- probeBack hose $ SlawList ["test", "hemoglobin"]
+    1   @=? rpIndex   rp2
+    p2  @=? rpProtein rp2
+    rp2 @=? dep2
+
+    cIdx1 <- currIndex hose
+    1 @=? cIdx1
