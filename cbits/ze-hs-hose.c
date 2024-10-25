@@ -367,3 +367,23 @@ ob_retort ze_hs_change_options (ze_hs_hose *zHose,
 
     return pool_change_options (h, opts);
 }
+
+ob_retort ze_hs_wakeup_op (char        op,
+                           ze_hs_hose *zHose)
+{
+    ob_retort       tort = OB_UNKNOWN_ERR;
+    pool_hose       h    = get_hose (zHose, &tort);
+
+    if (!h) {
+        return tort;
+    }
+
+    switch (op) {
+    case 'e':
+        return pool_hose_enable_wakeup (h);
+    case 'w':
+        return pool_hose_wake_up (h);
+    }
+
+    return ZE_HS_INTERNAL_ERROR;
+}

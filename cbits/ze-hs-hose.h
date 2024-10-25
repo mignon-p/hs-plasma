@@ -111,4 +111,11 @@ ob_retort ze_hs_seek_time_op (char        op,
 ob_retort ze_hs_change_options (ze_hs_hose *zHose,
                                 bslaw       opts);
 
+/* "op" character:
+ *   pool_hose_(e)nable_wakeup
+ *   pool_hose_(w)ake_up
+ */
+ob_retort ze_hs_wakeup_op (char        op,
+                           ze_hs_hose *zHose);
+
 #endif /* ZE_HS_HOSE_H_57ED2E1F */

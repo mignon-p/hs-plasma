@@ -72,6 +72,8 @@ module System.Plasma.Pool
   , deposit
   , advanceOldest
   , changeOptions
+  , enableWakeup
+  , wakeUp
     -- *** Reading proteins
   , nthProtein
   , next

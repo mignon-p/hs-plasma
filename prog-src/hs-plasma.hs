@@ -322,6 +322,8 @@ main1 = do
   infoTxt <- slawToYamlStringIO [info] simple
   putStr $ LT.unpack infoTxt
 
+  enableWakeup hose
+
   (RetProtein myProt2 _ _) <- nthProtein hose (fst depPair)
   (RetProtein myProt3 _ _) <- next       hose
   withdraw hose

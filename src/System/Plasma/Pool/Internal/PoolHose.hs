@@ -20,6 +20,8 @@ module System.Plasma.Pool.Internal.PoolHose
   , getInfo
   , advanceOldest
   , changeOptions
+  , enableWakeup
+  , wakeUp
     -- Reading proteins
   , nthProtein
   , next
@@ -166,6 +168,12 @@ foreign import capi safe "ze-hs-hose.h ze_hs_change_options"
     c_change_options
       :: Ptr FgnHose        -- zHose
       -> C.ConstPtr FgnSlaw -- options
+      -> IO Int64           -- retort
+
+foreign import capi safe "ze-hs-hose.h ze_hs_wakeup_op"
+    c_wakeup_op
+      :: CChar              -- op         ('e' or 'w')
+      -> Ptr FgnHose        -- zHose
       -> IO Int64           -- retort
 
 kHose :: IsString a => a
@@ -660,3 +668,29 @@ changeOptions h opts = do
     withSlaw (š opts) $ \slawPtr -> do
       tort <- c_change_options hPtr slawPtr
       throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+
+wakeupOp
+  :: CallStack
+  -> String     -- loc
+  -> Char       -- op
+  -> Hose
+  -> IO ()
+wakeupOp cs loc op h = do
+  let addn = Just loc
+      erl  = erlFromHose h
+      c    = toCChar op
+  withForeignPtr (hosePtr h) $ \hPtr -> do
+    tort <- c_wakeup_op c hPtr
+    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+
+enableWakeup
+  :: HasCallStack
+  => Hose
+  -> IO ()
+enableWakeup = wakeupOp callStack "enableWakeup" 'e'
+
+wakeUp
+  :: HasCallStack
+  => Hose
+  -> IO ()
+wakeUp = wakeupOp callStack "wakeUp" 'w'
