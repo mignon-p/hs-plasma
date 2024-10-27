@@ -50,6 +50,9 @@ module System.Plasma.Pool
   , dispose
   , rename
   , listPools
+  , doesPoolExist
+  , isPoolInUse
+  , putPoolToSleep
     -- ** Convenient resource management
   , withHose
   , withHoseCreatingly
@@ -130,6 +133,8 @@ import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
 import System.Plasma.Pool.Internal.PoolTimeout
 
+type PoolNameFunc = C.ConstCString -> Ptr FgnCtx -> IO Int64
+
 foreign import capi safe "ze-hs-pool.h ze_hs_participate"
     c_participate :: CBool -> Ptr FgnCtx -> C.ConstCString -> C.ConstPtr FgnSlaw -> Ptr Int64 -> IO (Ptr FgnRawHose)
 
@@ -144,6 +149,15 @@ foreign import capi safe "libPlasma/c/pool.h pool_rename_ctx"
 
 foreign import capi safe "ze-hs-pool.h ze_hs_list"
     c_list :: Ptr FgnCtx -> C.ConstCString -> Ptr Int64 -> Ptr SlawLen -> IO (Ptr FgnSlaw)
+
+foreign import capi safe "libPlasma/c/pool.h pool_exists_ctx"
+    c_exists_ctx :: PoolNameFunc
+
+foreign import capi safe "libPlasma/c/pool.h pool_sleep_ctx"
+    c_sleep_ctx :: PoolNameFunc
+
+foreign import capi safe "libPlasma/c/pool.h pool_check_in_use_ctx"
+    c_check_in_use_ctx :: PoolNameFunc
 
 participate
   :: HasCallStack
@@ -238,9 +252,9 @@ dispose ctx pool = do
       erl   = Just $ erlFromPoolName pool
       addn  = Just "dispose"
   C.useAsConstCString (toByteString pool) $ \pnPtr -> do
-      withForeignPtr (ctxPtr ctx) $ \cPtr -> do
-        tort <- c_dispose_ctx pnPtr cPtr
-        throwRetortCS EtPools addn (Retort tort) erl cs
+    withForeignPtr (ctxPtr ctx) $ \cPtr -> do
+      tort <- c_dispose_ctx pnPtr cPtr
+      throwRetortCS EtPools addn (Retort tort) erl cs
 
 rename
   :: HasCallStack
@@ -330,3 +344,51 @@ chkExc pe =
   case peRetort pe of
     Just POOL_EXISTS -> Just ()
     _                -> Nothing
+
+nameOnlyOp
+  :: CallStack
+  -> String
+  -> PoolNameFunc
+  -> [(Retort, a)]
+  -> a
+  -> Context
+  -> PoolName
+  -> IO a
+nameOnlyOp cs loc func pairs dflt ctx pool = do
+  initialize
+  let erl   = Just $ erlFromPoolName pool
+      addn  = Just loc
+  C.useAsConstCString (toByteString pool) $ \pnPtr -> do
+    withForeignPtr (ctxPtr ctx) $ \cPtr -> do
+      tort <- Retort <$> func pnPtr cPtr
+      case tort `lookup` pairs of
+        Just x  -> return x
+        Nothing -> do
+          throwRetortCS EtPools addn tort erl cs
+          return dflt
+
+doesPoolExist
+  :: HasCallStack
+  => Context  -- ^ pool context
+  -> PoolName -- ^ name of pool
+  -> IO Bool
+doesPoolExist =
+  nameOnlyOp callStack "doesPoolExist" c_exists_ctx pairs False
+  where pairs = [(OB_YES, True)]
+
+isPoolInUse
+  :: HasCallStack
+  => Context  -- ^ pool context
+  -> PoolName -- ^ name of pool
+  -> IO Bool
+isPoolInUse =
+  nameOnlyOp callStack "isPoolInUse" c_check_in_use_ctx pairs False
+  where pairs = [(POOL_IN_USE, True)]
+
+putPoolToSleep
+  :: HasCallStack
+  => Context  -- ^ pool context
+  -> PoolName -- ^ name of pool
+  -> IO ()
+putPoolToSleep =
+  nameOnlyOp callStack "putPoolToSleep" c_sleep_ctx [] ()

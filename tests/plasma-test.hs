@@ -100,6 +100,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "advanceOldest"              $ testAdvanceOldest
   , testCase "probe"                      $ testProbe
   , testCase "seekToTime"                 $ testSeekToTime
+  , testCase "pool exists/in use"         $ testExists
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -506,3 +507,25 @@ testSeekToTime = do
 
     triples' <- myShuffle 1993 triples
     mapM_ (checkSeekTime hose) triples'
+
+testExists :: Assertion
+testExists = do
+  let pool = "salt water"
+
+  withHoseCreatingly def "testExists" pool small $ \_ -> do
+    ex1 <- doesPoolExist def pool
+    iu1 <- isPoolInUse   def pool
+
+    True @=? ex1
+    True @=? iu1
+
+  ex2 <- doesPoolExist def pool
+  iu2 <- isPoolInUse   def pool
+
+  True  @=? ex2
+  False @=? iu2
+
+  dispose def pool
+
+  ex3 <- doesPoolExist def pool
+  False @=? ex3
