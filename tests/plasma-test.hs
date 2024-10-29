@@ -101,6 +101,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "probe"                      $ testProbe
   , testCase "seekToTime"                 $ testSeekToTime
   , testCase "pool exists/in use"         $ testExists
+  , testCase "changeOptions"              $ testOptions
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -529,3 +530,17 @@ testExists = do
 
   ex3 <- doesPoolExist def pool
   False @=? ex3
+
+testOptions :: Assertion
+testOptions = do
+  poolTestFixture $ \hose _ -> do
+    pi1 <- getInfo hose Nothing
+    Just True  @=? piTerminal pi1
+    Just kMmap @=? piType     pi1
+    Just False @=? piFrozen   pi1
+
+    let newOpts = def { pcoFrozen = Just True }
+    changeOptions hose newOpts
+
+    pi2 <- getInfo hose Nothing
+    Just True  @=? piFrozen   pi2
