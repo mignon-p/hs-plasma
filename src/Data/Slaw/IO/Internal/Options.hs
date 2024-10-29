@@ -14,6 +14,7 @@ module Data.Slaw.IO.Internal.Options
   , WriteYamlOptions(..)
   , PoolCreateOptions(..)
   , ContextOptions(..)
+  , PoolInfo(..)
     --
   , kComment
   , kType
@@ -440,4 +441,236 @@ contextOptions :: Options ContextOptions
 contextOptions =
   [ CFELD("certificate", coCertificate, SlawString, ŝm)
   , CFELD("private-key", coPrivateKey,  SlawString, ŝm)
+  ]
+
+--
+
+data PoolInfo = PoolInfo
+  { -- | The type of pool.
+    --
+    -- [key]: @type@
+    --
+    -- [type]: string
+    --
+    -- [relevant pool type]: all
+    piType            :: Maybe T.Text
+    -- | True if this is the underlying pool type that stores the
+    -- data, or 'False' if this is a transport pool type which is a
+    -- hop along the way.
+    --
+    -- [key]: @terminal@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: all
+  , piTerminal        :: Maybe Bool
+    -- | The size of the pool, in bytes.  This includes the space
+    -- used for the header and table of contents, so the actual
+    -- amount of space available for proteins will be less.  The
+    -- pool wraps around and deletes older proteins once this limit
+    -- has been exceeded.
+    --
+    -- [key]: @size@
+    --
+    -- [type]: unt64
+    --
+    -- [relevant pool type]: @mmap@
+  , piSize            :: Maybe Integer
+    -- | The amount of the pool which is in use, in bytes.
+    --
+    -- [key]: @size-used@
+    --
+    -- [type]: unt64
+    --
+    -- [relevant pool type]: @mmap@
+  , piSizeUsed        :: Maybe Integer
+    -- | Sorry, not yet documented.
+    --
+    -- [key]: @mmap-pool-version@
+    --
+    -- [type]: unt32
+    --
+    -- [relevant pool type]: @mmap@
+  , piMmapPoolVersion :: Maybe Integer
+    -- | Sorry, not yet documented.
+    --
+    -- [key]: @slaw-version@
+    --
+    -- [type]: unt32
+    --
+    -- [relevant pool type]: @mmap@ or @tcp@
+  , piSlawVersion     :: Maybe Integer
+    -- | The size of the table of contents, in entries (one entry
+    -- for each protein).  The default value, 0, indicates that
+    -- there should be no table of contents.  The table of contents
+    -- is an optimization which makes random access of proteins
+    -- within the pool faster.  If the number of proteins in the
+    -- pool exceeds the table of contents size, then the table of
+    -- contents is “decimated” so that it records only ever
+    -- other protein, or every 4th protein, etc.
+    --
+    -- [key]: @toc-capacity@
+    --
+    -- [type]: unt64
+    --
+    -- [relevant pool type]: @mmap@
+  , piTocCapacity     :: Maybe Integer
+    -- | Sorry, not yet documented.
+    --
+    -- [key]: @toc-step@
+    --
+    -- [type]: unt64
+    --
+    -- [relevant pool type]: @mmap@
+  , piTocStep         :: Maybe Integer
+    -- | Sorry, not yet documented.
+    --
+    -- [key]: @toc-count@
+    --
+    -- [type]: unt64
+    --
+    -- [relevant pool type]: @mmap@
+  , piTocCount        :: Maybe Integer
+    -- | Causes the pool to be automatically deleted once the last
+    -- hose to it is closed.  This option can only be set with
+    -- @pool_change_options@; it cannot be set when the pool is
+    -- created.
+    --
+    -- [key]: @auto-dispose@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: @mmap@
+  , piAutoDispose     :: Maybe Bool
+    -- | When 'True', a checksum is computed for each protein, and
+    -- stored in the pool.  This should make it easier to detect
+    -- corruption, at the expense of some performance.
+    --
+    -- [key]: @checksum@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: @mmap@
+  , piChecksum        :: Maybe Bool
+    -- | When 'True', Plasma uses @flock()@ for locking operations.
+    -- When 'False', Plasma uses System V semaphores.  The default
+    -- is to use semaphores on Linux, and @flock()@ on macOS.
+    -- Windows always uses Windows mutexes, and is not affected by
+    -- this option.
+    --
+    -- [key]: @flock@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: @mmap@
+  , piFlock           :: Maybe Bool
+    -- | Makes the pool read-only until @frozen@ is set to 'False'
+    -- again.
+    --
+    -- [key]: @frozen@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: @mmap@
+  , piFrozen          :: Maybe Bool
+    -- | If 'True', then the pool stops allowing deposits once it
+    -- is full.  If 'False', the default, it will wrap around and
+    -- delete the oldest proteins as newer ones are deposited.
+    --
+    -- [key]: @stop-when-full@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: @mmap@
+  , piStopWhenFull    :: Maybe Bool
+    -- | Causes the pool to be synced to disk after every deposit.
+    -- This should eliminate the possiblity of corruption due to
+    -- power failures, at the expense of performance.  Note that on
+    -- Linux, the data is only synced to the disk controller, not
+    -- to the platter, so there is still a slight risk of data
+    -- being lost due to a power failure.
+    --
+    -- [key]: @sync@
+    --
+    -- [type]: boolean
+    --
+    -- [relevant pool type]: @mmap@
+  , piSync            :: Maybe Bool
+    -- | Name of the remote host where the pool is located.
+    --
+    -- [key]: @host@
+    --
+    -- [type]: string
+    --
+    -- [relevant pool type]: @tcp@
+  , piHost            :: Maybe T.Text
+    -- | Port of the pool server on the remote host.
+    --
+    -- [key]: @port@
+    --
+    -- [type]: int32
+    --
+    -- [relevant pool type]: @tcp@
+  , piPort            :: Maybe Integer
+    -- | Sorry, not yet documented.
+    --
+    -- [key]: @net-pool-version@
+    --
+    -- [type]: unt32
+    --
+    -- [relevant pool type]: @tcp@
+  , piNetPoolVersion  :: Maybe Integer
+} deriving (Eq, Ord, Show, Read, Generic, NFData, Hashable)
+
+instance Default PoolInfo where
+  def = PoolInfo
+        { piType            = Nothing
+        , piTerminal        = Nothing
+        , piSize            = Nothing
+        , piSizeUsed        = Nothing
+        , piMmapPoolVersion = Nothing
+        , piSlawVersion     = Nothing
+        , piTocCapacity     = Nothing
+        , piTocStep         = Nothing
+        , piTocCount        = Nothing
+        , piAutoDispose     = Nothing
+        , piChecksum        = Nothing
+        , piFlock           = Nothing
+        , piFrozen          = Nothing
+        , piStopWhenFull    = Nothing
+        , piSync            = Nothing
+        , piHost            = Nothing
+        , piPort            = Nothing
+        , piNetPoolVersion  = Nothing
+        }
+
+instance Nameable PoolInfo where
+  typeName _ = "PoolInfo"
+
+instance FromSlaw PoolInfo where
+  fromSlaw = Right . recordFromMap poolInfo
+
+instance ToSlaw PoolInfo where
+  toSlaw = recordToMap poolInfo
+
+poolInfo :: Options PoolInfo
+poolInfo =
+  [ FIELD("type",                        piType           )
+  , FIELD("terminal",                    piTerminal       )
+  , NFELD("size",                        piSize           , NumUnt64)
+  , NFELD("size-used",                   piSizeUsed       , NumUnt64)
+  , NFELD("mmap-pool-version",           piMmapPoolVersion, NumUnt32)
+  , NFELD("slaw-version",                piSlawVersion    , NumUnt32)
+  , NFELD("toc-capacity|index-capacity", piTocCapacity    , NumUnt64)
+  , NFELD("toc-step|index-step",         piTocStep        , NumUnt64)
+  , NFELD("toc-count|index-count",       piTocCount       , NumUnt64)
+  , FIELD("auto-dispose",                piAutoDispose    )
+  , FIELD("checksum",                    piChecksum       )
+  , FIELD("flock",                       piFlock          )
+  , FIELD("frozen",                      piFrozen         )
+  , FIELD("stop-when-full",              piStopWhenFull   )
+  , FIELD("sync",                        piSync           )
+  , FIELD("host",                        piHost           )
+  , NFELD("port",                        piPort           , NumInt32)
+  , NFELD("net-pool-version",            piNetPoolVersion , NumUnt32)
   ]

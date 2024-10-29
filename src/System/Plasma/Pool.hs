@@ -64,6 +64,7 @@ module System.Plasma.Pool
   , PoolTimestamp
   , TimeComparison(..)
   , PoolTimeout
+  , PoolInfo(..)
     -- ** Hose information
   , hoseName
   , hosePool
