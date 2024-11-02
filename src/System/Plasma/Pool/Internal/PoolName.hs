@@ -123,22 +123,43 @@ fromPoolName :: TextClass a => PoolName -> a
 fromPoolName = fromString . toString
 
 (+/) :: PoolName -> PoolName -> PoolName
-x +/ y = mconcat [noTrailSlash x, "/", noLeadSlash y]
+x +/ y
+  | isAbsolutePoolName y =                  y
+  | needsSlash         x = mconcat [x, "/", y]
+  | otherwise            = mconcat [x,      y]
+
+isAbsolutePoolName :: PoolName -> Bool
+isAbsolutePoolName (PoolName sbs)
+  | SBS.null sbs            = False
+  | SBS.null pfx            = True
+  | ":" `SBS.isInfixOf` pfx = True
+  | otherwise               = False
+  where pfx = SBS.takeWhile (not . isSlash) sbs
 
 isSlash :: Word8 -> Bool
-isSlash = (== 0x2f)
+isSlash = (== 0x2f)         -- '/'
 
+needsSlash :: PoolName -> Bool
+needsSlash (PoolName sbs) =
+  case SBS.unsnoc sbs of
+    Nothing        -> False
+    Just (_, 0x2f) -> False -- '/'
+    Just (_, 0x3a) -> False -- ':'
+    _              -> True
+
+{-
 noTrailSlash :: PoolName -> PoolName
 noTrailSlash name@(PoolName sbs)
   | "/" `SBS.isSuffixOf` sbs =
-      PoolName . SBS.toShort $ B.dropWhileEnd isSlash $ SBS.fromShort sbs
+      PoolName $ SBS.dropWhileEnd isSlash sbs
   | otherwise = name
 
 noLeadSlash :: PoolName -> PoolName
 noLeadSlash name@(PoolName sbs)
   | "/" `SBS.isPrefixOf` sbs =
-      PoolName . SBS.toShort $ B.dropWhile isSlash $ SBS.fromShort sbs
+      PoolName $ SBS.dropWhile isSlash sbs
   | otherwise = name
+-}
 
 isPoolPathValid :: PoolName -> Bool
 isPoolPathValid (PoolName sbs) = unsafePerformIO $ do

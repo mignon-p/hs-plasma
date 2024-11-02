@@ -102,6 +102,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "seekToTime"                 $ testSeekToTime
   , testCase "pool exists/in use"         $ testExists
   , testCase "changeOptions"              $ testOptions
+  , testCase "+/ operator"                $ testPlusSlash
   ]
 
 rtIoProp :: Slaw -> QC.Property
@@ -544,3 +545,16 @@ testOptions = do
 
     pi2 <- getInfo hose Nothing
     Just True  @=? piFrozen   pi2
+
+testPlusSlash :: Assertion
+testPlusSlash = do
+  "foo/bar"      @=? "foo"  +/ "bar"
+  "foo/bar"      @=? "foo/" +/ "bar"
+  "/bar"         @=? "foo"  +/ "/bar"
+  "foo/foo/bar"  @=? "foo"  +/ "foo/bar"
+  "foo:/bar"     @=? "foo"  +/ "foo:/bar"
+  "foo/foo/:bar" @=? "foo"  +/ "foo/:bar"
+  "foo/"         @=? "foo"  +/ ""
+  "bar"          @=? ""     +/ "bar"
+  "foo:bar"      @=? "foo:" +/ "bar"
+  ":bar"         @=? "foo:" +/ ":bar"
