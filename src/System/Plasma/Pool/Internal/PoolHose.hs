@@ -513,10 +513,10 @@ fetch
   -> Bool
   -> [FetchOp]
   -> IO ([Maybe FetchResult], Maybe (PoolIndex, PoolIndex))
-fetch h clamp fops = do
+fetch h clmp fops = do
   let loc = "fetch"
       cs  = callStack
-  ret <- fetchCS loc cs h clamp fops
+  ret <- fetchCS loc cs h clmp fops
   handleExc loc cs ret
 
 -- | Instead of throwing exceptions, returns the exception which
@@ -540,10 +540,10 @@ fetchCS
   -> IO ( [Either PlasmaException FetchResult]
         , Either PlasmaException (PoolIndex, PoolIndex)
         )
-fetchCS loc cs h clamp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
+fetchCS loc cs h clmp fops = withForeignPtr (hosePtr h) $ \hPtr -> do
   let nops   = length fops
       nElems = nops * fieldsPerFetchRecord
-      b      = fromBool clamp
+      b      = fromBool clmp
       pool   = hosePool h
   allocaArray nElems $ \opPtr -> do
     fillBytes opPtr 0 $ nElems * sizeOf (0 :: Int64)
