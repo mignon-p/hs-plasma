@@ -240,7 +240,7 @@ create ctx pool opts = do
     withForeignPtr (ctxPtr ctx) $ \cPtr -> do
       withSlaw (š opts) $ \optPtr -> do
         tort <- c_create cPtr pnPtr optPtr
-        throwRetortCS EtPools addn (Retort tort) erl cs
+        throwRetortCS_ EtPools addn (Retort tort) erl cs
 
 dispose
   :: HasCallStack
@@ -255,7 +255,7 @@ dispose ctx pool = do
   C.useAsConstCString (toByteString pool) $ \pnPtr -> do
     withForeignPtr (ctxPtr ctx) $ \cPtr -> do
       tort <- c_dispose_ctx pnPtr cPtr
-      throwRetortCS EtPools addn (Retort tort) erl cs
+      throwRetortCS_ EtPools addn (Retort tort) erl cs
 
 rename
   :: HasCallStack
@@ -274,7 +274,7 @@ rename ctx oldName newName = do
       withForeignPtr (ctxPtr ctx) $ \cPtr -> do
         tort <- Retort <$> c_rename_ctx oldPtr newPtr cPtr
         let erl = if tort == POOL_EXISTS then erlNew else erlOld
-        throwRetortCS EtPools addn tort erl cs
+        throwRetortCS_ EtPools addn tort erl cs
 
 listPools
   :: HasCallStack
@@ -365,7 +365,7 @@ nameOnlyOp cs loc func pairs dflt ctx pool = do
       case tort `lookup` pairs of
         Just x  -> return x
         Nothing -> do
-          throwRetortCS EtPools addn tort erl cs
+          throwRetortCS_ EtPools addn tort erl cs
           return dflt
 
 doesPoolExist

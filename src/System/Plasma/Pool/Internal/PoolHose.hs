@@ -263,7 +263,7 @@ withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
   let erl  = erlFromHose hose
       addn = Just "withdraw"
   tort <- c_withdraw ptr
-  throwRetortCS EtPools addn (Retort tort) (Just erl) callStack
+  throwRetortCS_ EtPools addn (Retort tort) (Just erl) callStack
 
 getHoseContext :: Hose -> IO Context
 getHoseContext h = withForeignPtr (hosePtr h) $ \hPtr -> do
@@ -300,7 +300,7 @@ deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
         poke idxPtr  minBound
         poke timePtr (-1)
         tort <- Retort <$> c_deposit hPtr slawPtr idxPtr timePtr
-        throwRetortCS EtPools addn tort (Just erl) callStack
+        throwRetortCS_ EtPools addn tort (Just erl) callStack
         idx  <- peek idxPtr
         ts   <- peek timePtr
         return (idx, ts)
@@ -444,7 +444,7 @@ seekOp cs loc op h idx = do
       c    = toCChar op
   withForeignPtr (hosePtr h) $ \hPtr -> do
     tort <- c_seek_op c hPtr idx
-    throwRetortCS' EtPools addn (Retort tort) (Just erl) cs
+    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
 
 rewind
   :: HasCallStack
@@ -592,7 +592,7 @@ seriousException loc cs (Left pe)
   | otherwise = do
       let tort = peRetort    pe ?> OB_UNKNOWN_ERR
           erl  = peLocation  pe
-      throwRetortCS EtPools (Just loc) tort erl cs
+      throwRetortCS_ EtPools (Just loc) tort erl cs
       return Nothing -- should never reach this
 
 keyForIndex :: PoolIndex -> (Int, PoolIndex)
@@ -637,7 +637,7 @@ seekTimeOp cs loc op h ts tc = do
       c    = toCChar op
   withForeignPtr (hosePtr h) $ \hPtr -> do
     tort <- c_seek_time_op c hPtr ts (timeCmpChar tc)
-    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+    throwRetortCS_ EtPools addn (Retort tort) (Just erl) cs
 
 seekToTime
   :: HasCallStack
@@ -667,7 +667,7 @@ changeOptions h opts = do
   withForeignPtr (hosePtr h) $ \hPtr -> do
     withSlaw (š opts) $ \slawPtr -> do
       tort <- c_change_options hPtr slawPtr
-      throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+      throwRetortCS_ EtPools addn (Retort tort) (Just erl) cs
 
 wakeupOp
   :: CallStack
@@ -681,7 +681,7 @@ wakeupOp cs loc op h = do
       c    = toCChar op
   withForeignPtr (hosePtr h) $ \hPtr -> do
     tort <- c_wakeup_op c hPtr
-    throwRetortCS EtPools addn (Retort tort) (Just erl) cs
+    throwRetortCS_ EtPools addn (Retort tort) (Just erl) cs
 
 enableWakeup
   :: HasCallStack

@@ -482,7 +482,7 @@ newLogLevel name0 = do
   ptr  <- c_log_level_alloc
   when (ptr == nullPtr) $ do
     let addn = Just "newLogLevel"
-    throwRetortCS EtOther addn OB_NO_MEM Nothing callStack
+    throwRetortCS_ EtOther addn OB_NO_MEM Nothing callStack
   fptr <- newForeignPtr c_log_level_free ptr
   let lvl = LogLevel { llName = name
                      , llPtr  = fptr
@@ -558,7 +558,7 @@ levelSetDestFile lev dest = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     C.useAsConstCString fn $ \fnPtr -> do
       tort <- c_log_level_set_dest levPtr c' fnPtr
-      throwRetortCS EtOther addn (Retort tort) (Just erl) cs
+      throwRetortCS_ EtOther addn (Retort tort) (Just erl) cs
 
 levelSetSyslogPriority :: LogLevel -> SyslogPriority -> IO ()
 levelSetSyslogPriority lev pri = do

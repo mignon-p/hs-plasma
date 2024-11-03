@@ -129,7 +129,7 @@ trulyRandom0 nBytes
   | otherwise = withFrozenCallStack $ do
       allocaBytes nBytes $ \ptr -> do
         tort <- Retort <$> c_truly_random ptr (fromIntegral nBytes)
-        throwRetort EtOther (Just "trulyRandom") tort Nothing
+        throwRetort_ EtOther (Just "trulyRandom") tort Nothing
         B.packCStringLen (castPtr ptr, nBytes)
 
 makeSeed :: Maybe Int -> Int32
@@ -162,7 +162,7 @@ newRandState name0 seed = do
   ptr  <- c_rand_allocate_state (makeSeed seed)
   when (ptr == nullPtr) $ do
     let addn = Just "newRandState"
-    throwRetortCS EtOther addn OB_NO_MEM Nothing callStack
+    throwRetortCS_ EtOther addn OB_NO_MEM Nothing callStack
   fptr <- newForeignPtr c_rand_free_state ptr
   return $ RandState { rsName = name
                      , rsSeed = seed

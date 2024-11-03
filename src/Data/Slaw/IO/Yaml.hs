@@ -419,7 +419,7 @@ yiClose y2 cs = do
                         }
   withForeignPtr (yinPtr y2) $ \iPtr -> do
     tort <- c_close_input iPtr
-    throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+    throwRetortCS_ EtSlawIO addn (Retort tort) (Just erl) cs
 
 --
 
@@ -497,7 +497,7 @@ yoWrite y2 cs slaw = do
   withForeignPtr (youtPtr y2) $ \oPtr -> do
     withSlaw slaw $ \slawPtr -> do
       tort <- c_write_output oPtr slawPtr
-      throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+      throwRetortCS_ EtSlawIO addn (Retort tort) (Just erl) cs
 
 -- Currently, YAML output auto-flushes after each slaw.
 -- There's no way to flush manually, so ignore.
@@ -511,7 +511,7 @@ yoClose y2 cs = do
   erl <- yoErl yout
   withForeignPtr (youtPtr y2) $ \oPtr -> do
     tort <- c_close_output oPtr
-    throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+    throwRetortCS_ EtSlawIO addn (Retort tort) (Just erl) cs
 
 --
 
@@ -749,7 +749,7 @@ ysWrite y2 cs slaw = do
   withForeignPtr (yStr2Ptr y2) $ \oPtr -> do
     withSlaw slaw $ \slawPtr -> do
       tort <- c_write_output oPtr slawPtr
-      throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+      throwRetortCS_ EtSlawIO addn (Retort tort) (Just erl) cs
 
 ysFlush :: YStrOut2 -> CallStack -> IO ()
 ysFlush _ _ = return ()
@@ -761,7 +761,7 @@ ysClose y2 cs = do
   erl <- ysErl y1
   withForeignPtr (yStr2Ptr y2) $ \oPtr -> do
     tort <- c_close_output oPtr
-    throwRetortCS EtSlawIO addn (Retort tort) (Just erl) cs
+    throwRetortCS_ EtSlawIO addn (Retort tort) (Just erl) cs
 
 tryAndConvertExc :: HasCallStack => IO a -> IO (Either PlasmaException a)
 tryAndConvertExc f = do

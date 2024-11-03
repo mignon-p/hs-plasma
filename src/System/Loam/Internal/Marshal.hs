@@ -250,7 +250,7 @@ withReturnedRetortCS et addn erl cs f = alloca $ \tortPtr -> do
   poke tortPtr $ unRetort OB_UNKNOWN_ERR
   ret  <- f tortPtr
   tort <- Retort <$> peek tortPtr
-  throwRetortCS et addn tort erl cs
+  throwRetortCS_ et addn tort erl cs
   return ret
 
 --

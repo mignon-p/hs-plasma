@@ -47,7 +47,7 @@ generateUuid = withFrozenCallStack $ do
   initialize
   allocaBytes 40 $ \ptr -> do
     tort <- Retort <$> c_generate_uuid ptr
-    throwRetort EtOther (Just "generateUuid") tort Nothing
+    throwRetort_ EtOther (Just "generateUuid") tort Nothing
     T.decodeUtf8Lenient <$> B.packCString ptr
 
 getUserName :: IO T.Text

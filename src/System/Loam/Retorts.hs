@@ -25,10 +25,10 @@ module System.Loam.Retorts
   , displayDataSource       -- re-export from slaw package
     -- ** Throwing retorts as exceptions
   , retortToPlasmaException
+  , throwRetort_
   , throwRetort
-  , throwRetort'
+  , throwRetortCS_
   , throwRetortCS
-  , throwRetortCS'
   ) where
 
 import Control.DeepSeq
@@ -173,7 +173,7 @@ retortToPlasmaException et addn r erl = do
 -- If the retort encapsulates an @errno@ from the standard C
 -- library, throws an 'IOException'.  For any other failure
 -- retort, throws a 'PlasmaException'.
-throwRetort
+throwRetort_
   :: HasCallStack
   => PlasmaExceptionType
   -- ^ Default exception type; used if 'riType' is 'Nothing'.
@@ -187,10 +187,49 @@ throwRetort
   -- ^ Optionally, the file or pool associated with the error.
   -> IO ()
   -- ^ Returns @()@ if retort is a success code.
+throwRetort_ et addn r erl = throwRetortCS_ et addn r erl callStack
+
+-- | Same as 'throwRetort_', except it takes the 'CallStack'
+-- as an explicit argument, instead of an implicit one.
+throwRetortCS_
+  :: PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> CallStack
+  -- ^ The callstack.
+  -> IO ()
+  -- ^ Returns @()@ if retort is a success code.
+throwRetortCS_ et addn r erl cs = do
+  throwRetortCS et addn r erl cs
+  return ()
+
+-- | Same as 'throwRetort_', except if the retort is a success
+-- code, it returns the retort instead of returning @()@.
+throwRetort
+  :: HasCallStack
+  => PlasmaExceptionType
+  -- ^ Default exception type; used if 'riType' is 'Nothing'.
+  -- If unsure, just pass in 'EtOther'.
+  -> Maybe String
+  -- ^ Optionally, additional information about the error, such as
+  -- the function it occurred in.
+  -> Retort
+  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -> Maybe ErrLocation
+  -- ^ Optionally, the file or pool associated with the error.
+  -> IO Retort
+  -- ^ Returns the retort if it is a success code.
 throwRetort et addn r erl = throwRetortCS et addn r erl callStack
 
--- | Same as 'throwRetort', except it takes the 'CallStack'
--- as an explicit argument, instead of an implicit one.
+-- | Same as 'throwRetortCS_', except if the retort is a success
+-- code, it returns the retort instead of returning @()@.
 throwRetortCS
   :: PlasmaExceptionType
   -- ^ Default exception type; used if 'riType' is 'Nothing'.
@@ -204,48 +243,9 @@ throwRetortCS
   -- ^ Optionally, the file or pool associated with the error.
   -> CallStack
   -- ^ The callstack.
-  -> IO ()
-  -- ^ Returns @()@ if retort is a success code.
-throwRetortCS et addn r erl cs = do
-  throwRetortCS' et addn r erl cs
-  return ()
-
--- | Same as 'throwRetort', except if the retort is a success
--- code, it returns the retort instead of returning @()@.
-throwRetort'
-  :: HasCallStack
-  => PlasmaExceptionType
-  -- ^ Default exception type; used if 'riType' is 'Nothing'.
-  -- If unsure, just pass in 'EtOther'.
-  -> Maybe String
-  -- ^ Optionally, additional information about the error, such as
-  -- the function it occurred in.
-  -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
-  -> Maybe ErrLocation
-  -- ^ Optionally, the file or pool associated with the error.
   -> IO Retort
   -- ^ Returns the retort if it is a success code.
-throwRetort' et addn r erl = throwRetortCS' et addn r erl callStack
-
--- | Same as 'throwRetortCS', except if the retort is a success
--- code, it returns the retort instead of returning @()@.
-throwRetortCS'
-  :: PlasmaExceptionType
-  -- ^ Default exception type; used if 'riType' is 'Nothing'.
-  -- If unsure, just pass in 'EtOther'.
-  -> Maybe String
-  -- ^ Optionally, additional information about the error, such as
-  -- the function it occurred in.
-  -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
-  -> Maybe ErrLocation
-  -- ^ Optionally, the file or pool associated with the error.
-  -> CallStack
-  -- ^ The callstack.
-  -> IO Retort
-  -- ^ Returns the retort if it is a success code.
-throwRetortCS' et addn r erl cs
+throwRetortCS et addn r erl cs
   | isSuccess r = return r
   | otherwise   = do
       case (retortToIoet r, retortToErrno r) of
@@ -296,8 +296,8 @@ throwIoetHelper addn ioet erl cs = do
   throwIO ioe
 
 isInternal :: String -> Bool
+isInternal "throwRetort_" = True
 isInternal "throwRetort"  = True
-isInternal "throwRetort'" = True
 isInternal _              = False
 
 locFromStack :: [([Char], SrcLoc)] -> String
