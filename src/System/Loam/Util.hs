@@ -43,11 +43,11 @@ foreign import capi  "libLoam/c/ob-util.h ob_set_prog_name"
     c_set_prog_name :: C.ConstCString -> IO ()
 
 generateUuid :: HasCallStack => IO T.Text
-generateUuid = withFrozenCallStack $ do
+generateUuid = do
   initialize
   allocaBytes 40 $ \ptr -> do
     tort <- Retort <$> c_generate_uuid ptr
-    throwRetort_ EtOther (Just "generateUuid") tort Nothing
+    throwRetortCS_ EtOther (Just "generateUuid") tort Nothing callStack
     T.decodeUtf8Lenient <$> B.packCString ptr
 
 getUserName :: IO T.Text

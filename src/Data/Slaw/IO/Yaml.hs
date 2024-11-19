@@ -228,13 +228,14 @@ openSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
               => a -- ^ name (or handle) of file to open
               -> b -- ^ options map/protein (currently none)
               -> IO SlawInputStream
-openSlawInput file opts = withFrozenCallStack $ do
+openSlawInput file opts = do
+  let cs = callStack
   eth  <- fcOpenReadOrMap file
   rdr  <- makeFileReader  eth
   hdr4 <- peekBytes rdr 4
   if hdr4 == fileMagicLBS
     then openBinarySlawInput1 (fcName file) rdr opts
-    else openYamlSlawInput1   "openSlawInput" (fcName file) rdr opts
+    else openYamlSlawInput1 "openSlawInput" (fcName file) rdr opts cs
 
 --
 
@@ -352,28 +353,30 @@ openYamlSlawInput :: (HasCallStack, FileClass a, ToSlaw b)
                   => a -- ^ name (or handle) of file to open
                   -> b -- ^ options map/protein (currently none)
                   -> IO SlawInputStream
-openYamlSlawInput file opts = withFrozenCallStack $ do
+openYamlSlawInput file opts = do
   let nam = fcName file
   eth <- fcOpenReadOrMap file
   rdr <- makeFileReader eth
-  openYamlSlawInput1 "openYamlSlawInput" nam rdr opts
+  openYamlSlawInput1 "openYamlSlawInput" nam rdr opts callStack
 
 openYamlSlawInput1
-  :: (HasCallStack, ToSlaw b)
+  :: ToSlaw b
   => String -- location name
   -> String -- file name
   -> FileReader
   -> b      -- options (ignored)
+  -> CallStack
   -> IO SlawInputStream
-openYamlSlawInput1 addn nam rdr _ = do
+openYamlSlawInput1 loc nam rdr _ cs = do
   initialize
   offRef <- newIORef Nothing
-  let yin = YInput { yinName       = nam
-                   , yinReader     = rdr
-                   , yinLastOffset = offRef
-                   }
-      erl = Just $ def { elSource = DsFile nam }
-  iPtr <- withReturnedRetort EtSlawIO (Just addn) erl $ \tortPtr -> do
+  let yin  = YInput { yinName       = nam
+                    , yinReader     = rdr
+                    , yinLastOffset = offRef
+                    }
+      erl  = Just $ def { elSource = DsFile nam }
+      addn = Just loc
+  iPtr <- withReturnedRetortCS EtSlawIO addn erl cs $ \tortPtr -> do
     readPtr <- makeInputFunc yin
     c_open_yaml_input readPtr tortPtr
   iFPtr <- newForeignPtr c_finalize_input iPtr
@@ -574,9 +577,9 @@ slawFromYamlString
   => LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
   -> Either PlasmaException [Slaw]
-slawFromYamlString txt opts = withFrozenCallStack $ unsafePerformIO $ do
+slawFromYamlString txt opts = unsafePerformIO $ do
   tryAndConvertExc $ do
-    slawFromYamlStringIO' "slawFromYamlString" txt opts
+    slawFromYamlStringIO' "slawFromYamlString" txt opts callStack
 
 -- | Like 'slawFromYamlString', but runs in the IO monad,
 -- and throws a 'PlasmaException' on error.
@@ -585,18 +588,19 @@ slawFromYamlStringIO
   => LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
   -> IO [Slaw]
-slawFromYamlStringIO txt opts = withFrozenCallStack $ do
-  slawFromYamlStringIO' "slawFromYamlStringIO" txt opts
+slawFromYamlStringIO txt opts =
+  slawFromYamlStringIO' "slawFromYamlStringIO" txt opts callStack
 
 slawFromYamlStringIO'
-  :: (HasCallStack, ToSlaw b)
+  :: ToSlaw b
   => String  -- ^ function name
   -> LT.Text -- ^ string to read YAML from
   -> b       -- ^ options map/protein (currently none)
+  -> CallStack
   -> IO [Slaw]
-slawFromYamlStringIO' nam txt opts = do
+slawFromYamlStringIO' nam txt opts cs = do
   rdr <- makeFileReaderLazyBS $ toUtf8 txt
-  sis <- openYamlSlawInput1 nam "<string>" rdr opts
+  sis <- openYamlSlawInput1 nam "<string>" rdr opts cs
   ss  <- readAllSlawx sis
   siClose sis
   return ss

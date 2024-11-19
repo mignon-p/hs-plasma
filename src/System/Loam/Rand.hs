@@ -110,15 +110,7 @@ trulyRandom
   :: HasCallStack
   => Int             -- ^ number of bytes to generate
   -> IO B.ByteString
-trulyRandom nBytes = withFrozenCallStack $ do
-  initialize
-  trulyRandom0 nBytes
-
-trulyRandom0
-  :: HasCallStack
-  => Int             -- ^ number of bytes to generate
-  -> IO B.ByteString
-trulyRandom0 nBytes
+trulyRandom nBytes
   | nBytes < 0 = do
       let msg = "trulyRandom: nBytes " ++ show nBytes ++ " < 0"
       throwIO $ def { peType      = EtInvalidArgument
@@ -126,10 +118,11 @@ trulyRandom0 nBytes
                     , peCallstack = Just callStack
                     }
   | nBytes == 0 = return B.empty
-  | otherwise = withFrozenCallStack $ do
+  | otherwise = do
+      initialize
       allocaBytes nBytes $ \ptr -> do
         tort <- Retort <$> c_truly_random ptr (fromIntegral nBytes)
-        throwRetort_ EtOther (Just "trulyRandom") tort Nothing
+        throwRetortCS_ EtOther (Just "trulyRandom") tort Nothing callStack
         B.packCStringLen (castPtr ptr, nBytes)
 
 makeSeed :: Maybe Int -> Int32

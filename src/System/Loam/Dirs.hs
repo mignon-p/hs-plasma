@@ -78,8 +78,8 @@ resolveStandardPath
   -> f
   -> T.Text
   -> IO (Maybe f)
-resolveStandardPath sd fn spec = withFrozenCallStack $ do
-  listToMaybe <$> searchStandardPath0 wh sd fn spec 1
+resolveStandardPath sd fn spec =
+  listToMaybe <$> searchStandardPath0 wh sd fn spec 1 callStack
   where wh = "resolveStandardPath"
 
 searchStandardPath
@@ -89,7 +89,7 @@ searchStandardPath
   -> T.Text
   -> IO [f]
 searchStandardPath sd fn spec =
-  withFrozenCallStack $ searchStandardPath0 wh sd fn spec reasonableLimit
+  searchStandardPath0 wh sd fn spec reasonableLimit callStack
   where
     wh = "searchStandardPath"
     -- Limit the number of filenames returned, just in
@@ -97,15 +97,16 @@ searchStandardPath sd fn spec =
     reasonableLimit = 1024
 
 searchStandardPath0
-  :: (HasCallStack, Filename f)
+  :: Filename f
   => String
   -> StandardDir
   -> f
   -> T.Text
   -> Int64
+  -> CallStack
   -> IO [f]
-searchStandardPath0 wh sd fn spec limit = do
-  mslaw <- searchStandardPath1 wh sd fn spec limit
+searchStandardPath0 wh sd fn spec limit cs = do
+  mslaw <- searchStandardPath1 wh sd fn spec limit cs
   case fmap ŝee mslaw of
     Nothing            -> return [] -- I don't think this can happen?
     Just (Left  exc  ) -> throwIO exc
@@ -113,14 +114,15 @@ searchStandardPath0 wh sd fn spec limit = do
       return $ map from8bitFn $ filter (not . B.null) bsLst
 
 searchStandardPath1
-  :: (HasCallStack, Filename f)
+  :: Filename f
   => String
   -> StandardDir
   -> f
   -> T.Text
   -> Int64
+  -> CallStack
   -> IO (Maybe Slaw)
-searchStandardPath1 wh sd fn spec limit = do
+searchStandardPath1 wh sd fn spec limit cs = do
   initialize
   let sd'     = standardDir2int  sd
       fn'     = to8bitFn         fn
@@ -133,5 +135,5 @@ searchStandardPath1 wh sd fn spec limit = do
   C.useAsConstCString fn' $ \fnPtr -> do
     C.useAsConstCString spec' $ \specPtr -> do
       withReturnedSlaw slawErl $ \lenPtr -> do
-        withReturnedRetort EtOther addn erl $ \tortPtr -> do
+        withReturnedRetortCS EtOther addn erl cs $ \tortPtr -> do
           c_search_standard_path sd' fnPtr specPtr limit tortPtr lenPtr
