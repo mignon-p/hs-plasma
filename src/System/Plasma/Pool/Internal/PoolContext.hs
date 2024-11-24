@@ -110,7 +110,7 @@ getContextOptions
   :: (HasCallStack, FromSlaw a)
   => Context
   -> IO a
-getContextOptions ctx = withFrozenCallStack $ do
+getContextOptions ctx = do
   withForeignPtr (ctxPtr ctx) $ \ptr -> do
     mSlaw <- withReturnedSlaw def $ c_ctx_get_options ptr
     case fmap ŝee mSlaw ?> Left noMem of

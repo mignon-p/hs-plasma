@@ -43,7 +43,7 @@ makeTempDir0 cs addn pfx = do
   B.unsafePackMallocCString ptr
 
 withTempDir :: (HasCallStack, Filename a) => a -> (a -> IO b) -> IO b
-withTempDir pfx func = withFrozenCallStack $ do
+withTempDir pfx func = do
   bracket (makeTempDir0 callStack "withTempDir" pfx) rmRfDir func'
   where
     func'   = func                 . from8bitFn

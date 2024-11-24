@@ -614,8 +614,8 @@ getInfo h mHops = withForeignPtr (hosePtr h) $ \hPtr -> do
   p <- withReturnedSlaw' erl $ \lenPtr -> do
     withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
       c_get_info hPtr hops tortPtr lenPtr
-  case withFrozenCallStack (ŝee p) of
-    Left exc -> throwIO exc
+  case ŝee p of
+    Left exc -> throwIO $ exc { peCallstack = Just cs }
     Right x  -> return x
 
 timeCmpChar :: TimeComparison -> Char

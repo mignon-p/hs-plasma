@@ -260,7 +260,7 @@ randBytes nBytes rs
                     , peCallstack = Just callStack
                     }
   | nBytes == 0 = return B.empty
-  | otherwise = withFrozenCallStack $ do
+  | otherwise = do
       allocaBytes nBytes $ \bufPtr -> do
         withForeignPtr (rsPtr rs) $ \ptr -> do
           c_random_bytes_state ptr bufPtr (fromIntegral nBytes)

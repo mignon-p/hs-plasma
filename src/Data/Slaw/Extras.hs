@@ -47,11 +47,10 @@ foreign import capi "ze-hs-misc.h ze_hs_spew_overview_to_string"
       -> IO (Ptr FgnSlaw)    -- slaw   (return value)
 
 spewOverview :: HasCallStack => Slaw -> LT.Text
-spewOverview =
-  fixAddrs . unsafePerformIO . withFrozenCallStack . spewOverview0
+spewOverview = fixAddrs . unsafePerformIO . spewOverview0 callStack
 
-spewOverview0 :: HasCallStack => Slaw -> IO (LT.Text, Word64)
-spewOverview0 slaw = do
+spewOverview0 :: CallStack -> Slaw -> IO (LT.Text, Word64)
+spewOverview0 cs slaw = do
   initialize
   let slawErl            = def { elSource = DsOther sErlStr }
       sErlStr            = "<internal:spewOverview>"
@@ -67,7 +66,7 @@ spewOverview0 slaw = do
       let msg = "slaw_spew_overview_to_string unexpectedly returned NULL"
       throwIO $ def { peType      = EtOther
                     , peMessage   = msg
-                    , peCallstack = Just callStack
+                    , peCallstack = Just cs
                     }
 
 -- Output from slaw_spew_overview() looks like this:
