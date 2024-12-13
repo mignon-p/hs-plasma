@@ -63,8 +63,12 @@ infixr 5 +/
 foreign import capi safe "libPlasma/c/pool.h pool_validate_name"
     c_pool_validate_name :: C.ConstCString -> IO Int64
 
+-- | Every protein in a pool has a unique, immutable, and sequential
+-- serial number known as an “index”.
 type PoolIndex = Int64
 
+-- | A string type which represents the name of a pool.
+-- Should only contain printable ASCII characters, 0x20 to 0x7E.
 newtype PoolName = PoolName { unPoolName :: SBS.ShortByteString }
                  deriving newtype (Eq, Ord, Show, Monoid, Semigroup,
                                    NFData, Hashable)
@@ -116,12 +120,22 @@ clampByte n
   | n >= 0x20 && n < 0x7f = fromIntegral n
   | otherwise             = 0x3f
 
+-- | Convert a string from any instance of 'TextClass' into a
+-- 'PoolName'.  Characters outside the range 0x20 to 0x7E are
+-- changed to 0x3F (@?@).
 toPoolName :: TextClass a => a -> PoolName
 toPoolName = fromString . toString
 
+-- | Convert a string from 'PoolName' into any instance of
+-- 'TextClass'.
 fromPoolName :: TextClass a => PoolName -> a
 fromPoolName = fromString . toString
 
+-- | Concatenate two path components of a pool URI.
+-- Normally, a @/@ is automatically inserted between the two
+-- components.  However, if the second component is an
+-- absolute pool URI, then the second component is returned
+-- unchanged, and the first component is ignored.
 (+/) :: PoolName -> PoolName -> PoolName
 x +/ y
   | isAbsolutePoolName y =                  y
@@ -147,56 +161,63 @@ needsSlash (PoolName sbs) =
     Just (_, 0x3a) -> False -- ':'
     _              -> True
 
-{-
-noTrailSlash :: PoolName -> PoolName
-noTrailSlash name@(PoolName sbs)
-  | "/" `SBS.isSuffixOf` sbs =
-      PoolName $ SBS.dropWhileEnd isSlash sbs
-  | otherwise = name
-
-noLeadSlash :: PoolName -> PoolName
-noLeadSlash name@(PoolName sbs)
-  | "/" `SBS.isPrefixOf` sbs =
-      PoolName $ SBS.dropWhile isSlash sbs
-  | otherwise = name
--}
-
+-- | Determines whether a 'PoolName' represents a syntactically
+-- valid pool name.  This wraps the C function
+-- @pool_validate_name()@.
 isPoolPathValid :: PoolName -> Bool
 isPoolPathValid (PoolName sbs) = unsafePerformIO $ do
   C.useSBSAsConstCString sbs $ \namePtr -> do
     tort <- c_pool_validate_name namePtr
     return $ tort >= 0
 
+-- | Represents a pool URI which has been separated into its
+-- components.  The output of 'parsePoolUri', or the input to
+-- 'makePoolUri'.
 data ParsedPoolUri = ParsedPoolUri
-  { poolLocation :: Maybe PoolLocation
+  { -- | “scheme” and “authority” of the URI (optional)
+    poolLocation :: Maybe PoolLocation
+    -- | The path of the pool, on the specified server.
   , poolPath     :: !PoolName
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance Nameable ParsedPoolUri where
   typeName _ = "ParsedPoolUri"
 
+-- | Represents a pool server.  (“scheme” and “authority”
+-- in URL terminology)
 data PoolLocation = PoolLocation
-  { poolScheme    :: !PoolName
+  { -- | For example: @local@, @tcp@, @tcpo@, or @tcps@
+    poolScheme    :: !PoolName
+    -- | The name and port of the server.
   , poolAuthority :: Maybe PoolAuthority
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance Nameable PoolLocation where
   typeName _ = "PoolLocation"
 
+-- | The name and port of a pool server.
 data PoolAuthority = PoolAuthority
-  { poolHost :: !PoolName
+  { -- | DNS name, or IPv4 or IPv6 address, of the server.
+    -- If it is an IPv6 address, it must be enclosed in
+    -- square brackets.
+    poolHost :: !PoolName
+    -- | Optional port number of the server.
   , poolPort :: Maybe Int
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
 instance Nameable PoolAuthority where
   typeName _ = "PoolAuthority"
 
+-- | Parse a 'PoolName' into its URI components, as a
+-- 'ParsedPoolUri'.
 parsePoolUri :: PoolName -> ParsedPoolUri
 parsePoolUri (PoolName sbs) =
   case A.parseOnly (poolNameP <* A.endOfInput) (SBS.fromShort sbs) of
     Left  _   -> ParsedPoolUri Nothing (PoolName sbs)
     Right ppn -> ppn
 
+-- | Convert a 'ParsedPoolUri' into a single string, as a
+-- 'PoolName'.
 makePoolUri :: ParsedPoolUri -> PoolName
 makePoolUri ppn =
   mconcat $ locParts (poolLocation ppn) ++ [poolPath ppn]
@@ -307,6 +328,8 @@ ipv6P = do
 portP :: A.Parser Int
 portP = A.char ':' >> A.decimal
 
+-- | Determines whether a given 'ParsedPoolUri' represents a
+-- syntactically valid pool URI.
 isParsedPoolUriValid :: ParsedPoolUri -> Bool
 isParsedPoolUriValid ppu = hostOk && pathOk
   where
@@ -335,12 +358,20 @@ isParsedPoolUriValid ppu = hostOk && pathOk
     pathOk2   = not hasAuth && not pathEmpty && isPoolPathValid uri
     pathOk    = if isLocal scheme then pathOk2 else pathOk1
 
+-- | Determines whether a given string (as a 'PoolName')
+-- represents a syntactically valid DNS name, or IPv4 or IPv6
+-- address.
+--
+-- If it is an IPv6 address, it must be enclosed in
+-- square brackets.
 isPoolHostValid :: PoolName -> Bool
 isPoolHostValid (PoolName sbs) =
   case A.parseOnly (validHostP <* A.endOfInput) (SBS.fromShort sbs) of
     Left  _ -> False
     Right _ -> True
 
+-- | Determines whether a given 'PoolName' represents a
+-- syntactically valid pool URI.
 isPoolUriValid :: PoolName -> Bool
 isPoolUriValid = isParsedPoolUriValid . parsePoolUri
 
@@ -364,10 +395,20 @@ validIPv6P = do
   A.char ']'
   return ()
 
-kLocal, kTcp, kTcpo, kTcps :: PoolName
+-- | The string @local@.
+kLocal :: PoolName
 kLocal = "local"
+
+-- | The string @tcp@.
+kTcp :: PoolName
 kTcp   = "tcp"
+
+-- | The string @tcpo@.
+kTcpo :: PoolName
 kTcpo  = "tcpo"
+
+-- | The string @tcps@.
+kTcps :: PoolName
 kTcps  = "tcps"
 
 erlFromPoolName :: PoolName -> ErrLocation

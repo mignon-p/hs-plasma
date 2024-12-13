@@ -47,6 +47,8 @@ import System.Loam.Retorts.Constants
 kContext :: IsString a => a
 kContext = "Context"
 
+-- | Holds “context” information that might be needed for pool
+-- operations, such as credentials.
 data Context = Context
   { ctxName :: !T.Text
   , ctxPtr  :: !(ForeignPtr FgnCtx)
@@ -82,10 +84,11 @@ emptyCtx :: Context
 emptyCtx = unsafePerformIO $ newContext "(default context)" emptyMap
   where emptyMap = SlawMap []
 
+-- | Creates a new 'Context'.
 newContext
   :: (HasCallStack, ToSlaw a)
   => T.Text     -- ^ name of this Context (only used in 'Show' instance)
-  -> a
+  -> a          -- ^ context options (usually a 'ContextOptions')
   -> IO Context
 newContext name0 opts = do
   initialize
@@ -106,6 +109,7 @@ noMem = unsafePerformIO $ do
   let addn = Just "getContextOptions"
   retortToPlasmaException EtPools addn OB_NO_MEM Nothing
 
+-- | Returns the options that were used when creating the 'Context'.
 getContextOptions
   :: (HasCallStack, FromSlaw a)
   => Context

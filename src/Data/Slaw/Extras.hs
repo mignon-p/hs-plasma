@@ -5,6 +5,8 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Additional Slaw functionality (just “overview” so far).
 -}
 
 module Data.Slaw.Extras
@@ -46,6 +48,12 @@ foreign import capi "ze-hs-misc.h ze_hs_spew_overview_to_string"
       -> Ptr SlawLen         -- int64 *len_ptr
       -> IO (Ptr FgnSlaw)    -- slaw   (return value)
 
+-- | Produces a string representation of the slaw.
+-- Equivalent to the C function @slaw_spew_overview_to_string()@.
+--
+-- Unlike the C function, which prints addresses of the slaw
+-- in memory, this version prints byte offsets from the beginning
+-- of the slaw.
 spewOverview :: HasCallStack => Slaw -> LT.Text
 spewOverview = fixAddrs . unsafePerformIO . spewOverview0 callStack
 

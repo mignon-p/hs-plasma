@@ -5,6 +5,18 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+A process deposits Proteins into, and retrieves Proteins from,
+network-soluble ring buffers called “Pools”.  Multiple processes can
+be simultaneously connected (via “Hoses”) to a single pool, with each
+both depositing and retrieving Proteins.  The ordering of Proteins
+stored in a Pool is monotonic and immutable, such that all retrieving
+processes observe the same sequence.  Processes most typically read
+from Pools in something like real time, with Proteins being retrieved
+immediately after being deposited; but Pools are also “rewindable” so
+that, for example, a new process joining a distributed system might
+attach to a Pool already in use and begin reading Proteins from a time
+far enough in the past to be able to reconstruct system context.
 -}
 
 module System.Plasma.Pool
@@ -176,7 +188,7 @@ participateCreatingly
   => Context  -- ^ pool context
   -> T.Text   -- ^ name for new hose
   -> PoolName -- ^ name of pool to participate in
-  -> a        -- ^ pool create options
+  -> a        -- ^ pool create options (usually 'PoolCreateOptions')
   -> IO Hose
 participateCreatingly ctx name pool opts = do
   let loc = "participateCreatingly"
@@ -216,11 +228,11 @@ withHose ctx name pool action =
 
 withHoseCreatingly
   :: (HasCallStack, ToSlaw a)
-  => Context         -- ^ pool context
-  -> T.Text          -- ^ name for new hose
-  -> PoolName        -- ^ name of pool to participate in
-  -> a               -- ^ pool create options
-  -> (Hose -> IO b)  -- ^ action to run with hose
+  => Context        -- ^ pool context
+  -> T.Text         -- ^ name for new hose
+  -> PoolName       -- ^ name of pool to participate in
+  -> a              -- ^ pool create options (usually 'PoolCreateOptions')
+  -> (Hose -> IO b) -- ^ action to run with hose
   -> IO b
 withHoseCreatingly ctx name pool opts action =
   bracket (participateCreatingly ctx name pool opts) withdraw action
@@ -229,7 +241,7 @@ create
   :: (HasCallStack, ToSlaw a)
   => Context  -- ^ pool context
   -> PoolName -- ^ name of pool to create
-  -> a        -- ^ pool create options
+  -> a        -- ^ pool create options (usually 'PoolCreateOptions')
   -> IO ()
 create ctx pool opts = do
   initialize

@@ -59,6 +59,8 @@ import Data.Slaw.Util
 --
 
 -- | Represents either a string or an integer.
+-- Used for representing user and group IDs in either string or
+-- numeric form in 'PoolCreateOptions'.
 data StrOrInt = StringValue  !T.Text
               | NumericValue !Integer
               deriving (Eq, Ord, Show, Read, Generic, NFData, Hashable)
@@ -80,6 +82,8 @@ instance ToSlaw StrOrInt where
 
 --
 
+-- | Options which can be given to 'Data.Slaw.IO.Yaml.openYamlSlawOutput'
+-- and similar functions.
 data WriteYamlOptions = WriteYamlOptions
   { -- | Set it to 'False' if you don't need full fidelity, and
     -- would rather not have all your numbers tagged.
@@ -180,6 +184,8 @@ kComment = "comment"
 
 --
 
+-- | Options which can be given to 'System.Plasma.Pool.create'
+-- and 'System.Plasma.Pool.participateCreatingly'.
 data PoolCreateOptions = PoolCreateOptions
   { -- | The pool type.  Theoretically, different types could
     -- exist, but in practice, only the “mmap” type exists.
@@ -413,8 +419,20 @@ kMmap = "mmap"
 
 --
 
+-- | Options that can be specified when creating a
+-- 'System.Plasma.Pool.Context'.
 data ContextOptions = ContextOptions
-  { coCertificate :: Maybe L.ByteString
+  { -- | Client's certificate chain, as the contents of a PEM file.
+    --
+    -- [key]: @certificate@
+    --
+    -- [type]: string
+    coCertificate :: Maybe L.ByteString
+    -- | Client's private key, as the contents of a PEM file.
+    --
+    -- [key]: @private-key@
+    --
+    -- [type]: string
   , coPrivateKey  :: Maybe L.ByteString
   } deriving (Eq, Ord, Show, Read, Generic, NFData, Hashable)
 
@@ -445,6 +463,7 @@ contextOptions =
 
 --
 
+-- | Information returned by 'System.Plasma.Pool.getInfo'.
 data PoolInfo = PoolInfo
   { -- | The type of pool.
     --
