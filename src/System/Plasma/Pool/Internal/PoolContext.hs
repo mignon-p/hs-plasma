@@ -87,8 +87,10 @@ emptyCtx = unsafePerformIO $ newContext "(default context)" emptyMap
 -- | Creates a new 'Context'.
 newContext
   :: (HasCallStack, ToSlaw a)
-  => T.Text     -- ^ name of this Context (only used in 'Show' instance)
-  -> a          -- ^ context options (usually a 'ContextOptions')
+  -- | Name of this Context (only used in 'Show' instance).
+  => T.Text
+  -- | Context options (usually a 'System.Plasma.Pool.ContextOptions').
+  -> a
   -> IO Context
 newContext name0 opts = do
   initialize

@@ -179,6 +179,9 @@ foreign import capi safe "ze-hs-hose.h ze_hs_wakeup_op"
 kHose :: IsString a => a
 kHose = "Hose"
 
+-- | A Hose is a connection to a pool.  In that sense, it is much
+-- like a file handle.  It can only be used from one thread at
+-- a time.
 data Hose = Hose
   { hoseName :: !T.Text
   , hosePool :: !PoolName
@@ -201,9 +204,19 @@ instance Show Hose where
 instance Nameable Hose where
   typeName _ = "Hose"
 
+-- | This is the type returned by most of the functions that read
+-- a protein from a pool, such as 'nthProtein', 'awaitNext',
+-- 'probeFrwd', etc.
+--
+-- It contains the actual protein read, along with the index
+-- and timestamp of that protein within the pool.
 data RetProtein = RetProtein
-  { rpProtein   ::                Slaw
+  { -- | The protein read from the pool.
+    rpProtein   ::                Slaw
+    -- | The index at which the protein was located in the pool.
   , rpIndex     :: {-# UNPACK #-} !PoolIndex
+    -- | The time at which the protein was originally written
+    -- to the pool.
   , rpTimestamp :: {-# UNPACK #-} !PoolTimestamp
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
@@ -658,7 +671,9 @@ seekByTime = seekTimeOp callStack "seekByTime" 'b'
 changeOptions
   :: (HasCallStack, ToSlaw a)
   => Hose
-  -> a         -- ^ options to change (usually a 'PoolCreateOptions')
+  -- | Options to change (usually a
+  -- 'System.Plasma.Pool.PoolCreateOptions').
+  -> a
   -> IO ()
 changeOptions h opts = do
   let addn = Just "changeOptions"

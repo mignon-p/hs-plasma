@@ -87,16 +87,41 @@ foreign import capi unsafe "ze-hs-fetch.h value ZE_HS_FETCH_P_LEN"
 foreign import capi unsafe "ze-hs-fetch.h value ZE_HS_FETCH_MAX"
     fieldsPerFetchRecord :: Int
 
--- | Number of seconds since the UNIX epoch (January 1, 1970)
+-- | Number of seconds since the UNIX epoch (January 1, 1970).
+-- (May be a fractional number of seconds.)
+--
+-- Timestamps are stored in the pool alongside each protein, and
+-- indicate the time at which the protein was written to the pool.
+--
+-- See 'System.Loam.Time.loamTimeToPosixTime' and
+-- 'System.Loam.Time.loamTimeToUtcTime' for converting pool
+-- timestamps to types used by the "Data.Time.Clock" module in
+-- the Haskell @time@ library.
 type PoolTimestamp = LoamTime
 
+-- | Record used as an argument to 'System.Plasma.Pool.fetch' and
+-- 'System.Plasma.Pool.fetch''.
+--
+-- Indicates the index to fetch, and also indicates which parts
+-- of the protein to fetch.  It's possible to choose whether to
+-- return the descrips and ingests, and some, all, or none of the
+-- rude data.
+--
+-- For example, setting 'foRudeOffset' to @Just 0@, and setting
+-- 'foRudeLength' to @Nothing@, would return all of the rude data,
+-- if any is present.
 data FetchOp = FetchOp
-  { foIdx          :: {-# UNPACK #-} !Int64
+  { -- | Index of the protein to fetch.
+    foIdx          :: {-# UNPACK #-} !Int64
+    -- | Whether to include the descrips in the result.
   , foWantDescrips :: !Bool
+    -- | Whether to include the ingests in the result.
   , foWantIngests  :: !Bool
-    -- | 'Nothing' means no rude data
+    -- | Byte offset within the rude data to start fetching.
+    -- 'Nothing' means no rude data.
   , foRudeOffset   :: Maybe Int64
-    -- | 'Nothing' means "until end"
+    -- | Maximum number of bytes of rude data to fetch.
+    -- 'Nothing' means “until end”.
   , foRudeLength   :: Maybe Int64
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
@@ -113,17 +138,42 @@ instance Default FetchOp where
     , foRudeLength   = Nothing
     }
 
+-- | This is the type returned by 'System.Plasma.Pool.fetch' and
+-- 'System.Plasma.Pool.fetch''.
+--
+-- It contains the protein, index, and timestamp, much like
+-- 'System.Plasma.Pool.RetProtein'.  (Except that 'frProtein' may
+-- be a trimmed-down version of the protein, depending on which
+-- options were selected in 'FetchOp'.)
+--
+-- In addition, it also contains some statistics about the full protein,
+-- regardless of which parts of the protein were actually returned.
 data FetchResult = FetchResult
-  { frIdx          :: {-# UNPACK #-} !PoolIndex
+  { -- | The index at which the protein was actually located in the
+    -- pool.  This may be different than 'foIdx', if the “clamp”
+    -- option was specified to 'System.Plasma.Pool.fetch' or
+    -- 'System.Plasma.Pool.fetch''.
+    frIdx          :: {-# UNPACK #-} !PoolIndex
+    -- | The time at which the protein was originally written
+    -- to the pool.
   , frTimestamp    :: {-# UNPACK #-} !PoolTimestamp
+    -- | Total number of bytes in the full protein.
   , frTotalBytes   :: {-# UNPACK #-} !Int64
+    -- | Number of bytes in the “descrips” of the full protein.
   , frDescripBytes :: {-# UNPACK #-} !Int64
+    -- | Number of bytes in the “ingests” of the full protein.
   , frIngestBytes  :: {-# UNPACK #-} !Int64
+    -- | Number of bytes of rude data in the full protein.
   , frRudeBytes    :: {-# UNPACK #-} !Int64
-    -- | 'Nothing' if descrips is not a list
+    -- | Number of elements in the “descrips” list.
+    -- 'Nothing' if descrips is not a list.
   , frNumDescrips  :: Maybe Int64
-    -- | 'Nothing' if ingests is not a map
+    -- | Number of key/value pairs in the “ingests” map.
+    -- 'Nothing' if ingests is not a map.
   , frNumIngests   :: Maybe Int64
+    -- | The returned protein, which may be a cut-down version of the
+    -- actual protein in the pool, depending on the options specified
+    -- in 'FetchOp'.
   , frProtein      :: Slaw
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 

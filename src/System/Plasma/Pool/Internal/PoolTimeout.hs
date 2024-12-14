@@ -28,10 +28,20 @@ foreign import capi unsafe "libPlasma/c/pool.h value POOL_WAIT_FOREVER"
 foreign import capi unsafe "libPlasma/c/pool.h value POOL_NO_WAIT"
     c_no_wait :: Double
 
-data PoolTimeout = NoWait
-                 | Timeout {-# UNPACK #-} !Double -- ^ in seconds
-                 | WaitForever
-                 deriving (Show, Generic, NFData)
+-- | Amount of time to wait, when waiting for a protein.
+--
+-- Used by 'System.Plasma.Pool.awaitNext' and
+-- 'System.Plasma.Pool.awaitProbeFrwd'.
+data PoolTimeout =
+    -- | Do not wait at all.  Return immediately if no protein is
+    -- available.
+    NoWait
+    -- | Wait for the given number of seconds (which may be
+    -- fractional).
+  | Timeout {-# UNPACK #-} !Double
+    -- | Wait forever.  Do not return until a protein is available.
+  | WaitForever
+  deriving (Show, Generic, NFData)
 
 instance Eq PoolTimeout where
   x == y = tToDbl x == tToDbl y

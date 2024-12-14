@@ -75,7 +75,7 @@ module System.Plasma.Pool
   , RetProtein(..)
   , PoolTimestamp
   , TimeComparison(..)
-  , PoolTimeout
+  , PoolTimeout(..)
   , PoolInfo(..)
     -- ** Hose information
   , hoseName
