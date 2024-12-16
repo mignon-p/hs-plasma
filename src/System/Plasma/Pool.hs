@@ -173,6 +173,18 @@ foreign import capi safe "libPlasma/c/pool.h pool_sleep_ctx"
 foreign import capi safe "libPlasma/c/pool.h pool_check_in_use_ctx"
     c_check_in_use_ctx :: PoolNameFunc
 
+-- | Open a new 'Hose' to a given pool.  It is an error
+-- ('POOL_NO_SUCH_POOL') if the pool does not already exist.
+--
+-- In case of error, throws a 'PlasmaException' or an 'IOException'.
+--
+-- In case of success, returns the new hose.  The current index for
+-- the hose will be set to the newest available protein in the pool.
+--
+-- When you are done with the hose, you should call 'withdraw' to
+-- close it.  (Eventually, the hose would be closed during garbage
+-- collection, but that is highly nondeterministic, so it is much
+-- preferable to call 'withdraw' explicitly.)
 participate
   :: HasCallStack
   => Context  -- ^ pool context
@@ -184,6 +196,9 @@ participate ctx name pool = do
       cs  = callStack
   participateInternal loc False cs ctx name pool SlawNil
 
+-- | Open a new 'Hose' to a given pool, as in 'participate'.
+-- However, if the pool does not exist, it is created.  The
+-- specified options are used when creating the pool.
 participateCreatingly
   :: (HasCallStack, ToSlaw a)
   => Context  -- ^ pool context
@@ -238,6 +253,10 @@ withHoseCreatingly
 withHoseCreatingly ctx name pool opts action =
   bracket (participateCreatingly ctx name pool opts) withdraw action
 
+-- | Creates the specified pool, using the specified options.
+-- It is an error ('POOL_EXISTS') if the pool already exists.
+--
+-- In case of error, throws a 'PlasmaException' or an 'IOException'.
 create
   :: (HasCallStack, ToSlaw a)
   => Context  -- ^ pool context
@@ -255,6 +274,11 @@ create ctx pool opts = do
         tort <- c_create cPtr pnPtr optPtr
         throwRetortCS_ EtPools addn (Retort tort) erl cs
 
+-- | Deletes the specified pool.  Possible errors include
+-- 'POOL_NO_SUCH_POOL' if the pool does not exist, and
+-- 'POOL_IN_USE' if there is still a hose open to this pool.
+--
+-- In case of error, throws a 'PlasmaException' or an 'IOException'.
 dispose
   :: HasCallStack
   => Context  -- ^ pool context
@@ -270,6 +294,10 @@ dispose ctx pool = do
       tort <- c_dispose_ctx pnPtr cPtr
       throwRetortCS_ EtPools addn (Retort tort) erl cs
 
+-- | Renames a pool.  It is an error ('POOL_IN_USE') to attempt
+-- to rename a pool if there are any open hoses to it.
+--
+-- In case of error, throws a 'PlasmaException' or an 'IOException'.
 rename
   :: HasCallStack
   => Context  -- ^ pool context
