@@ -46,6 +46,7 @@ module System.Plasma.Pool
   , ContextOptions(..)
   , newContext
   , getContextOptions
+  , loadCredentialsFromFile
     -- * Pool creation options
   , PoolCreateOptions(..)
   , StrOrInt(..)
@@ -122,7 +123,7 @@ module System.Plasma.Pool
 import Control.Exception
 import Data.Default.Class
 import Data.Int
-import qualified Data.Text                as T
+import qualified Data.Text                     as T
 import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Marshal.Utils

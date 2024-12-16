@@ -11,12 +11,14 @@ module System.Plasma.Pool.Internal.PoolContext
   ( Context(..)
   , newContext
   , getContextOptions
+  , loadCredentialsFromFile
   ) where
 
 import Control.DeepSeq
 import Control.Exception
 -- import Control.Monad
 -- import qualified Data.ByteString          as B
+import qualified Data.ByteString.Lazy     as L
 import Data.Default.Class
 import Data.Hashable
 import Data.Int
@@ -34,6 +36,8 @@ import GHC.Stack
 import System.IO.Unsafe
 
 import Data.Slaw
+import Data.Slaw.Internal
+import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Util
 import System.Loam.Hash
 import qualified System.Loam.Internal.ConstPtr as C
@@ -89,7 +93,7 @@ newContext
   :: (HasCallStack, ToSlaw a)
   -- | Name of this Context (only used in 'Show' instance).
   => T.Text
-  -- | Context options (usually a 'System.Plasma.Pool.ContextOptions').
+  -- | Context options (usually a 'ContextOptions').
   -> a
   -> IO Context
 newContext name0 opts = do
@@ -122,3 +126,26 @@ getContextOptions ctx = do
     case fmap ŝee mSlaw ?> Left noMem of
       Left  exc -> throwIO $ exc { peCallstack = Just callStack }
       Right x   -> return x
+
+--
+
+-- | Loads certificate, private key, or both, from files on disk.
+loadCredentialsFromFile
+  :: FileClass a
+  -- | Name of a PEM file containing client's certificate chain.
+  -- (Optional.)
+  => Maybe a
+  -- | Name of a PEM file containing client's private key.
+  -- (Optional.)
+  -> Maybe a
+  -> IO ContextOptions
+loadCredentialsFromFile certFile keyFile = do
+  cert <- maybeLoad certFile
+  key  <- maybeLoad keyFile
+  return $ ContextOptions { coCertificate = cert
+                          , coPrivateKey  = key
+                          }
+
+maybeLoad :: FileClass a => Maybe a -> IO (Maybe L.ByteString)
+maybeLoad Nothing   = return Nothing
+maybeLoad (Just fc) = Just <$> fcReadAsLBS fc
