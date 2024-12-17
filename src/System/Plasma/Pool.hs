@@ -232,6 +232,9 @@ participateInternal loc crtly cs ctx name pool opts = do
           c_participate cbool cPtr pnPtr optPtr tortPtr
   newHose loc cs name pool ctx hPtr
 
+-- | Like 'participate', but guarantees that the hose will be
+-- closed (withdrawn) when the given IO action completes, regardless
+-- of whether that is normally or by an exception being thrown.
 withHose
   :: HasCallStack
   => Context         -- ^ pool context
@@ -242,6 +245,9 @@ withHose
 withHose ctx name pool action =
   bracket (participate ctx name pool) withdraw action
 
+-- | Like 'participateCreatingly', but guarantees that the hose will be
+-- closed (withdrawn) when the given IO action completes, regardless
+-- of whether that is normally or by an exception being thrown.
 withHoseCreatingly
   :: (HasCallStack, ToSlaw a)
   => Context        -- ^ pool context
@@ -317,10 +323,18 @@ rename ctx oldName newName = do
         let erl = if tort == POOL_EXISTS then erlNew else erlOld
         throwRetortCS_ EtPools addn tort erl cs
 
+-- | List all the pools under a specified URI.  If the URI is
+-- 'Nothing', then lists all local pools under @OB_POOLS_DIR@.  A
+-- subset of those pools, underneath a specified subdirectory of
+-- @OB_POOLS_DIR@, can be requested with a URI of the form
+-- @some\/dir@.  Pools underneath an arbitrary local directory can be
+-- listed with @local:\/an\/absolute\/dir@.  The URI should be a
+-- string like @tcp:\/\/chives.la923.example.net:1234\/@ if you want
+-- to list pools on a remote server.
 listPools
   :: HasCallStack
   => Context        -- ^ pool context
-  -> Maybe PoolName -- ^ uri to list
+  -> Maybe PoolName -- ^ uri to list ('Nothing' for all local pools)
   -> IO [PoolName]
 listPools ctx Nothing    = listPools0 callStack ctx def C.nullConstPtr
 listPools ctx (Just uri) =
@@ -345,6 +359,10 @@ listPools0 cs ctx erl uriPtr = do
     Nothing    -> return []
     Just names -> return names
 
+-- | Creates a uniquely-named, temporary pool which exists for the
+-- duration of the specified IO action.  When the IO action returns
+-- (whether normally or by raising an exception), the temporary
+-- pool is deleted (via 'dispose').
 withTemporaryPool
   :: (HasCallStack, ToSlaw a)
   => Context            -- ^ pool context
@@ -409,6 +427,14 @@ nameOnlyOp cs loc func pairs dflt ctx pool = do
           throwRetortCS_ EtPools addn tort erl cs
           return dflt
 
+-- | Returns 'True' if the specified pool exists, and returns 'False'
+-- if the specified pool does not exist.  Throws 'PlasmaException' or
+-- 'IOException' in case of error.
+--
+-- Beware of TOCTOU!  In most cases, it would be more robust to just
+-- use 'participate', because then if the pool does exist, you'll have
+-- a hose to it.  With 'doesPoolExist', the pool might go away between
+-- now and when you participate in it.
 doesPoolExist
   :: HasCallStack
   => Context  -- ^ pool context
@@ -418,6 +444,13 @@ doesPoolExist =
   nameOnlyOp callStack "doesPoolExist" c_exists_ctx pairs False
   where pairs = [(OB_YES, True)]
 
+-- | If the named pool exists and there are currently no hoses open to it,
+-- returns 'False'.  If the named pool currently has one or more hoses
+-- open to it, returns 'True'.  Throws 'PlasmaException' or
+-- 'IOException' in case of error.
+--
+-- Beware of TOCTOU issues, though:
+-- <http://cwe.mitre.org/data/definitions/367.html>
 isPoolInUse
   :: HasCallStack
   => Context  -- ^ pool context
@@ -427,6 +460,17 @@ isPoolInUse =
   nameOnlyOp callStack "isPoolInUse" c_check_in_use_ctx pairs False
   where pairs = [(POOL_IN_USE, True)]
 
+-- | Put a pool “to sleep”, which means allowing the pool implementation
+-- to free certain resources used by the pool, in the expectation that
+-- it won't be used in a while.  A pool can only be put to sleep if
+-- there are no open hoses to it; 'POOL_IN_USE' will be thrown if this
+-- condition is not met.  The pool will automatically “wake up”
+-- (reacquire the resources it needs) the next time it is participated
+-- in.
+--
+-- In practice, in the current implementation, “resources” means
+-- “semaphores”.  This function is only useful/necessary if you
+-- intend to have a large number (more than 32768) of pools.
 putPoolToSleep
   :: HasCallStack
   => Context  -- ^ pool context
