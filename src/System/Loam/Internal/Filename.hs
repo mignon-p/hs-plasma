@@ -30,7 +30,7 @@ import Data.Word
 import qualified System.OsPath            as O
 
 import Data.Slaw
-import Data.Slaw.Internal (FileClass(..))
+import Data.Slaw.IO (FileClass(..))
 
 class FileClass a => Filename a where
   to8bitFn   :: a -> B.ByteString

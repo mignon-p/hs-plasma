@@ -36,7 +36,8 @@ import GHC.Stack
 import System.IO.Unsafe
 
 import Data.Slaw
-import Data.Slaw.Internal
+-- import Data.Slaw.Internal
+import Data.Slaw.IO
 import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Util
 import System.Loam.Hash
