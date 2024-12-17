@@ -5,11 +5,12 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Functions for dealing with standard paths.
 -}
 
 module System.Loam.Dirs
-  ( Filename
-  , StandardDir(..)
+  ( StandardDir(..)
   , getStandardPath
   , splitStandardPath
   , resolveStandardPath

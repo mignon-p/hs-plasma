@@ -5,10 +5,13 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Functions for dealing with the filesystem.
 -}
 
 module System.Loam.File
-  ( makeTempDir
+  ( Filename(..)
+  , makeTempDir
   , withTempDir
   ) where
 
