@@ -15,6 +15,7 @@ module System.Loam.Log
   , LogFlag(..)        -- re-export
   , SyslogPriority(..) -- re-export
   , SyslogFacility     -- opaque type
+  , SyslogFlag(..)     -- re-export
   , logLoc
   , logCode
   , logMsg
