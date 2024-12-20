@@ -5,6 +5,8 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Some totally miscellaneous stuff that doesn't fit anywhere else.
 -}
 
 module System.Loam.Util
@@ -42,6 +44,8 @@ foreign import capi  "libLoam/c/ob-util.h ob_get_prog_name"
 foreign import capi  "libLoam/c/ob-util.h ob_set_prog_name"
     c_set_prog_name :: C.ConstCString -> IO ()
 
+-- | Generate a random (Version 4) UUID, as a string
+-- containing 32 hex digits and 4 dashes.
 generateUuid :: HasCallStack => IO T.Text
 generateUuid = do
   initialize
@@ -50,12 +54,16 @@ generateUuid = do
     throwRetortCS_ EtOther (Just "generateUuid") tort Nothing callStack
     T.decodeUtf8Lenient <$> B.packCString ptr
 
+-- | Fetch the current user's username, or “unknown” on error.
 getUserName :: IO T.Text
 getUserName = initialize >> c_get_user_name >>= constCStrToTxt
 
+-- | Return the name of the current program.  Can be set with
+-- 'setProgName', but defaults to @argv[0]@.
 getProgName :: IO T.Text
 getProgName = initialize >> c_get_prog_name >>= constCStrToTxt
 
+-- | Sets the name returned by 'getProgName'.
 setProgName :: T.Text -> IO ()
 setProgName txt = do
   initialize
