@@ -54,9 +54,17 @@ foreign import capi "ze-hs-misc.h ze_hs_search_standard_path"
       -> Ptr SlawLen      -- int64          *len_ptr
       -> IO (Ptr FgnSlaw) -- slaw            (return value)
 
+-- | Returns the pathname for one of the standard directories
+-- enumerated in 'StandardDir'.  These are determined by checking
+-- various environment variables and then falling back to a hardcoded
+-- path.
 getStandardPath :: Filename f => StandardDir -> IO f
 getStandardPath sd = from8bitFn <$> getStandardPathBS sd
 
+-- | Like 'getStandardPath', but for 'StandardDir's which are
+-- paths (rather than single directories), splits them into
+-- multiple directories on the colon character.  (Semicolon
+-- on Windows.)
 splitStandardPath :: Filename f => StandardDir -> IO [f]
 splitStandardPath sd = do
   bs <- getStandardPathBS sd
@@ -73,21 +81,65 @@ getStandardPathBS sd = do
     then return B.empty
     else B.packCString (C.unConstPtr cs)
 
+-- | Returns the first instance of the filename in the search path
+-- specified by 'StandardDir' which meets the criteria specified in
+-- the searchspec.
+--
+-- The searchspec may contain the following characters:
+--
+--     * @d@ directory specified by path exists
+--     * @r@ directory specified by path is readable
+--     * @w@ directory specified by path is writable
+--     * @c@ directory specified by path can be created
+--     * @l@ directory specified by path is on a local (non-NFS) filesystem
+--     * @E@ filename exists (as anything)
+--     * @F@ filename exists as a regular file
+--     * @D@ filename exists as a directory
+--     * @R@ filename is readable
+--     * @W@ filename is writable
+--
+-- Concatenating multiple letters together is an “and”, meaning that a
+-- single component of the path must fulfill all the specified
+-- conditions in order to match.  So, @Rw@ would mean the file is
+-- readable, and exists in a writable directory.
+--
+-- The character @|@ can be used to mean “or”.  “and” binds more
+-- tightly than “or”.  So, @RF|w@ means either the specified filename
+-- is readable and is a regular file, or the directory in the path is
+-- writable.
+--
+-- The character @,@ means “start over and go through all the path
+-- components again”.  @|@ binds more tightly than @,@.  So, @RF,w,c@
+-- means first check all the directories in the path to see if any of
+-- them contain a readable, regular file named filename.  Then, go
+-- through all the directories in the path and see if any of them are
+-- writable.  Then, go through all the directories in the path and see
+-- if any of them can be created.
+--
+-- Symbolic links are not treated specially.  (in other words, they
+-- are always followed.)
+--
+-- If the given filename is absolute, then you just get it back as-is,
+-- without searching the path.
+--
+-- Returns 'Nothing' if the filename is not found in the path.
 resolveStandardPath
   :: (HasCallStack, Filename f)
-  => StandardDir
-  -> f
-  -> T.Text
+  => StandardDir -- ^ standard path to search
+  -> f           -- ^ file to search for
+  -> T.Text      -- ^ search specification
   -> IO (Maybe f)
 resolveStandardPath sd fn spec =
   listToMaybe <$> searchStandardPath0 wh sd fn spec 1 callStack
   where wh = "resolveStandardPath"
 
+-- | Like 'resolveStandardPath', but returns all matches,
+-- rather than just the first one.
 searchStandardPath
   :: (HasCallStack, Filename f)
-  => StandardDir
-  -> f
-  -> T.Text
+  => StandardDir -- ^ standard path to search
+  -> f           -- ^ file to search for
+  -> T.Text      -- ^ search specification
   -> IO [f]
 searchStandardPath sd fn spec =
   searchStandardPath0 wh sd fn spec reasonableLimit callStack
