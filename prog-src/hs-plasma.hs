@@ -383,3 +383,21 @@ main1 = do
 
   withTemporaryPool def Nothing small $ \tmpPool -> do
     putStrLn $ toString tmpPool
+
+  putStrLn ""
+
+  let badTimes = [ "Dec 20, 2024 13:30:53.63"
+                 , "Blob 20, 2024 13:30:53.63"
+                 , "Dec 32, 2024 13:30:53.63"
+                 , "Dec 20, 2024 25:30:53.63"
+                 , "Dec 20, 2024 13:30:xx.63"
+                 , "Dec 20, 2024 13:30:53.xx"
+                 , "Dec 20, 867-5309 13:30:53.63"
+                 ]
+
+  forM_ badTimes $ \badTime -> do
+    putStr $ printf "%-30s: " $ show badTime
+    let errPt = parseTime badTime
+    case errPt of
+      Left exc -> putStrLn $ displayPlasmaException False exc
+      Right t  -> putStrLn $ show $ formatTime t
