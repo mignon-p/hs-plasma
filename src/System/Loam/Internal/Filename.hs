@@ -32,8 +32,21 @@ import qualified System.OsPath            as O
 import Data.Slaw
 import Data.Slaw.IO (FileClass(..))
 
+-- | Class for filenames that can be converted to 8-bit 'B.ByteString's.
+--
+-- For 'FilePath', this is done by UTF-8 encoding the filename.
+--
+-- For 'O.OsPath' on POSIX systems, this means leaving the
+-- 8-bit 'O.OsPath' unchanged, regardless of whether it is valid
+-- UTF-8 or not.
+--
+-- For 'O.OsPath' on Windows, this means re-encoding the UTF-16
+-- 'O.OsPath' as UTF-8.
 class FileClass a => Filename a where
+  -- | Convert filename to an 8-bit bytestring.
   to8bitFn   :: a -> B.ByteString
+
+  -- | Convert an 8-bit bytestring to a filename.
   from8bitFn :: B.ByteString -> a
 
 instance Filename FilePath where
