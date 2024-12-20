@@ -53,6 +53,7 @@ import Data.Slaw
 #include "libLoam/c/ob-vers.h"
 #include "ze-hs-syslog.h"
 
+-- | Which version string to return.
 data VersionOfWhat =
     GspeakVersion
   | CompilerVersion
@@ -81,6 +82,7 @@ versionOfWhat2int MachineModel       = #{const OB_VERSION_OF_MACHINE}
 versionOfWhat2int AbiVersion         = #{const OB_VERSION_OF_ABI}
 versionOfWhat2int BuildConfiguration = #{const OB_BUILD_CONFIGURATION}
 
+-- | Which integer parameter to return.
 data SystemInfo =
     SysNumCores
   | SysCpuMhz
@@ -97,6 +99,7 @@ systemInfo2int SysCpuMhz            = #{const OB_SYSINFO_CPU_MHZ}
 systemInfo2int SysPhysicalMegabytes = #{const OB_SYSINFO_PHYSICAL_MEGABYTES}
 systemInfo2int SysSwapMegabytes     = #{const OB_SYSINFO_VIRTUAL_MEGABYTES}
 
+-- | Priority passed to @syslog()@.
 data SyslogPriority =
     LogEmerg
   | LogAlert
@@ -124,6 +127,7 @@ syslogPriority2int LogNotice  = #{const LOG_NOTICE}
 syslogPriority2int LogInfo    = #{const LOG_INFO}
 syslogPriority2int LogDebug   = #{const LOG_DEBUG}
 
+-- | Options passed to @openlog()@.
 data SyslogFlag =
     LogPid
   | LogCons
@@ -144,6 +148,7 @@ syslogFlag2int LogNdelay = #{const LOG_NDELAY}
 syslogFlag2int LogNowait = #{const LOG_NOWAIT}
 syslogFlag2int LogPerror = #{const LOG_PERROR}
 
+-- | Standard directory to return.
 data StandardDir =
     -- | Non-changing “resource” files like fonts, images, videos.
     SharePath
@@ -173,6 +178,7 @@ standardDir2int PoolsDir   = #{const ob_pools_dir}
 standardDir2int YobuildDir = #{const ob_yobuild_dir}
 standardDir2int PrefixDir  = #{const ob_prefix_dir}
 
+-- | Flags to control logging.
 data LogFlag =
     -- | Log to the specified file descriptor.
     DstFd
