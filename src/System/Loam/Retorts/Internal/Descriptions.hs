@@ -88,6 +88,11 @@ tortTuples =
       \shared libs"
     , Nothing
     )
+  , ( OB_PARSE_ERROR
+    , "OB_PARSE_ERROR"
+    , "Unable to parse the given string"
+    , Nothing
+    )
   , ( OB_STOP
     , "OB_STOP"
     , "not an error, but don't continue"

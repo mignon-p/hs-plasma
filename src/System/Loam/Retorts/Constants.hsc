@@ -23,6 +23,7 @@ module System.Loam.Retorts.Constants
   , pattern OB_INVALID_OPERATION
   , pattern OB_DISCONNECTED
   , pattern OB_VERSION_MISMATCH
+  , pattern OB_PARSE_ERROR
   , pattern OB_STOP
   , pattern OB_NOTHING_TO_DO
   , pattern OB_YES
@@ -177,6 +178,10 @@ pattern OB_DISCONNECTED      =  Retort (#{const OB_DISCONNECTED})
 -- and shared libs.
 pattern OB_VERSION_MISMATCH  :: Retort
 pattern OB_VERSION_MISMATCH  =  Retort (#{const OB_VERSION_MISMATCH})
+
+-- | Unable to parse the given string.
+pattern OB_PARSE_ERROR       :: Retort
+pattern OB_PARSE_ERROR       =  Retort (#{const OB_PARSE_ERROR})
 
 -- | Not an error, but don't continue.
 pattern OB_STOP              :: Retort
