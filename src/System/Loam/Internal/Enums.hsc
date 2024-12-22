@@ -229,23 +229,92 @@ logFlag2w32 FlgShowProg        = #{const OB_FLG_SHOW_PROG}
 logFlag2w32 FlgShowTid         = #{const OB_FLG_SHOW_TID}
 logFlag2w32 FlgShowTidNonmain  = #{const OB_FLG_SHOW_TID_NONMAIN}
 
-hasSse, hasSse2, hasSse3, hasPclmulqdq, hasSsse3 :: Word64 -> Bool
+-- | Test for Streaming SIMD Extensions.
+--
+-- <https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions>
+hasSse       :: Word64 -> Bool
 hasSse       = (`testBit` 25)
+
+-- | Test for Streaming SIMD Extensions 2.
+--
+-- <https://en.wikipedia.org/wiki/SSE2>
+hasSse2      :: Word64 -> Bool
 hasSse2      = (`testBit` 26)
+
+-- | Test for Streaming SIMD Extensions 3.
+--
+-- <https://en.wikipedia.org/wiki/SSE3>
+hasSse3      :: Word64 -> Bool
 hasSse3      = (`testBit` 32)
+
+-- | Test for Carry-less Multiplication.
+--
+-- <https://en.wikipedia.org/wiki/CLMUL_instruction_set>
+hasPclmulqdq :: Word64 -> Bool
 hasPclmulqdq = (`testBit` 33)
+
+-- | Test for Supplemental Streaming SIMD Extensions 3.
+--
+-- <https://en.wikipedia.org/wiki/SSSE3>
+hasSsse3     :: Word64 -> Bool
 hasSsse3     = (`testBit` 41)
 
-hasFma3, hasCx16, hasSse41, hasSse42, hasMovbe :: Word64 -> Bool
+-- | Test for Fused Multiply-Add.
+--
+-- <https://en.wikipedia.org/wiki/FMA_instruction_set#FMA3_instruction_set>
+hasFma3      :: Word64 -> Bool
 hasFma3      = (`testBit` 44)
+
+-- | Test for CMPXCHG16B instruction.
+--
+-- <https://www.felixcloutier.com/x86/cmpxchg8b:cmpxchg16b>
+hasCx16      :: Word64 -> Bool
 hasCx16      = (`testBit` 45)
+
+-- | Test for Streaming SIMD Extensions 4.1.
+--
+-- <https://en.wikipedia.org/wiki/SSE4.1>
+hasSse41     :: Word64 -> Bool
 hasSse41     = (`testBit` 51)
+
+-- | Test for Streaming SIMD Extensions 4.2.
+--
+-- <https://en.wikipedia.org/wiki/SSE4.2>
+hasSse42     :: Word64 -> Bool
 hasSse42     = (`testBit` 52)
+
+-- | Test for MOVBE instruction.
+--
+-- <https://www.felixcloutier.com/x86/movbe>
+hasMovbe     :: Word64 -> Bool
 hasMovbe     = (`testBit` 54)
 
-hasPopcnt, hasAes, hasAvx, hasF16c, hasRdrnd :: Word64 -> Bool
+-- | Test for POPCNT instruction.
+--
+-- <https://www.felixcloutier.com/x86/popcnt>
+hasPopcnt    :: Word64 -> Bool
 hasPopcnt    = (`testBit` 55)
+
+-- | Test for Advanced Encryption Standard.
+--
+-- <https://en.wikipedia.org/wiki/AES_instruction_set>
+hasAes       :: Word64 -> Bool
 hasAes       = (`testBit` 57)
+
+-- | Test for Advanced Vector Extensions.
+--
+-- <https://en.wikipedia.org/wiki/Advanced_Vector_Extensions>
+hasAvx       :: Word64 -> Bool
 hasAvx       = (`testBit` 60)
+
+-- | Test for F16C (previously CVT16).
+--
+-- <https://en.wikipedia.org/wiki/F16C>
+hasF16c      :: Word64 -> Bool
 hasF16c      = (`testBit` 61)
+
+-- | Test for RDRAND instruction.
+--
+-- <https://en.wikipedia.org/wiki/RDRAND>
+hasRdrnd     :: Word64 -> Bool
 hasRdrnd     = (`testBit` 62)
