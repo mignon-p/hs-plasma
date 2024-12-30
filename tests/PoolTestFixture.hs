@@ -58,14 +58,17 @@ mkProt name num = SlawProtein (Just des) (Just ing) name
     ing = SlawMap  [("n", š num)]
 
 noDes :: Slaw -> Slaw
-noDes p = p { slawDescrips = Nothing }
+noDes (SlawProtein _ ing rude) = SlawProtein Nothing ing rude
+noDes _                        = error "noDes: should not happen"
 
 noIng :: Slaw -> Slaw
-noIng p = p { slawIngests  = Nothing }
+noIng (SlawProtein des _ rude) = SlawProtein des Nothing rude
+noIng _                        = error "noIng: should not happen"
 
 trimRude :: Slaw -> Int64 -> Int64 -> Slaw
-trimRude p start len = p { slawRudeData = rude }
-  where rude = L.take len $ L.drop start $ slawRudeData p
+trimRude (SlawProtein des ing rude) start len =
+  SlawProtein des ing $ L.take len $ L.drop start rude
+trimRude _ _ _ = error "trimRude: should not happen"
 
 tstProteins :: [Slaw]
 tstProteins = [p1, p2, p3, p4, p5]
