@@ -63,7 +63,7 @@ typeAndOptions :: ToSlaw a => a -> (T.Text, Slaw)
 typeAndOptions opts = (typ, s)
   where
     s         = š opts `prefLeft` dfltOpts
-    typ       = (s !? kType) ?> kMmap
+    typ       = (s !:? kType) ?> kMmap
 
 dfltOpts :: Slaw
 dfltOpts = SlawMap [ (š kType, š kMmap)

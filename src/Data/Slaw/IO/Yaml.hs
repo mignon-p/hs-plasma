@@ -560,7 +560,7 @@ openSlawOutput :: (HasCallStack, FileClass a, ToSlaw b)
 openSlawOutput file opts = do
   let opts' = coerceToMap    (š opts)
       nam   = fcName         file
-      ff1   = opts'       !? kFormat
+      ff1   = opts'      !:? kFormat
       ff2   = formatFromName nam
       ff    = (ff1 <|> ff2) ?> YamlFile
   case ff of
