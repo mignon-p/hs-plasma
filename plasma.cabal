@@ -13,10 +13,21 @@ name:                plasma
 version:             0.1.0.0
 
 -- A short (one-line) description of the package.
--- synopsis:
+synopsis:
+        Haskell binding to the libPlasma C library
 
 -- A longer description of the package.
--- description:
+description:
+        This is a Haskell binding to the libLoam and libPlasma
+        <https://purl.org/funwithsoftware/libPlasma C libraries>.
+        The primary purpose is to bind the “pools” API from
+        libPlasma, although some useful libLoam functionality
+        is also provided.
+
+        This library does not expose the “slaw” API from libPlasma.
+        Instead, marshaling of slawx is expected to be done with
+        the <https://github.com/mignon-p/hs-slaw slaw> Haskell
+        library.
 
 -- The license under which the package is released.
 license:             MIT
@@ -31,8 +42,12 @@ author:              Mignon Pelletier
 -- patches.
 maintainer:          code@funwithsoftware.org
 
+homepage:            https://github.com/mignon-p/hs-plasma
+
+bug-reports:         https://github.com/mignon-p/hs-plasma/issues
+
 -- A copyright notice.
--- copyright:
+copyright:           © Mignon Pelletier, 2024
 
 category:            System
 
@@ -48,6 +63,13 @@ extra-source-files:  CHANGELOG.md
 
 -- Constraint on the version of Cabal needed to build this package.
 cabal-version:       >=1.10
+
+tested-with:         GHC==8.6.5
+                   , GHC==9.8.4
+
+source-repository head
+  Type:     git
+  Location: https://github.com/mignon-p/hs-plasma.git
 
 
 library
