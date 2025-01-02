@@ -1,3 +1,4 @@
+import Control.Exception
 import Control.Monad
 import qualified Data.ByteString          as B
 import Data.Default.Class
@@ -136,12 +137,13 @@ main1 = do
 
   curTime  <- currentTime
   monoTime <- monotonicTime
-  let fmtTime = formatTime curTime
+  fmtTime  <- formatTime curTime
+  parTime  <- parseTime fmtTime
 
   putStrLn $ "currentTime:   " ++ show curTime
   putStrLn $ "monotonicTime: " ++ show monoTime
   putStrLn $ "formatTime:    " ++ T.unpack fmtTime
-  putStrLn $ "parseTime:     " ++ show (parseTime fmtTime)
+  putStrLn $ "parseTime:     " ++ show parTime
 
   putStrLn ""
 
@@ -396,8 +398,9 @@ main1 = do
                  ]
 
   forM_ badTimes $ \badTime -> do
-    putStr $ printf "%-30s: " $ show badTime
-    let errPt = parseTime badTime
+    putStrLn $ show badTime
+    errPt <- try $ parseTime badTime
+    putStr "    "
     case errPt of
       Left exc -> putStrLn $ displayPlasmaException False exc
-      Right t  -> putStrLn $ show $ formatTime t
+      Right t  -> show <$> formatTime t >>= putStrLn

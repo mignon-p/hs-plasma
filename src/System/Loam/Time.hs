@@ -41,7 +41,7 @@ import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
 import GHC.Stack
-import System.IO.Unsafe
+-- import System.IO.Unsafe
 
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Retorts
@@ -85,8 +85,8 @@ bufSize = 112
 -- Note: Although 'LoamTime' is in UTC, the string representation
 -- is in local time.  Therefore, the current time zone is used
 -- implicitly.
-formatTime :: LoamTime -> T.Text
-formatTime t = unsafePerformIO $ do
+formatTime :: LoamTime -> IO T.Text
+formatTime t =
   allocaBytes bufSize $ \bufPtr -> do
     fillBytes bufPtr 0 bufSize
     c_format_time_f bufPtr bufSize t
@@ -99,18 +99,15 @@ formatTime t = unsafePerformIO $ do
 -- Note: Although 'LoamTime' is in UTC, the string representation
 -- is in local time.  Therefore, the current time zone is used
 -- implicitly.
-parseTime :: HasCallStack => T.Text -> Either PlasmaException LoamTime
-parseTime txt = unsafePerformIO $ do
+parseTime :: HasCallStack => T.Text -> IO LoamTime
+parseTime txt =
   C.useAsConstCString (T.encodeUtf8 txt) $ \ccs -> do
+    let addn = Just "parseTime"
     alloca $ \dblPtr -> do
       poke dblPtr (-1)
       tort <- Retort <$> c_strptime ccs dblPtr
-      case isSuccess tort of
-        True  -> Right <$> peek dblPtr
-        False -> do
-          let addn = Just "parseTime"
-          exc <- retortToPlasmaException EtOther addn tort Nothing
-          return $ Left $ exc { peCallstack = Just callStack }
+      throwRetortCS_ EtOther addn tort Nothing callStack
+      peek dblPtr
 
 -- | Convert 'LoamTime' to 'POSIXTime'.
 loamTimeToPosixTime :: LoamTime -> POSIXTime
