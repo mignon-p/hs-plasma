@@ -27,6 +27,7 @@ module System.Loam.Time
 
 -- import Control.Exception
 import qualified Data.ByteString          as B
+import Data.Char
 -- import Data.Default.Class
 import Data.Int
 import qualified Data.Text                as T
@@ -82,15 +83,18 @@ bufSize = 112
 -- | Produces a textual representation of the given time,
 -- such as @Dec 20, 2024 13:30:53.63@.
 --
+-- Unlike the C function @ob_format_time()@, the returned
+-- string does not have a trailing space.
+--
 -- Note: Although 'LoamTime' is in UTC, the string representation
 -- is in local time.  Therefore, the current time zone is used
 -- implicitly.
 formatTime :: LoamTime -> IO T.Text
-formatTime t =
+formatTime t = do
   allocaBytes bufSize $ \bufPtr -> do
     fillBytes bufPtr 0 bufSize
     c_format_time_f bufPtr bufSize t
-    T.decodeUtf8Lenient <$> B.packCString bufPtr
+    T.dropWhileEnd isSpace . T.decodeUtf8Lenient <$> B.packCString bufPtr
 
 -- | Given a string formatted with 'formatTime', such as
 -- @Dec 20, 2024 13:30:53.63@, returns the corresponding
@@ -100,7 +104,7 @@ formatTime t =
 -- is in local time.  Therefore, the current time zone is used
 -- implicitly.
 parseTime :: HasCallStack => T.Text -> IO LoamTime
-parseTime txt =
+parseTime txt = do
   C.useAsConstCString (T.encodeUtf8 txt) $ \ccs -> do
     let addn = Just "parseTime"
     alloca $ \dblPtr -> do

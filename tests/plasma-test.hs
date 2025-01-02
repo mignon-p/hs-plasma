@@ -315,11 +315,13 @@ testTime = do
     let expected = case testData of
                      GoodTime _ x    -> Right x
                      BadTime  _ tort -> Left $ Just tort
-    eth    <- try $ parseTime $ ttIn testData
+        inStr    = ttIn testData
+        pfx      = "   input: " ++ show inStr
+    eth    <- try $ parseTime inStr
     actual <- case eth of
                 Left pe -> return $ Left $ peRetort pe
                 Right t -> Right <$> formatTime t
-    expected @=? actual
+    assertEqual pfx expected actual
 
 testPoolName :: Assertion
 testPoolName = do

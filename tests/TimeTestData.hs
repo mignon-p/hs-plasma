@@ -27,16 +27,16 @@ data TimeTest = GoodTime { ttIn   :: !T.Text
 
 timeTestData :: [TimeTest]
 timeTestData =
-  [ GoodTime "Dec 20, 2024 13:30:53.63 "    "Dec 20, 2024 13:30:53.63 "
-  , GoodTime "Dec 20, 2024 13:30:53.63"     "Dec 20, 2024 13:30:53.63 "
-  , GoodTime "Dec 20, 2024 13:30:53.631 "   "Dec 20, 2024 13:30:53.63 "
-  , GoodTime "Dec 20, 2024 13:30:53.631"    "Dec 20, 2024 13:30:53.63 "
-  , GoodTime "Dec 20, 2024 13:30:53.50 "    "Dec 20, 2024 13:30:53.50 "
-  , GoodTime "Dec 20, 2024 13:30:53.50"     "Dec 20, 2024 13:30:53.50 "
-  , GoodTime "Dec 20, 2024 13:30:53.5 "     "Dec 20, 2024 13:30:53.50 "
-  , GoodTime "Dec 20, 2024 13:30:53.5"      "Dec 20, 2024 13:30:53.50 "
-  , GoodTime "Dec 20, 2024 13:30:53 "       "Dec 20, 2024 13:30:53.00 "
-  , GoodTime "Dec 20, 2024 13:30:53"        "Dec 20, 2024 13:30:53.00 "
+  [ GoodTime "Dec 20, 2024 13:30:53.63 "    "Dec 20, 2024 13:30:53.63"
+  , GoodTime "Dec 20, 2024 13:30:53.63"     "Dec 20, 2024 13:30:53.63"
+  , GoodTime "Dec 20, 2024 13:30:53.631 "   "Dec 20, 2024 13:30:53.63"
+  , GoodTime "Dec 20, 2024 13:30:53.631"    "Dec 20, 2024 13:30:53.63"
+  , GoodTime "Dec 20, 2024 13:30:53.50 "    "Dec 20, 2024 13:30:53.50"
+  , GoodTime "Dec 20, 2024 13:30:53.50"     "Dec 20, 2024 13:30:53.50"
+  , GoodTime "Dec 20, 2024 13:30:53.5 "     "Dec 20, 2024 13:30:53.50"
+  , GoodTime "Dec 20, 2024 13:30:53.5"      "Dec 20, 2024 13:30:53.50"
+  , GoodTime "Dec 20, 2024 13:30:53 "       "Dec 20, 2024 13:30:53.00"
+  , GoodTime "Dec 20, 2024 13:30:53"        "Dec 20, 2024 13:30:53.00"
   , BadTime  "Dec 32, 2024 13:30:53.63"     OB_PARSE_ERROR
   , BadTime  "Dec 20, 2024 25:30:53.63"     OB_PARSE_ERROR
   , BadTime  "Dec 20, 2024 13:30:xx.63"     OB_PARSE_ERROR
