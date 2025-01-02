@@ -10,8 +10,9 @@ Portability : GHC
 {-# LANGUAGE ImpredicativeTypes         #-}
 {-# LANGUAGE RankNTypes                 #-}
 
--- import Control.Exception
+import Control.Exception
 import Control.Monad
+-- import Data.Bifunctor
 -- import qualified Data.ByteString.Lazy     as L
 -- import Data.Char
 -- import Data.Complex
@@ -47,6 +48,7 @@ import System.Loam.File
 import System.Loam.Hash
 import System.Loam.Rand
 -- import System.Loam.Retorts.Constants
+import System.Loam.Time
 import System.Plasma.Pool
 
 import Comprehensive
@@ -54,6 +56,7 @@ import OtherInstances ()
 import PlasmaTestUtil
 import PoolTestFixture
 import SlawInstances ()
+import TimeTestData
 
 main :: IO ()
 main = withTempDir "pool-" $ \dir -> do
@@ -94,6 +97,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "cityHash64"                 $ testCityHash64
   , testCase "hash functions"             $ testHash
   , testCase "Merge typeclass"            $ testMerge
+  , testCase "time functions"             $ testTime
   , testCase "pool name validation"       $ testPoolName
   , testCase "listPools"                  $ testListPools
   , testCase "fetch"                      $ testFetch
@@ -304,6 +308,18 @@ testMerge = do
   [("n", š (2 :: Word8))]           @=? (M.toList . pIngests) pRight
   "keratin"                         @=? pRudeData             pLeft
   "hemoglobin"                      @=? pRudeData             pRight
+
+testTime :: Assertion
+testTime = do
+  forM_ timeTestData $ \testData -> do
+    let expected = case testData of
+                     GoodTime _ x    -> Right x
+                     BadTime  _ tort -> Left $ Just tort
+    eth    <- try $ parseTime $ ttIn testData
+    actual <- case eth of
+                Left pe -> return $ Left $ peRetort pe
+                Right t -> Right <$> formatTime t
+    expected @=? actual
 
 testPoolName :: Assertion
 testPoolName = do
