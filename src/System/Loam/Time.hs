@@ -29,6 +29,7 @@ module System.Loam.Time
 import qualified Data.ByteString          as B
 import Data.Char
 -- import Data.Default.Class
+import Data.Fixed
 import Data.Int
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
@@ -51,25 +52,16 @@ import System.Loam.Retorts
 -- UNIX epoch.  (January 1, 1970 UTC)
 type LoamTime = Double
 
--- | Number of nanoseconds since some fixed, but arbitrary,
--- point in time.
-type MonotonicTime = Word64
+-- | Number of seconds (with nanosecond resolution) since some fixed,
+-- but arbitrary, point in time.
+type MonotonicTime = Nano
 
 -- | Returns the current UTC time as a 'LoamTime'.
 foreign import capi unsafe "libLoam/c/ob-time.h ob_current_time"
     currentTime :: IO LoamTime
 
--- | Returns the number of nanoseconds since some fixed, but arbitrary,
--- point in time.  It will not be affected if the time-of-day is
--- adjusted (e. g. by NTP or by VMware Tools).  Therefore, it is a
--- good choice for measuring how long something takes, by calling it
--- before and after and taking the difference.
---
--- Although the unit is nanoseconds, note that the resolution is
--- probably not nanoseconds... could be as coarse as 15 milliseconds
--- on Windows, for example.
 foreign import capi unsafe "libLoam/c/ob-time.h ob_monotonic_time"
-    monotonicTime :: IO MonotonicTime
+    c_monotonic_time :: IO Word64
 
 foreign import capi unsafe "libLoam/c/ob-time.h ob_format_time_f"
     c_format_time_f :: CString -> CSize -> Double -> IO ()
@@ -128,3 +120,16 @@ posixTimeToLoamTime = realToFrac
 -- | Convert 'UTCTime' to 'LoamTime'.
 utcTimeToLoamTime :: UTCTime -> LoamTime
 utcTimeToLoamTime = posixTimeToLoamTime . utcTimeToPOSIXSeconds
+
+-- | Returns the number of seconds since some fixed, but arbitrary,
+-- point in time.  It will not be affected if the time-of-day is
+-- adjusted (e. g. by NTP or by VMware Tools).  Therefore, it is a
+-- good choice for measuring how long something takes, by calling it
+-- before and after and taking the difference.
+--
+-- Although the resolution of 'MonotonicTime' is nanoseconds, note
+-- that the resolution of measurement is probably not
+-- nanoseconds... could be as coarse as 15 milliseconds on Windows,
+-- for example.
+monotonicTime :: IO MonotonicTime
+monotonicTime = MkFixed . toInteger <$> c_monotonic_time
