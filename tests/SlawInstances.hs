@@ -68,10 +68,10 @@ numericData len = oneof
   ,     (NumInt16   . S.fromList) <$> vectorOf len arbitrary
   ,     (NumInt32   . S.fromList) <$> vectorOf len arbitrary
   ,     (NumInt64   . S.fromList) <$> vectorOf len arbitrary
-  ,     (NumUnt8    . S.fromList) <$> vectorOf len arbitrary
-  ,     (NumUnt16   . S.fromList) <$> vectorOf len arbitrary
-  ,     (NumUnt32   . S.fromList) <$> vectorOf len arbitrary
-  ,     (NumUnt64   . S.fromList) <$> vectorOf len arbitrary
+  ,     (NumWord8   . S.fromList) <$> vectorOf len arbitrary
+  ,     (NumWord16  . S.fromList) <$> vectorOf len arbitrary
+  ,     (NumWord32  . S.fromList) <$> vectorOf len arbitrary
+  ,     (NumWord64  . S.fromList) <$> vectorOf len arbitrary
   ,     (NumFloat32 . S.fromList) <$> vectorOf len flt32
   ,     (NumFloat64 . S.fromList) <$> vectorOf len flt64
   ]

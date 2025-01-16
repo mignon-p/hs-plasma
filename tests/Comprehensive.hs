@@ -51,10 +51,10 @@ ndForSize n =
   , NumInt16   $ S.fromList $ map fromInteger  $ take n someIntegers
   , NumInt32   $ S.fromList $ map fromInteger  $ take n someIntegers
   , NumInt64   $ S.fromList $ map fromInteger  $ take n someIntegers
-  , NumUnt8    $ S.fromList $ map fromInteger  $ take n someIntegers
-  , NumUnt16   $ S.fromList $ map fromInteger  $ take n someIntegers
-  , NumUnt32   $ S.fromList $ map fromInteger  $ take n someIntegers
-  , NumUnt64   $ S.fromList $ map fromInteger  $ take n someIntegers
+  , NumWord8   $ S.fromList $ map fromInteger  $ take n someIntegers
+  , NumWord16  $ S.fromList $ map fromInteger  $ take n someIntegers
+  , NumWord32  $ S.fromList $ map fromInteger  $ take n someIntegers
+  , NumWord64  $ S.fromList $ map fromInteger  $ take n someIntegers
   , NumFloat32 $ S.fromList $ map fromRational $ take n someRationals
   , NumFloat64 $ S.fromList $ map fromRational $ take n someRationals
   ]
@@ -90,10 +90,10 @@ numData =
   , NumInt16   $ S.fromList $ map fromInteger [1..96]
   , NumInt32   $ S.fromList $ map fromInteger [1..96]
   , NumInt64   $ S.fromList $ map fromInteger [1..96]
-  , NumUnt8    $ S.fromList $ map fromInteger [1..96]
-  , NumUnt16   $ S.fromList $ map fromInteger [1..96]
-  , NumUnt32   $ S.fromList $ map fromInteger [1..96]
-  , NumUnt64   $ S.fromList $ map fromInteger [1..96]
+  , NumWord8   $ S.fromList $ map fromInteger [1..96]
+  , NumWord16  $ S.fromList $ map fromInteger [1..96]
+  , NumWord32  $ S.fromList $ map fromInteger [1..96]
+  , NumWord64  $ S.fromList $ map fromInteger [1..96]
   , NumFloat32 $ S.fromList $ map fromInteger [1..96]
   , NumFloat64 $ S.fromList $ map fromInteger [1..96]
   ]
