@@ -9,7 +9,11 @@
 static pool_hose get_hose (ze_hs_hose *zHose, ob_retort *tort_out)
 {
     ze_hs_check_cleanup();
+    return ze_hs_get_hose (zHose, tort_out);
+}
 
+pool_hose ze_hs_get_hose (ze_hs_hose *zHose, ob_retort *tort_out)
+{
     if (zHose->magic[0] != ZE_HS_HOSE_MAGIC) {
         *tort_out = ZE_HS_INTERNAL_ERROR;
         return NULL;

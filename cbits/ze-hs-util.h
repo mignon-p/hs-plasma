@@ -14,4 +14,8 @@ static inline slaw ze_hs_ret_slaw_len (slaw s, int64 *len)
 #define U_2264_LESS_THAN_OR_EQUAL_TO     0x2264 /* ≤ */
 #define U_2265_GREATER_THAN_OR_EQUAL_TO  0x2265 /* ≥ */
 
+#define ZE_HS_N_MAGIC    4
+#define ZE_HS_HOSE_MAGIC 666
+#define ZE_HS_GANG_MAGIC 8675309
+
 #endif /* ZE_HS_UTIL_H_2995A248 */

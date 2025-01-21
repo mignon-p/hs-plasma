@@ -4,9 +4,7 @@
 #include <stddef.h>
 #include <HsFFI.h>
 #include "libPlasma/c/pool.h"
-
-#define ZE_HS_N_MAGIC    4
-#define ZE_HS_HOSE_MAGIC 666
+#include "ze-hs-util.h"
 
 typedef struct ze_hs_hose {
     int32       magic[ZE_HS_N_MAGIC];
@@ -14,6 +12,10 @@ typedef struct ze_hs_hose {
     HsStablePtr ctx;
 } ze_hs_hose;
 
+/* Unwrap the pool_hose inside of a ze_hs_hose. */
+pool_hose ze_hs_get_hose (ze_hs_hose *zHose, ob_retort *tort_out);
+
+/* Wrap a pool_hose in a ze_hs_hose. */
 ze_hs_hose *ze_hs_make_hose (pool_hose   hose,
                              HsStablePtr ctx,
                              const char *name,
