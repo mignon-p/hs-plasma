@@ -102,6 +102,7 @@ library
                      , System.Loam.Retorts.Internal.IoeRetorts
                      , System.Loam.Retorts.Internal.RetortUtil
                      , System.Plasma.Pool.Internal.FetchOp
+                     , System.Plasma.Pool.Internal.Hoses
                      , System.Plasma.Pool.Internal.PoolContext
                      , System.Plasma.Pool.Internal.PoolHose
                      , System.Plasma.Pool.Internal.PoolName
