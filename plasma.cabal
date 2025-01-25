@@ -104,6 +104,7 @@ library
                      , System.Plasma.Pool.Internal.FetchOp
                      , System.Plasma.Pool.Internal.Hoses
                      , System.Plasma.Pool.Internal.PoolContext
+                     , System.Plasma.Pool.Internal.PoolGang
                      , System.Plasma.Pool.Internal.PoolHose
                      , System.Plasma.Pool.Internal.PoolName
                      , System.Plasma.Pool.Internal.PoolOpts
@@ -185,8 +186,8 @@ library
   ghc-options:         -Wall
                        -Wno-unused-do-bind
                        -Wno-incomplete-uni-patterns
-                       -- -Wno-unused-top-binds
-                       -- -Wno-unused-imports
+                       -Wno-unused-top-binds
+                       -Wno-unused-imports
 
 
 executable hs-plasma

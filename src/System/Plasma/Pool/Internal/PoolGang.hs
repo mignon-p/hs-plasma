@@ -1,0 +1,273 @@
+{-|
+Module      : System.Plasma.Pool.Internal.PoolGang
+Description : Gang type, for holding a collection of hoses
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
+module System.Plasma.Pool.Internal.PoolGang
+  ( Gang(..)
+  , newGang
+  , getGangMembers
+  , joinGang
+  , leaveGang
+  , clearGang
+  , nextMulti
+  , awaitNextMulti
+  ) where
+
+import Control.DeepSeq
+import Control.Exception
+import Control.Monad
+import Data.Bifunctor
+-- import qualified Data.ByteString          as B
+import Data.Default.Class
+import Data.Hashable
+import Data.Int
+import Data.List
+import Data.Ord
+import Data.String
+import qualified Data.Text                as T
+import qualified Data.Text.Encoding       as T
+-- import Data.Word
+-- import Foreign.C.String
+import Foreign.C.Types
+import Foreign.ForeignPtr
+import Foreign.Marshal.Alloc
+import Foreign.Marshal.Array
+-- import Foreign.Marshal.Error
+import Foreign.Marshal.Utils
+import Foreign.Ptr
+import Foreign.StablePtr
+import Foreign.Storable
+import GHC.Generics (Generic)
+import GHC.Stack
+-- import System.IO.Unsafe
+
+import Data.Slaw
+import Data.Slaw.Util
+import System.Loam.Hash
+import qualified System.Loam.Internal.ConstPtr as C
+import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Initialize
+import System.Loam.Internal.Marshal
+import System.Loam.Internal.Misc
+import System.Loam.Retorts
+import System.Loam.Retorts.Constants
+-- import System.Loam.Time
+import System.Plasma.Pool.Internal.Hoses
+import System.Plasma.Pool.Internal.PoolContext
+import System.Plasma.Pool.Internal.PoolHose
+import System.Plasma.Pool.Internal.PoolName
+import System.Plasma.Pool.Internal.PoolTimeout
+
+foreign import capi safe "ze-hs-gang.h ze_hs_new_gang"
+    c_new_gang :: StablePtr HosesRef -> Ptr Int64 -> IO (Ptr FgnGang)
+
+foreign import capi unsafe "ze-hs-gang.h &ze_hs_finalize_gang"
+    c_finalize_gang :: FunPtr (Ptr FgnGang -> IO ())
+
+foreign import capi unsafe "ze-hs-gang.h ze_hs_get_gang_hoses"
+    c_get_gang_hoses :: Ptr FgnGang -> IO (StablePtr HosesRef)
+
+foreign import capi safe "ze-hs-gang.h ze_hs_gang_op"
+    c_gang_op
+      :: CChar              -- op
+      -> Ptr FgnGang        -- zGang
+      -> Ptr FgnHose        -- zHose
+      -> IO Int64           -- retort
+
+foreign import capi safe "ze-hs-gang.h ze_hs_gang_next_op"
+    c_gang_next_op
+      :: CChar                -- op
+      -> Ptr FgnGang          -- zGang
+      -> Double               -- timeout
+      -> Ptr (Ptr FgnRawHose) -- hose_out
+      -> Ptr PoolTimestamp    -- ts_out
+      -> Ptr PoolIndex        -- index_out
+      -> Ptr Int64            -- tort_out
+      -> Ptr SlawLen          -- len_out
+      -> IO (Ptr FgnSlaw)
+
+foreign import capi safe "ze-hs-gang.h ze_hs_gang_misc_op"
+    c_gang_misc_op
+      :: CChar              -- op
+      -> Ptr FgnGang        -- zGang
+      -> Double             -- timeout
+      -> IO Int64           -- retort
+
+kGang :: IsString a => a
+kGang = "Gang"
+
+data Gang = Gang
+  { gangName  :: !T.Text
+  , gangPtr   :: !(ForeignPtr FgnGang)
+  } deriving (Eq, Ord)
+
+instance NFData Gang where
+  rnf x = gangName x `deepseq` (gangPtr x `seq` ())
+
+instance Hashable Gang where
+  hash                gang = hashInt $ fPtrToIntegral (gangPtr gang)
+  salt `hashWithSalt` gang =
+    salt `hash2xInt` fPtrToIntegral (gangPtr gang)
+
+instance Show Gang where
+  show gang = fmtForeignObj kGang (gangName gang) [] (gangPtr gang)
+
+instance Nameable Gang where
+  typeName _ = "Gang"
+
+-- | Creates a new 'Gang'.
+newGang
+  :: HasCallStack
+  -- | Name of this Gang (only used in 'Show' instance).
+  => T.Text
+  -> IO Gang
+newGang name0 = do
+  initialize
+  let cs   = callStack
+      addn = Just "newGang"
+  name     <- nonEmptyName kGang name0 cs
+  hosesRef <- newHoses
+  stabPtr  <- newStablePtr hosesRef
+  zGang <- withReturnedRetortCS EtPools addn Nothing cs $ \tortPtr -> do
+    c_new_gang stabPtr tortPtr
+  fptr  <- newForeignPtr c_finalize_gang zGang
+  return $ Gang { gangName = name
+                , gangPtr  = fptr
+                }
+
+getGangMembers :: Gang -> IO [Hose]
+getGangMembers g = getHoses g >>= listHoses
+
+joinGang
+  :: HasCallStack
+  => Gang
+  -> Hose
+  -> IO ()
+joinGang gang hose = do
+  let ei = mkErrInfo "joinGang" gang callStack
+  gangOp ei 'j' gang hose
+  hosesRef <- getHoses gang
+  addToHoses ei hosesRef hose
+
+leaveGang
+  :: HasCallStack
+  => Gang
+  -> Hose
+  -> IO ()
+leaveGang gang hose = do
+  let ei = mkErrInfo "leaveGang" gang callStack
+  gangOp ei 'l' gang hose
+  hosesRef <- getHoses gang
+  removeFromHoses ei hosesRef hose
+
+clearGang
+  :: HasCallStack
+  => Gang
+  -> IO ()
+clearGang gang = do
+  let ei = mkErrInfo "clearGang" gang callStack
+  gangMiscOp ei 'd' gang NoWait
+  hosesRef <- getHoses gang
+  clearHoses hosesRef
+
+nextMulti
+  :: HasCallStack
+  => Gang
+  -> IO (RetProtein, Hose)
+nextMulti = undefined
+
+awaitNextMulti
+  :: HasCallStack
+  => Gang
+  -> PoolTimeout -- timeout
+  -> IO (RetProtein, Hose)
+awaitNextMulti = undefined
+
+--
+
+getHoses :: Gang -> IO HosesRef
+getHoses gang = withForeignPtr (gangPtr gang) $ \pGang -> do
+  c_get_gang_hoses pGang >>= deRefStablePtr
+
+gangOp
+  :: ErrInfo
+  -> Char        -- op
+  -> Gang
+  -> Hose
+  -> IO ()
+gangOp ei op gang hose = do
+  let (addn, erl) = mkAddn   ei (Just hose)
+      c           = toCChar  op
+      cs          = errStack ei
+  withForeignPtr (gangPtr gang) $ \gPtr -> do
+    withForeignPtr (hosePtr hose) $ \hPtr -> do
+      tort <- c_gang_op c gPtr hPtr
+      throwRetortCS_ EtPools addn (Retort tort) erl cs
+
+gangNextOp
+  :: ErrInfo
+  -> Char        -- op
+  -> Gang
+  -> PoolTimeout -- timeout
+  -> IO (RetProtein, Hose)
+gangNextOp = undefined
+
+gangMiscOp
+  :: ErrInfo
+  -> Char        -- op
+  -> Gang
+  -> PoolTimeout -- timeout
+  -> IO ()
+gangMiscOp ei op gang timeout = do
+  let (addn, erl) = mkAddn   ei Nothing
+      c           = toCChar  op
+      cs          = errStack ei
+  tmout <- encTimeout ei timeout
+  withForeignPtr (gangPtr gang) $ \gPtr -> do
+    tort <- c_gang_misc_op c gPtr tmout
+    throwRetortCS_ EtPools addn (Retort tort) erl cs
+
+mkAddn
+  :: ErrInfo
+  -> Maybe Hose
+  -> (Maybe String, Maybe ErrLocation)
+mkAddn ei mHose = first Just $ mkAddn' ei mHose
+
+mkAddn'
+  :: ErrInfo
+  -> Maybe Hose
+  -> (String, Maybe ErrLocation)
+mkAddn' ei mHose = (addn, erl)
+  where addn  = concat [ errFunc ei
+                       , ": "
+                       , show (errGang ei)
+                       , pname
+                       ]
+        pname = case mHose of
+                  Just hose -> ", hose " ++ show (hoseName hose)
+                  Nothing   -> ""
+        erl   = fmap erlFromHose mHose
+
+mkErrInfo :: String -> Gang -> CallStack -> ErrInfo
+mkErrInfo loc gang cs =
+  ErrInfo { errFunc  = loc
+          , errStack = cs
+          , errGang  = gangName gang
+          }
+
+encTimeout :: ErrInfo -> PoolTimeout -> IO Double
+encTimeout ei timeout = do
+  let (addn, erl) = mkAddn' ei Nothing
+  case encodePoolTimeout timeout of
+    Right t  -> return t
+    Left msg ->
+      throwIO $ def { peType      = EtPools
+                    , peMessage   = addn ++ ": " ++ msg
+                    , peCallstack = Just $ errStack ei
+                    , peLocation  = erl
+                    }

@@ -46,6 +46,8 @@ module System.Plasma.Pool.Internal.PoolHose
   , seekTo
   , seekToTime
   , seekByTime
+    -- utility
+  , erlFromHose
   ) where
 
 import Control.DeepSeq

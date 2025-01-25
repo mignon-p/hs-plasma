@@ -16,6 +16,7 @@ module System.Loam.Internal.FgnTypes
   , FgnCtx
   , FgnHose
   , FgnRawHose
+  , FgnGang
   ) where
 
 data {-# CTYPE "libLoam/c/ob-log.h"  "ob_log_level" #-} FgnLogLvl
@@ -28,3 +29,4 @@ data {-# CTYPE "ze-hs-slawio.h"      "ze_hs_output" #-} FgnSlawOut
 data {-# CTYPE "libPlasma/c/pool.h" "struct pool_context_struct" #-} FgnCtx
 data {-# CTYPE "ze-hs-hose.h"       "ze_hs_hose"                 #-} FgnHose
 data {-# CTYPE "libPlasma/c/pool.h" "struct pool_hose_struct"    #-} FgnRawHose
+data {-# CTYPE "ze-hs-gang.h"       "ze_hs_gang"                 #-} FgnGang

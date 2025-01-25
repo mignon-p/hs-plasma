@@ -113,7 +113,7 @@ eiToPE msg mHose ei =
                   , peRetort    = Nothing
                   , peMessage   = msg'
                   , peCallstack = Just $ errStack ei
-                  , peLocation  = loc
+                  , peLocation  = fmap erlFromHose mHose
                   }
   where msg'  = concat [ errFunc ei
                        , ": "
@@ -126,7 +126,6 @@ eiToPE msg mHose ei =
         pname = case mHose of
                   Just hose -> ", hose " ++ show (hoseName hose)
                   Nothing   -> ""
-        loc   = fmap (erlFromPoolName . hosePool) mHose
 
 hoseToRawHoseAddr :: ErrInfo -> Hose -> IO Int
 hoseToRawHoseAddr ei hose = withForeignPtr (hosePtr hose) $ \ptr -> do
