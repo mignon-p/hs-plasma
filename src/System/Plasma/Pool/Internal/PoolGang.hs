@@ -171,7 +171,7 @@ clearGang
   -> IO ()
 clearGang gang = do
   let ei = mkErrInfo "clearGang" gang callStack
-  gangMiscOp ei 'd' gang NoWait
+  gangMiscOp ei 'd' gang def
   hosesRef <- getHoses gang
   clearHoses hosesRef
 
@@ -179,14 +179,18 @@ nextMulti
   :: HasCallStack
   => Gang
   -> IO (RetProtein, Hose)
-nextMulti = undefined
+nextMulti gang = do
+  let ei = mkErrInfo "nextMulti" gang callStack
+  gangNextOp ei 'n' gang def
 
 awaitNextMulti
   :: HasCallStack
   => Gang
   -> PoolTimeout -- timeout
   -> IO (RetProtein, Hose)
-awaitNextMulti = undefined
+awaitNextMulti gang timeout = do
+  let ei = mkErrInfo "awaitNextMulti" gang callStack
+  gangNextOp ei 'a' gang timeout
 
 --
 
@@ -215,7 +219,19 @@ gangNextOp
   -> Gang
   -> PoolTimeout -- timeout
   -> IO (RetProtein, Hose)
-gangNextOp = undefined
+gangNextOp ei op gang timeout = do
+  let (addn, erl) = mkAddn   ei Nothing
+      c           = toCChar  op
+      cs          = errStack ei
+  tmout    <- encTimeout ei timeout
+  hosesRef <- getHoses   gang
+  withForeignPtr (gangPtr gang) $ \gPtr -> do
+    ((p, idx), ts, hPtr) <- withRet2 (-1, nullPtr) $ \tsPtr hpp -> do
+      withReturnedSlawIdx def $ \idxPtr lenPtr -> do
+        withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
+          c_gang_next_op c gPtr tmout hpp tsPtr idxPtr tortPtr lenPtr
+    hose <- findInHoses ei hosesRef hPtr
+    return (RetProtein p idx ts, hose)
 
 gangMiscOp
   :: ErrInfo
