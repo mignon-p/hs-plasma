@@ -23,45 +23,45 @@ module System.Plasma.Pool.Internal.PoolGang
 
 import Control.DeepSeq
 import Control.Exception
-import Control.Monad
+-- import Control.Monad
 import Data.Bifunctor
 -- import qualified Data.ByteString          as B
 import Data.Default.Class
 import Data.Hashable
 import Data.Int
-import Data.List
-import Data.Ord
+-- import Data.List
+-- import Data.Ord
 import Data.String
 import qualified Data.Text                as T
-import qualified Data.Text.Encoding       as T
+-- import qualified Data.Text.Encoding       as T
 -- import Data.Word
 -- import Foreign.C.String
 import Foreign.C.Types
 import Foreign.ForeignPtr
-import Foreign.Marshal.Alloc
-import Foreign.Marshal.Array
+-- import Foreign.Marshal.Alloc
+-- import Foreign.Marshal.Array
 -- import Foreign.Marshal.Error
-import Foreign.Marshal.Utils
+-- import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.StablePtr
-import Foreign.Storable
-import GHC.Generics (Generic)
+-- import Foreign.Storable
+-- import GHC.Generics (Generic)
 import GHC.Stack
 -- import System.IO.Unsafe
 
 import Data.Slaw
-import Data.Slaw.Util
+-- import Data.Slaw.Util
 import System.Loam.Hash
-import qualified System.Loam.Internal.ConstPtr as C
+-- import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
 import System.Loam.Retorts
-import System.Loam.Retorts.Constants
+-- import System.Loam.Retorts.Constants
 -- import System.Loam.Time
 import System.Plasma.Pool.Internal.Hoses
-import System.Plasma.Pool.Internal.PoolContext
+-- import System.Plasma.Pool.Internal.PoolContext
 import System.Plasma.Pool.Internal.PoolHose
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolTimeout
