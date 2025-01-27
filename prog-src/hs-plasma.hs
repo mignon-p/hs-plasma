@@ -404,3 +404,19 @@ main1 = do
     case errPt of
       Left exc -> putStrLn $ displayPlasmaException False exc
       Right t  -> show <$> formatTime t >>= putStrLn
+
+  putStrLn ""
+
+  gang <- newGang ""
+  putStrLn $ show gang
+
+  withTemporaryPool def Nothing small $ \tmpPool1 -> do
+    withTemporaryPool def Nothing small $ \tmpPool2 -> do
+      hose1 <- participate def "hose1" tmpPool1
+      hose2 <- participate def "hose2" tmpPool2
+      joinGang gang hose1
+      joinGang gang hose2
+      members <- getGangMembers gang
+      forM_ members $ \aHose -> do
+        putStrLn $ "    " ++ show aHose
+      withdrawAll gang
