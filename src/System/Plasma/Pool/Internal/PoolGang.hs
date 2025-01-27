@@ -14,8 +14,11 @@ module System.Plasma.Pool.Internal.PoolGang
   , joinGang
   , leaveGang
   , clearGang
+  , withdrawAll
+  , wakeGang
   , nextMulti
   , awaitNextMulti
+  , awaitMulti
   ) where
 
 import Control.DeepSeq
@@ -175,6 +178,23 @@ clearGang gang = do
   hosesRef <- getHoses gang
   clearHoses hosesRef
 
+withdrawAll
+  :: HasCallStack
+  => Gang
+  -> IO ()
+withdrawAll gang = do
+  hs <- getGangMembers gang
+  clearGang gang
+  mapM_ withdraw hs
+
+wakeGang
+  :: HasCallStack
+  => Gang
+  -> IO ()
+wakeGang gang = do
+  let ei = mkErrInfo "wakeGang" gang callStack
+  gangMiscOp ei 'w' gang def
+
 nextMulti
   :: HasCallStack
   => Gang
@@ -191,6 +211,15 @@ awaitNextMulti
 awaitNextMulti gang timeout = do
   let ei = mkErrInfo "awaitNextMulti" gang callStack
   gangNextOp ei 'a' gang timeout
+
+awaitMulti
+  :: HasCallStack
+  => Gang
+  -> PoolTimeout -- timeout
+  -> IO ()
+awaitMulti gang timeout = do
+  let ei = mkErrInfo "awaitMulti" gang callStack
+  gangMiscOp ei 'a' gang timeout
 
 --
 
