@@ -118,6 +118,26 @@ module System.Plasma.Pool
   , seekTo
   , seekToTime
   , seekByTime
+    -- * Pool gangs
+    --
+    -- | A 'Gang' is a collection of 'Hose's.  A 'Hose' can only belong
+    -- to one 'Gang' at a time.  It is possible to “await” on a 'Gang',
+    -- which “awaits” on all 'Hose's in the 'Gang' simultaneously,
+    -- similar to the C @select()@ function.
+  , Gang               -- opaque
+  , newGang
+  , gangName
+    -- ** Gang membership
+  , getGangMembers
+  , joinGang
+  , leaveGang
+  , clearGang
+  , withdrawAll
+    -- ** Gang operations
+  , nextMulti
+  , awaitNextMulti
+  , awaitMulti
+  , wakeGang
   ) where
 
 import Control.Exception
@@ -142,6 +162,7 @@ import System.Loam.Retorts.Constants
 import System.Loam.Util
 import System.Plasma.Pool.Internal.FetchOp
 import System.Plasma.Pool.Internal.PoolContext
+import System.Plasma.Pool.Internal.PoolGang
 import System.Plasma.Pool.Internal.PoolHose
 import System.Plasma.Pool.Internal.PoolName
 import System.Plasma.Pool.Internal.PoolOpts
