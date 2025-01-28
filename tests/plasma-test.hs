@@ -52,6 +52,7 @@ import System.Loam.Time
 import System.Plasma.Pool
 
 import Comprehensive
+import GangTest
 import OtherInstances ()
 import PlasmaTestUtil
 import PoolTestFixture
@@ -107,6 +108,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "pool exists/in use"         $ testExists
   , testCase "changeOptions"              $ testOptions
   , testCase "+/ operator"                $ testPlusSlash
+  , testCase "gangs"                      $ testGangs
   ]
 
 rtIoProp :: Slaw -> QC.Property

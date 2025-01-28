@@ -238,6 +238,7 @@ test-suite test
   main-is:             plasma-test.hs
 
   other-modules:       Comprehensive
+                     , GangTest
                      , OtherInstances
                      , PlasmaTestUtil
                      , PoolTestFixture
