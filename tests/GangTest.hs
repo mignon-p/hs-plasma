@@ -9,6 +9,7 @@ Portability : GHC
 
 module GangTest
   ( testGangMembership
+  , testNextMulti
   ) where
 
 import Control.Monad
@@ -20,10 +21,12 @@ import qualified Data.Text                as T
 import GHC.Stack
 import Test.Tasty.HUnit
 
--- import Data.Slaw
+import Data.Slaw
 import Data.Slaw.Util
 import System.Loam.Rand
 import System.Plasma.Pool
+
+import PoolTestFixture
 
 type GangMap = M.Map T.Text T.Text
 
@@ -93,6 +96,14 @@ randomMoves rs gang1 gang2 !count !gm0 chk
 notJet :: (T.Text, T.Text) -> Bool
 notJet (_, gName) = gName /= "Jets"
 
+doDeposit
+  :: HasCallStack
+  => PoolName
+  -> Slaw
+  -> IO (PoolIndex, PoolTimestamp)
+doDeposit pName p =
+  withHose def "tempHose" pName $ \hose -> deposit hose p
+
 testGangMembership :: Assertion
 testGangMembership = do
   rs     <- newRandState "testGangMembership" (Just 123454321)
@@ -133,3 +144,21 @@ testGangMembership = do
   validateGang jets   M.empty
 
   mapM_ (dispose def) $ map fst $ sharksPairs ++ jetsPairs ++ extraPairs
+
+testNextMulti :: Assertion
+testNextMulti = do
+  gang  <- newGang "testNextMulti"
+  pairs <- makeHoses "test" 10
+
+  mapM_ (joinGang gang) $ map snd pairs
+
+  let (myPool, myHose) = pairs !! 4
+      myProtein        = tstProteins !! 1
+
+  (myIdx, myTS) <- doDeposit myPool myProtein
+  (rp, retHose) <- nextMulti gang
+
+  rpProtein   rp @=? myProtein
+  rpIndex     rp @=? myIdx
+  rpTimestamp rp @=? myTS
+  myHose         @=? retHose
