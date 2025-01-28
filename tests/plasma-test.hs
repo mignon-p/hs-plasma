@@ -108,7 +108,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "pool exists/in use"         $ testExists
   , testCase "changeOptions"              $ testOptions
   , testCase "+/ operator"                $ testPlusSlash
-  , testCase "gangs"                      $ testGangs
+  , testCase "gangs"                      $ testGangMembership
   ]
 
 rtIoProp :: Slaw -> QC.Property

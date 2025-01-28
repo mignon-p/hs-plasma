@@ -8,7 +8,7 @@ Portability : GHC
 -}
 
 module GangTest
-  ( testGangs
+  ( testGangMembership
   ) where
 
 import Control.Monad
@@ -90,9 +90,12 @@ randomMoves rs gang1 gang2 !count !gm0 chk
       chk gm1
       randomMoves rs gang2 gang1 (count - 1) gm1 chk
 
-testGangs :: Assertion
-testGangs = do
-  rs     <- newRandState "testGangs" (Just 123454321)
+notJet :: (T.Text, T.Text) -> Bool
+notJet (_, gName) = gName /= "Jets"
+
+testGangMembership :: Assertion
+testGangMembership = do
+  rs     <- newRandState "testGangMembership" (Just 123454321)
 
   sharks <- newGang "Sharks"
   jets   <- newGang "Jets"
@@ -109,7 +112,17 @@ testGangs = do
   validateGang sharks gm2
   validateGang jets   gm2
 
-  randomMoves rs sharks jets 20 gm2 $ \gm -> do
+  gm3 <- randomMoves rs sharks jets 20 gm2 $ \gm -> do
+    validateGang sharks gm
+    validateGang jets   gm
+
+  withdrawAll jets
+  let gm4 = M.fromList $ filter notJet $ M.toList gm3
+
+  extraPairs <- makeHoses "extra" 10
+  gm5        <- addHoses jets (map snd extraPairs) gm4
+
+  randomMoves rs sharks jets 20 gm5 $ \gm -> do
     validateGang sharks gm
     validateGang jets   gm
 
@@ -119,4 +132,4 @@ testGangs = do
   validateGang sharks M.empty
   validateGang jets   M.empty
 
-  mapM_ (dispose def) $ map fst $ sharksPairs ++ jetsPairs
+  mapM_ (dispose def) $ map fst $ sharksPairs ++ jetsPairs ++ extraPairs
