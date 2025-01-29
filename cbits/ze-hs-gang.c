@@ -16,44 +16,37 @@ static pool_gang get_gang (ze_hs_gang *zGang,
         return NULL;
     }
 
-    pool_gang g = zGang->gang;
-    *tort_out = (g ? OB_OK : ZE_HS_ALREADY_CLOSED);
-    return g;
+    /* Allocate pool_gang on demand */
+    if (zGang->gang == NULL) {
+        *tort_out = pool_new_gang (&zGang->gang);
+    } else {
+        *tort_out = OB_OK;
+    }
+
+    return zGang->gang;
 }
 
 ze_hs_gang *ze_hs_new_gang (HsStablePtr hoses,
                             ob_retort  *tort_out)
 {
-    pool_gang   gang  = NULL;
-    ze_hs_gang *zGang = NULL;
-    ob_retort   tort  = OB_OK;
-    size_t      i;
-
     ze_hs_check_cleanup();
 
-    zGang = (ze_hs_gang *) calloc (1, sizeof (*zGang));
+    ze_hs_gang *zGang = (ze_hs_gang *) calloc (1, sizeof (*zGang));
     if (zGang == NULL) {
-        tort = OB_NO_MEM;
-        goto fail;
-    }
-
-    tort = pool_new_gang (&gang);
-    if (tort < OB_OK) {
-        free (zGang);
-    fail:
         hs_free_stable_ptr (hoses);
-        *tort_out = tort;
+        *tort_out = OB_NO_MEM;
         return NULL;
     }
 
+    size_t i;
     for (i = 0; i < ZE_HS_N_MAGIC; i++) {
         zGang->magic[i] = ZE_HS_GANG_MAGIC;
     }
 
-    zGang->gang  = gang;
+    zGang->gang  = NULL;
     zGang->hoses = hoses;
 
-    *tort_out = tort;
+    *tort_out = OB_OK;
     return zGang;
 }
 
@@ -149,6 +142,12 @@ ob_retort ze_hs_gang_misc_op (char            op,
                               ze_hs_gang     *zGang,
                               pool_timestamp  timeout)
 {
+    if (op == 'd' && zGang->gang == NULL) {
+        /* Don't bother allocating gang if we're just going
+         * to deallocate it immediately. */
+        return OB_OK;
+    }
+
     ob_retort tort = OB_UNKNOWN_ERR;
     pool_gang g    = get_gang (zGang, &tort);
 
@@ -164,12 +163,7 @@ ob_retort ze_hs_gang_misc_op (char            op,
     case 'd':
         tort = pool_disband_gang (g, false);
         zGang->gang = NULL;
-        if (tort >= OB_OK) {
-            /* Create a new, empty gang, so we are still pointing
-             * at a valid gang. */
-            tort = pool_new_gang (&zGang->gang);
-        }
-        return tort;
+       return tort;
     default:
         return ZE_HS_INTERNAL_ERROR;
     }
