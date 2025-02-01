@@ -328,7 +328,7 @@ deposit
 deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
   let addn = Just "deposit"
       erl  = erlFromHose h
-  withSlaw (š opts) $ \slawPtr -> do
+  withSlaw (forceProt $ š opts) $ \slawPtr -> do
     alloca $ \idxPtr -> do
       alloca $ \timePtr -> do
         poke idxPtr  minBound
@@ -338,6 +338,20 @@ deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
         idx  <- peek idxPtr
         ts   <- peek timePtr
         return (idx, ts)
+
+-- Be forgiving if they are trying to deposit something which is
+-- not a protein.  Try to wrap it up into a protein, for some
+-- common cases.
+forceProt :: Slaw -> Slaw
+forceProt SlawNil             = SlawProtein Nothing    Nothing    mempty
+forceProt des@(SlawList _)    = SlawProtein (Just des) Nothing    mempty
+forceProt ing@(SlawMap  _)    = SlawProtein Nothing    (Just ing) mempty
+forceProt (SlawCons des ing)  = SlawProtein (Just des) (Just ing) mempty
+forceProt s@(SlawNumeric _ _) =
+  case ŝm s of
+    Nothing   -> s
+    Just rude -> SlawProtein Nothing Nothing rude
+forceProt s                   = s
 
 nthProtein
   :: HasCallStack
