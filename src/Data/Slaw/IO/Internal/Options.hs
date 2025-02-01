@@ -463,7 +463,10 @@ contextOptions =
 
 --
 
--- | Information returned by 'System.Plasma.Pool.getInfo'.
+-- | Information returned by 'System.Plasma.Pool.getInfo'.  This
+-- record has fields for all of the keys currently returned by
+-- @mmap@ and @tcp@ pool types.  For other pool types, it might
+-- not be sufficient.
 data PoolInfo = PoolInfo
   { -- | The type of pool.
     --

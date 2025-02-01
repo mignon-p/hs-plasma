@@ -185,8 +185,8 @@ kHose = "Hose"
 -- like a file handle.  It can only be used from one thread at
 -- a time.
 data Hose = Hose
-  { hoseName :: !T.Text
-  , hosePool :: !PoolName
+  { hoseName :: !T.Text   -- ^ Name specified when hose was created.
+  , hosePool :: !PoolName -- ^ The pool the hose is connected to.
   , hosePtr  :: !(ForeignPtr FgnHose)
   } deriving (Eq, Ord)
 
@@ -273,6 +273,16 @@ erlFromHose = erlFromPoolName . hosePool
 erlFromHoseIdx :: Hose -> PoolIndex -> ErrLocation
 erlFromHoseIdx h idx = erlFromPoolIdx (hosePool h) idx
 
+-- | Closes a 'Hose'.  Any further operations on the hose will fail.
+--
+-- Although hoses will be withdrawn automatically when they are
+-- garbage collected, it is much better to call 'withdraw'
+-- explicitly when you are done with a hose.
+--
+-- You can't withdraw a hose if it is still a member of a
+-- 'System.Plasma.Pool.Gang'.  You need to remove it from the
+-- gang first, or just call 'System.Plasma.Pool.withdrawAll' if
+-- you want to withdraw all the hoses in the gang.
 withdraw :: HasCallStack => Hose -> IO ()
 withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
   let erl  = erlFromHose hose
@@ -280,14 +290,17 @@ withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
   tort <- c_withdraw ptr
   throwRetortCS_ EtPools addn (Retort tort) (Just erl) callStack
 
+-- | The 'Context' that was specified when the hose was created.
 getHoseContext :: Hose -> IO Context
 getHoseContext h = withForeignPtr (hosePtr h) $ \hPtr -> do
   c_get_context hPtr >>= deRefStablePtr
 
+-- | Create a new connection exactly like the original.  The index of
+-- the new 'Hose' will be set to the same point as the original.
 cloneHose
   :: HasCallStack
-  => T.Text       -- ^ name of new Hose
-  -> Hose         -- ^ hose to clone
+  => T.Text       -- ^ Name of new Hose.
+  -> Hose         -- ^ Hose to clone.
   -> IO Hose
 cloneHose name orig = withForeignPtr (hosePtr orig) $ \origPtr -> do
   let loc  = "cloneHose"
@@ -301,10 +314,16 @@ cloneHose name orig = withForeignPtr (hosePtr orig) $ \origPtr -> do
     c_hose_clone origPtr tortPtr
   newHose loc cs name pool ctx newH
 
+-- | Deposit a protein into this pool.  Returns the index and
+-- timestamp that were assigned to the protein when it was
+-- deposited.
+--
+-- Only proteins can be deposited in a pool; therefore the argument
+-- should be a 'SlawProtein' or a 'Protein'.
 deposit
   :: (HasCallStack, ToSlaw a)
-  => Hose
-  -> a
+  => Hose -- ^ Hose to deposit protein into.
+  -> a    -- ^ The protein to deposit.
   -> IO (PoolIndex, PoolTimestamp)
 deposit h opts = withForeignPtr (hosePtr h) $ \hPtr -> do
   let addn = Just "deposit"
@@ -616,10 +635,26 @@ keyForIndex idx
   | idx < 0                              = (1, idx)
   | otherwise                            = (3, idx)
 
+-- | Returns a protein with information about a pool.
+-- (Therefore, the most useful return types would be 'Slaw',
+-- 'Protein', or 'PoolInfo'.)
+--
+-- The returned protein should always include an ingest @type@, which
+-- is a string naming the pool type, and @terminal@, which is a
+-- boolean which is true if this is a terminal pool type like @mmap@,
+-- or false if this is a transport pool type like @tcp@.
+--
+-- If @hops@ is 'Just 0', means return information about this pool
+-- hose.  If @hops@ is 'Just 1', means return information about the
+-- pool beyond this hose (assuming this hose is a nonterminal type
+-- like TCP).  And higher values of @hops@ mean go further down the
+-- line, if multiple nonterminal types are chained together.  If
+-- @hops@ is 'Nothing', means return information about the terminal
+-- pool, no matter how far it is.
 getInfo
   :: (HasCallStack, FromSlaw a)
-  => Hose
-  -> Maybe Int   -- ^ number of hops
+  => Hose        -- ^ Hose to get information about.
+  -> Maybe Int   -- ^ The number of hops.
   -> IO a
 getInfo h mHops = withForeignPtr (hosePtr h) $ \hPtr -> do
   let cs   = callStack
