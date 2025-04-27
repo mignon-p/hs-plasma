@@ -24,8 +24,8 @@ module Data.Slaw.IO.Internal.Options
 
 import Control.DeepSeq
 import Data.Bifunctor
--- import qualified Data.ByteString.Short    as SBS
 import qualified Data.ByteString.Lazy     as L
+-- import qualified Data.ByteString.Short    as SBS
 import Data.Default.Class
 import Data.Hashable
 -- import Data.Int

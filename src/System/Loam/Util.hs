@@ -19,9 +19,9 @@ module System.Loam.Util
 -- import Control.Exception
 import qualified Data.ByteString          as B
 -- import Data.Default.Class
+import Data.Int
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
-import Data.Int
 import Foreign.C.String
 -- import Foreign.C.Types
 import Foreign.Marshal.Alloc

@@ -68,14 +68,14 @@ import Data.Slaw.IO.Internal.Options
 import Data.Slaw.Path
 import Data.Slaw.Util
 import qualified System.Loam.Internal.ConstPtr as C
-import System.Loam.Retorts
-import System.Loam.Retorts.Constants
-import System.Loam.Retorts.Internal.IoeRetorts
-import System.Loam.Retorts.Internal.RetortUtil
 import System.Loam.Internal.FgnTypes
 import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 import System.Loam.Internal.Misc
+import System.Loam.Retorts
+import System.Loam.Retorts.Constants
+import System.Loam.Retorts.Internal.IoeRetorts
+import System.Loam.Retorts.Internal.RetortUtil
 
 --
 

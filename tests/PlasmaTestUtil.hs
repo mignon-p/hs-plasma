@@ -32,10 +32,10 @@ import System.Directory
 -- import System.Environment
 import System.IO
 import System.IO.Unsafe
--- import Test.Tasty
-import Test.Tasty.HUnit
 -- import qualified Test.QuickCheck          as QC
 import qualified Test.QuickCheck.Monadic  as QC
+-- import Test.Tasty
+import Test.Tasty.HUnit
 
 import Data.Slaw
 import Data.Slaw.IO

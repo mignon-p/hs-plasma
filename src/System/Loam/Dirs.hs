@@ -33,8 +33,8 @@ import GHC.Stack
 import Data.Slaw
 import qualified System.Loam.Internal.ConstPtr as C
 import System.Loam.Internal.Enums
-import System.Loam.Internal.Filename
 import System.Loam.Internal.FgnTypes
+import System.Loam.Internal.Filename
 import System.Loam.Internal.Initialize
 import System.Loam.Internal.Marshal
 

@@ -40,8 +40,8 @@ import Data.Int
 import qualified Data.Map.Strict          as M
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
-import Foreign.C.Types (CInt(..))
 import Foreign.C.Error
+import Foreign.C.Types (CInt(..))
 -- import Foreign.Ptr
 import GHC.Generics (Generic)
 import GHC.Stack

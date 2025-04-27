@@ -15,10 +15,10 @@ import Control.Exception
 import Control.Monad
 import qualified Data.ByteString          as B
 -- import Data.Default.Class
-import qualified Data.Text                as T
-import qualified Data.Text.Encoding       as T
 import Data.Int
 import Data.List
+import qualified Data.Text                as T
+import qualified Data.Text.Encoding       as T
 import Data.Word
 -- import Foreign.C.String
 import Foreign.C.Types

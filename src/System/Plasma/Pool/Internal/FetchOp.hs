@@ -24,9 +24,9 @@ import Data.Default.Class
 import Data.Hashable
 import Data.Int
 -- import Data.Word
+import Foreign.Marshal.Utils
 import Foreign.Ptr
 import Foreign.Storable
-import Foreign.Marshal.Utils
 import GHC.Generics (Generic)
 import GHC.Stack
 -- import Text.Printf
