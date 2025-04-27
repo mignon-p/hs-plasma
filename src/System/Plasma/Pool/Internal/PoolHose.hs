@@ -353,6 +353,10 @@ forceProt s@(SlawNumeric _ _) =
     Just rude -> SlawProtein Nothing Nothing rude
 forceProt s                   = s
 
+-- | Retrieve the protein with the given index.  Throws a
+-- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN' if the index is
+-- previous to that of the oldest index or if it is after that of the
+-- newest index.
 nthProtein
   :: HasCallStack
   => Hose
@@ -399,16 +403,27 @@ proteinOp cs loc op h srch timeout = do
             c_protein_op c hPtr srchPtr tmout tsPtr idxPtr tortPtr lenPtr
       return $ RetProtein p idx ts
 
+-- | Retrieve the next available protein at or following the pool
+-- hose's index and advance the index to position following.  May skip
+-- proteins since the protein immediately following the last read
+-- protein may have been discarded.  If no proteins are available,
+-- this function throws a 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 next
   :: HasCallStack
   => Hose
   -> IO RetProtein
 next h = proteinOp callStack "next" 'n' h Nothing def
 
+-- | The same as 'next', but wait for the next protein if none are
+-- available now.  The 'PoolTimeout' specifies how long to wait
+-- for a protein.
+--
+-- Throws a 'PlasmaException' of 'POOL_AWAIT_TIMEDOUT' if no protein
+-- arrived before the timeout expired.
 awaitNext
   :: HasCallStack
   => Hose
-  -> PoolTimeout -- timeout
+  -> PoolTimeout
   -> IO RetProtein
 awaitNext h = proteinOp callStack "awaitNext" 'a' h Nothing
 
@@ -719,6 +734,8 @@ seekByTime
   -> IO ()
 seekByTime = seekTimeOp callStack "seekByTime" 'b'
 
+-- | Allows some of the options that were specified in
+-- 'System.Plasma.Pool.create' to be changed after the pool is created.
 changeOptions
   :: (HasCallStack, ToSlaw a)
   => Hose
@@ -749,12 +766,28 @@ wakeupOp cs loc op h = do
     tort <- c_wakeup_op c hPtr
     throwRetortCS_ EtPools addn (Retort tort) (Just erl) cs
 
+-- | Enable 'wakeUp' for this hose.  Calling this function
+-- multiple times on a hose is the same as calling it once on a
+-- hose.
+--
+-- Enabling wakeup involves acquiring some platform-dependent
+-- resources.  An exception will be thrown if these resources
+-- could not be acquired.
 enableWakeup
   :: HasCallStack
   => Hose
   -> IO ()
 enableWakeup = wakeupOp callStack "enableWakeup" 'e'
 
+-- | A thread-safe function to interrupt any call to 'awaitNext' on
+-- this hose.  For each time that this function is called, one call to
+-- 'awaitNext' will throw a 'PlasmaException' of 'POOL_AWAIT_WOKEN'.
+-- (That's not really true if enough wakeup requests pile up.  They
+-- will eventually be eaten if no one looks at them.)
+--
+-- It is an error to call this function without previously having
+-- called 'enableWakeup' on this hose.  In that case, this function
+-- will throw a 'PlasmaException' of 'POOL_WAKEUP_NOT_ENABLED'.
 wakeUp
   :: HasCallStack
   => Hose
