@@ -148,11 +148,11 @@ library
                      , attoparsec           >= 0.14.4    && < 0.15
                      , bytestring           >= 0.11.3.0  && < 0.13
                      , containers           >= 0.6.0.1   && < 0.8
-                     , data-default-class   >= 0.1.2.0   && < 0.2
+                     , data-default-class   >= 0.1.2.0   && < 0.3
                      , deepseq              >= 1.4.4.0   && < 1.6
-                     , directory            >= 1.3.8.5   && < 1.4
+                     , directory            >= 1.3.8.3   && < 1.4
                      , filepath             >= 1.4.300.1 && < 1.6
-                     , hashable             >= 1.4.0.0   && < 1.5
+                     , hashable             >= 1.4.0.0   && < 1.6
                      , slaw
                      , text                 >= 1.2.3.1   && < 2.2
                      , time                 >= 1.8.0.2   && < 1.15
@@ -214,7 +214,7 @@ executable hs-plasma
   -- Other library packages from which modules are imported.
   build-depends:       base                 >= 4.12      && < 5
                      , bytestring           >= 0.11.3.0  && < 0.13
-                     , data-default-class   >= 0.1.2.0   && < 0.2
+                     , data-default-class   >= 0.1.2.0   && < 0.3
                      , half                 >= 0.3.1     && < 0.4
                      , plasma
                      , slaw
@@ -258,8 +258,8 @@ test-suite test
   build-depends:       base                 >= 4.12      && < 5
                      , bytestring           >= 0.11.3.0  && < 0.13
                      , containers           >= 0.6.0.1   && < 0.8
-                     , data-default-class   >= 0.1.2.0   && < 0.2
-                     , directory            >= 1.3.8.5   && < 1.4
+                     , data-default-class   >= 0.1.2.0   && < 0.3
+                     , directory            >= 1.3.8.3   && < 1.4
                      , plasma
                      , QuickCheck           >= 2.14.3    && < 2.16
                      , quickcheck-unicode   >= 1.0.1.0   && < 1.1
