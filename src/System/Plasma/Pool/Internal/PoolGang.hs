@@ -104,8 +104,12 @@ foreign import capi safe "ze-hs-gang.h ze_hs_gang_misc_op"
 kGang :: IsString a => a
 kGang = "Gang"
 
+-- | A collection of hoses, for multi-pool await support.
+--
+-- A hose may only be a member of one gang at any given time.
 data Gang = Gang
-  { gangName  :: !T.Text
+  { -- | The name of the gang that was given to 'newGang'.
+    gangName  :: !T.Text
   , gangPtr   :: !(ForeignPtr FgnGang)
   } deriving (Eq, Ord)
 
@@ -213,6 +217,11 @@ wakeGang gang = do
   let ei = mkErrInfo "wakeGang" gang callStack
   gangMiscOp ei 'w' gang def
 
+-- | Retrieve the next protein available from one of the pools in
+-- the specified gang.  Besides the errors that can be thrown by
+-- 'next', this function can throw a 'PlasmaException' with a
+-- 'Retort' of 'System.Loam.Retorts.Constants.POOL_EMPTY_GANG'
+-- if the specified gang contains no hoses.
 nextMulti
   :: HasCallStack
   => Gang
@@ -221,19 +230,25 @@ nextMulti gang = do
   let ei = mkErrInfo "nextMulti" gang callStack
   gangNextOp ei 'n' gang def
 
+-- | Retrieve the next protein available from one of the pools in
+-- the specified gang.  See 'awaitNext' and 'nextMulti' for more
+-- information.
 awaitNextMulti
   :: HasCallStack
   => Gang
-  -> PoolTimeout -- timeout
+  -> PoolTimeout
   -> IO (RetProtein, Hose)
 awaitNextMulti gang timeout = do
   let ei = mkErrInfo "awaitNextMulti" gang callStack
   gangNextOp ei 'a' gang timeout
 
+-- | Wait until 'awaitNextMulti' would have returned, but without
+-- returning any information, and without advancing the index of the
+-- pool hose.
 awaitMulti
   :: HasCallStack
   => Gang
-  -> PoolTimeout -- timeout
+  -> PoolTimeout
   -> IO ()
 awaitMulti gang timeout = do
   let ei = mkErrInfo "awaitMulti" gang callStack

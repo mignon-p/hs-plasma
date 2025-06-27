@@ -427,38 +427,67 @@ awaitNext
   -> IO RetProtein
 awaitNext h = proteinOp callStack "awaitNext" 'a' h Nothing
 
+-- | Retrieve the protein at the pool hose's index. If no protein
+-- is available, this function throws a 'PlasmaException' of
+-- 'POOL_NO_SUCH_PROTEIN'.
 curr
   :: HasCallStack
   => Hose
   -> IO RetProtein
 curr h = proteinOp callStack "curr" 'c' h Nothing def
 
+-- | Retrieve the protein just previous to the pool hose's current
+-- index.  Move the pool hose's index to this position.  If no
+-- protein before the current one is available, this function throws
+-- a 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 prev
   :: HasCallStack
   => Hose
   -> IO RetProtein
 prev h = proteinOp callStack "prev" 'p' h Nothing def
 
+-- | Search forward in the pool for a protein with a descrip matching
+-- that of the search argument.  On success, the hose's current index
+-- will be 1 + the index returned in 'RetProtein'.  On failure
+-- (exception), the hose's current index will remain unchanged.
+--
+-- Note: The search slaw is matched against candidate proteins
+-- using @protein_search()@.  Therefore, if the search slaw is
+-- a list, performs @slaw_list_gapsearch()@.  Otherwise, performs
+-- @slaw_list_find()@.
 probeFrwd
   :: HasCallStack
   => Hose
-  -> Slaw -- search
+  -> Slaw -- ^ Slaw to search for in descrips.
   -> IO RetProtein
 probeFrwd h srch = proteinOp callStack "probeFrwd" 'f' h (Just srch) def
 
+-- | The same as 'probeFrwd', but wait if necessary.
+--
+-- Throws a 'PlasmaException' of 'POOL_AWAIT_TIMEDOUT' if no protein
+-- arrived before the timeout expired.  The timeout is overall, and
+-- does not restart when a non-matching protein is found.
 awaitProbeFrwd
   :: HasCallStack
   => Hose
-  -> Slaw        -- search
-  -> PoolTimeout -- timeout
+  -> Slaw        -- ^ Slaw to search for in descrips.
+  -> PoolTimeout -- ^ How long to wait for the protein.
   -> IO RetProtein
 awaitProbeFrwd h srch =
   proteinOp callStack "awaitProbeFrwd" 'w' h (Just srch)
 
+-- | Search backward in the pool for a protein with a descrip matching
+-- that of the search argument.  If the beginning of the pool is
+-- reached without finding a match, this function throws a
+-- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
+--
+-- On success, the hose's current index will be the same as the index
+-- returned in 'RetProtein'.  On failure (exception), the hose's
+-- current index will remain unchanged.
 probeBack
   :: HasCallStack
   => Hose
-  -> Slaw -- search
+  -> Slaw -- ^ Slaw to search for in descrips.
   -> IO RetProtein
 probeBack h srch = proteinOp callStack "probeBack" 'b' h (Just srch) def
 
@@ -476,18 +505,27 @@ indexOp cs loc op h = do
     withReturnedRetortCS EtPools addn (Just erl) cs $ \tortPtr -> do
       c_get_index c hPtr tortPtr
 
+-- | Get the index of the newest protein in this pool.
+--
+-- If no proteins are in the pool, this function throws a
+-- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 newestIndex
   :: HasCallStack
   => Hose
   -> IO PoolIndex
 newestIndex = indexOp callStack "newestIndex" 'n'
 
+-- | Get the index of the oldest protein in this pool.
+--
+-- If no proteins are in the pool, this function throws a
+-- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 oldestIndex
   :: HasCallStack
   => Hose
   -> IO PoolIndex
 oldestIndex = indexOp callStack "oldestIndex" 'o'
 
+-- | Get the current position (index) of this pool.
 currIndex
   :: HasCallStack
   => Hose
@@ -509,42 +547,49 @@ seekOp cs loc op h idx = do
     tort <- c_seek_op c hPtr idx
     throwRetortCS EtPools addn (Retort tort) (Just erl) cs
 
+-- | Set the pool hose's index to the first available protein.
 rewind
   :: HasCallStack
   => Hose
   -> IO ()
 rewind h = void $ seekOp callStack "rewind" 'w' h minBound
 
+-- | Set the pool hose's index to the last available protein.
 toLast
   :: HasCallStack
   => Hose
   -> IO ()
 toLast h = void $ seekOp callStack "toLast" 'l' h minBound
 
+-- | Set the pool hose's index to that following the last
+-- available protein.
 runout
   :: HasCallStack
   => Hose
   -> IO ()
 runout h = void $ seekOp callStack "runout" 'o' h minBound
 
+-- | Move the pool hose's index forward by the given offset.
 frwdBy
   :: HasCallStack
   => Hose
-  -> PoolIndex -- offset
+  -> PoolIndex -- ^ Offset to move forward by.
   -> IO ()
 frwdBy h idx = void $ seekOp callStack "frwdBy" 'f' h idx
 
+-- | Move the pool hose's index back by the given offset.
 backBy
   :: HasCallStack
   => Hose
-  -> PoolIndex -- offset
+  -> PoolIndex -- ^ Offset to move backward by.
   -> IO ()
 backBy h idx = void $ seekOp callStack "backBy" 'b' h idx
 
+-- | Set the pool hose's index to the given value.
 seekTo
   :: HasCallStack
   => Hose
-  -> PoolIndex
+  -> PoolIndex -- ^ Index to move to.
   -> IO ()
 seekTo h idx = void $ seekOp callStack "seekTo" 's' h idx
 
@@ -718,19 +763,24 @@ seekTimeOp cs loc op h ts tc = do
     tort <- c_seek_time_op c hPtr ts (timeCmpChar tc)
     throwRetortCS_ EtPools addn (Retort tort) (Just erl) cs
 
+-- | Position the index pointing to the protein whose timestamp
+-- is closest to the given 'PoolTimestamp', using the given
+-- 'TimeComparison' strategy.
 seekToTime
   :: HasCallStack
   => Hose
-  -> PoolTimestamp
-  -> TimeComparison
+  -> PoolTimestamp  -- ^ Timestamp to seek to.
+  -> TimeComparison -- ^ Criterion for comparing timestamps.
   -> IO ()
 seekToTime = seekTimeOp callStack "seekToTime" 't'
 
+-- | As 'seekToTime', but specifying the timestamp by a delta
+-- relative to the current position's timestamp.
 seekByTime
   :: HasCallStack
   => Hose
-  -> PoolTimestamp
-  -> TimeComparison
+  -> PoolTimestamp  -- ^ Time delta to seek by.
+  -> TimeComparison -- ^ Criterion for comparing timestamps.
   -> IO ()
 seekByTime = seekTimeOp callStack "seekByTime" 'b'
 
