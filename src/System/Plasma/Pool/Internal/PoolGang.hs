@@ -218,7 +218,10 @@ wakeGang gang = do
   gangMiscOp ei 'w' gang def
 
 -- | Retrieve the next protein available from one of the pools in
--- the specified gang.  Besides the errors that can be thrown by
+-- the specified gang.  Also returns a 'Hose' indicating which
+-- pool the protein came from.
+--
+-- Besides the errors that can be thrown by
 -- 'next', this function can throw a 'PlasmaException' with a
 -- 'Retort' of 'System.Loam.Retorts.Constants.POOL_EMPTY_GANG'
 -- if the specified gang contains no hoses.

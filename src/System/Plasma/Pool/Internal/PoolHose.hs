@@ -611,15 +611,29 @@ advanceOldest h idx = do
   -- proteins erased) or OB_NOTHING_TO_DO (no proteins erased).
   return $ tort == OB_OK
 
--- | Throws an exception if a significant error (any 'Retort'
+-- | Executes the specified 'FetchOp's.  Returns a list of
+-- 'FetchResults', where each 'FetchResult' corresponds to
+-- one 'FetchOp' in the query, in order.
+--
+-- Also returns a pair of (oldest, newest) indicating the
+-- oldest and newest indices in the pool at the time of query.
+--
+-- You may specify whether to “clamp” the index values to within
+-- the range of valid proteins in the pool.  (i. e. if you request
+-- a protein which is too old, you will get the oldest available
+-- protein, rather than an error.)  If clamped, the 'frIdx' member
+-- of the 'FetchResult' will reflect the index of the protein
+-- actually retrieved.
+--
+-- Throws an exception if a significant error (any 'Retort'
 -- other than 'POOL_NO_SUCH_PROTEIN') occurs.
 -- If 'POOL_NO_SUCH_PROTEIN' occurs for a particular part of the
 -- query, returns 'Nothing' for that part of the query.
 fetch
   :: HasCallStack
   => Hose
-  -> Bool
-  -> [FetchOp]
+  -> Bool      -- ^ Clamp indices to oldest/newest?
+  -> [FetchOp] -- ^ List of fetch operations to execute.
   -> IO ([Maybe FetchResult], Maybe (PoolIndex, PoolIndex))
 fetch h clmp fops = do
   let loc = "fetch"
@@ -627,13 +641,14 @@ fetch h clmp fops = do
   ret <- fetchCS loc cs h clmp fops
   handleExc loc cs ret
 
--- | Instead of throwing exceptions, returns the exception which
--- occurred (as a 'Left') for each part of the query.
+-- | Like 'fetch', but instead of throwing exceptions, returns the
+-- exception which occurred (as a 'Left') for each part of the
+-- query.
 fetch'
   :: HasCallStack
   => Hose
-  -> Bool
-  -> [FetchOp]
+  -> Bool      -- ^ Clamp indices to oldest/newest?
+  -> [FetchOp] -- ^ List of fetch operations to execute.
   -> IO ( [Either PlasmaException FetchResult]
         , Either PlasmaException (PoolIndex, PoolIndex)
         )
