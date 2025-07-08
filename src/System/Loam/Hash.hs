@@ -1,7 +1,7 @@
 {-|
 Module      : System.Loam.Hash
 Description : Functions from ob-hash.h
-Copyright   : © Mignon Pelletier, 2024
+Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
@@ -67,6 +67,23 @@ foreign import capi unsafe "libLoam/c/ob-hash.h ob_city_hash64_with_seeds"
       -> Word64        -- seed1
       -> IO Word64     -- return value
 
+foreign import capi safe "libLoam/c/ob-hash.h ob_jenkins_hash"
+    c_jenkins_hash_safe :: C.ConstPtr () -> CSize -> Word32 -> IO Word32
+
+foreign import capi safe "ze-hs-misc.h ze_hs_jenkins_hash64"
+    c_jenkins_hash64_safe :: C.ConstPtr () -> CSize -> Word64 -> IO Word64
+
+foreign import capi safe "libLoam/c/ob-hash.h ob_city_hash64"
+    c_city_hash64_safe :: C.ConstPtr () -> CSize -> IO Word64
+
+foreign import capi safe "libLoam/c/ob-hash.h ob_city_hash64_with_seeds"
+    c_city_hash64_with_seeds_safe
+      :: C.ConstPtr () -- key
+      -> CSize         -- length
+      -> Word64        -- seed0
+      -> Word64        -- seed1
+      -> IO Word64     -- return value
+
 -- | Hashes a 'Word64'.
 foreign import capi unsafe "libLoam/c/ob-hash.h ob_hash_unt64"
     hashWord64 :: Word64 -> Word64
@@ -79,10 +96,24 @@ foreign import capi unsafe "libLoam/c/ob-hash.h ob_hash_unt32"
 foreign import capi unsafe "libLoam/c/ob-hash.h ob_hash_2xunt64_to_unt64"
     hash2xWord64 :: Word64 -> Word64 -> Word64
 
-callHash :: (C.ConstPtr () -> CSize -> IO a) -> B.ByteString -> IO a
-callHash f bs = do
+type HashFunc a = C.ConstPtr () -> CSize -> IO a
+
+-- I have no idea if 1024 is a good value.
+threshold :: CSize
+threshold = 1024
+
+-- Takes two versions of the hash function.
+-- "f" is used for short inputs, and "g" is used for long inputs.
+-- "f" and "g" should be the same function, except "f" should
+-- be "unsafe" and "g" should be "safe".  Therefore, we minimize
+-- overhead on short bytestrings, but avoid spending large amounts
+-- of time in unsafe foreign calls.
+callHash :: HashFunc a -> HashFunc a -> B.ByteString -> IO a
+callHash f g bs = do
   C.useAsConstCStringLen bs $ \(charPtr, len) -> do
-    f (C.castConstPtr charPtr) (fromIntegral len)
+    let p = C.castConstPtr charPtr
+        l = fromIntegral len
+    if l < threshold then f p l else g p l
 
 -- | Hashes a 'B.ByteString' using the Bob Jenkins “lookup3”
 -- algorithm.
@@ -90,8 +121,9 @@ jenkinsHash32
   :: Word32       -- seed
   -> B.ByteString -- bytes to hash
   -> Word32
-jenkinsHash32 seed bs = unsafePerformIO $ callHash f bs
-  where f ptr size = c_jenkins_hash ptr size seed
+jenkinsHash32 seed bs = unsafePerformIO $ callHash f g bs
+  where f ptr size = c_jenkins_hash      ptr size seed
+        g ptr size = c_jenkins_hash_safe ptr size seed
 
 -- | Hashes a 'B.ByteString' using the Bob Jenkins “lookup3”
 -- algorithm.  This version takes two 32-bit seeds, and produces
@@ -101,15 +133,17 @@ jenkinsHash64
   :: Word64       -- seed
   -> B.ByteString -- bytes to hash
   -> Word64
-jenkinsHash64 seed bs = unsafePerformIO $ callHash f bs
-  where f ptr size = c_jenkins_hash64 ptr size seed
+jenkinsHash64 seed bs = unsafePerformIO $ callHash f g bs
+  where f ptr size = c_jenkins_hash64      ptr size seed
+        g ptr size = c_jenkins_hash64_safe ptr size seed
 
 -- | Hashes a 'B.ByteString' using Google's CityHash64
 -- algorithm, version 1.0.2.
 cityHash64
   :: B.ByteString -- bytes to hash
   -> Word64
-cityHash64 bs = unsafePerformIO $ callHash c_city_hash64 bs
+cityHash64 bs =
+  unsafePerformIO $ callHash c_city_hash64 c_city_hash64_safe bs
 
 {-# INLINABLE cityHash64withSeed #-}
 -- | Hashes a 'B.ByteString' using Google's CityHash64
@@ -127,8 +161,9 @@ cityHash64withSeeds
   -> Word64       -- second seed
   -> B.ByteString -- bytes to hash
   -> Word64
-cityHash64withSeeds seed0 seed1 bs = unsafePerformIO $ callHash f bs
-  where f ptr size = c_city_hash64_with_seeds ptr size seed0 seed1
+cityHash64withSeeds seed0 seed1 bs = unsafePerformIO $ callHash f g bs
+  where f ptr size = c_city_hash64_with_seeds      ptr size seed0 seed1
+        g ptr size = c_city_hash64_with_seeds_safe ptr size seed0 seed1
 
 {-# INLINABLE hash2xWord32 #-}
 -- | Hashes two 32-bit words to produce a single 32-bit word.
