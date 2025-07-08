@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 -- The name of the package.
-name:                plasma
+name:                hs-plasma
 
 -- The package version.  See the Haskell package versioning policy (PVP)
 -- for standards guiding when and how versions should be incremented.
@@ -26,7 +26,7 @@ description:
 
         This library does not expose the “slaw” API from libPlasma.
         Instead, marshaling of slawx is expected to be done with
-        the <https://github.com/mignon-p/hs-slaw slaw> Haskell
+        the <https://github.com/mignon-p/hs-slaw hs-slaw> Haskell
         library.
 
 -- The license under which the package is released.
@@ -47,7 +47,7 @@ homepage:            https://github.com/mignon-p/hs-plasma
 bug-reports:         https://github.com/mignon-p/hs-plasma/issues
 
 -- A copyright notice.
-copyright:           © Mignon Pelletier, 2024
+copyright:           © Mignon Pelletier, 2024-2025
 
 category:            System
 
@@ -154,7 +154,7 @@ library
                      , directory            >= 1.3.8.3   && < 1.4
                      , filepath             >= 1.4.300.1 && < 1.6
                      , hashable             >= 1.4.0.0   && < 1.6
-                     , slaw
+                     , hs-slaw
                      , text                 >= 1.2.3.1   && < 2.2
                      , time                 >= 1.8.0.2   && < 1.15
                      , unordered-containers >= 0.2.10.0  && < 0.3
@@ -217,8 +217,8 @@ executable hs-plasma
                      , bytestring           >= 0.11.3.0  && < 0.13
                      , data-default-class   >= 0.1.2.0   && < 0.3
                      , half                 >= 0.3.1     && < 0.4
-                     , plasma
-                     , slaw
+                     , hs-plasma
+                     , hs-slaw
                      , text                 >= 1.2.3.1   && < 2.2
                      , vector               >= 0.12.0.3  && < 0.14
 
@@ -261,10 +261,10 @@ test-suite test
                      , containers           >= 0.6.0.1   && < 0.8
                      , data-default-class   >= 0.1.2.0   && < 0.3
                      , directory            >= 1.3.8.3   && < 1.4
-                     , plasma
+                     , hs-plasma
                      , QuickCheck           >= 2.14.3    && < 2.16
                      , quickcheck-unicode   >= 1.0.1.0   && < 1.1
-                     , slaw
+                     , hs-slaw
                      , tasty                >= 1.4.3     && < 1.6
                      , tasty-hunit          >= 0.10.1    && < 0.11
                      , tasty-quickcheck     >= 0.10.2    && < 0.12

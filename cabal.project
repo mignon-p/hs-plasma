@@ -1,2 +1,2 @@
-packages:            ../slaw/slaw.cabal
-                   , plasma.cabal
+packages:            ../hs-slaw/hs-slaw.cabal
+                   , hs-plasma.cabal

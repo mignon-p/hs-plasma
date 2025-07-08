@@ -1,6 +1,6 @@
 This library is a Haskell binding to the libLoam and libPlasma C libraries, which are in the [Plasma repository](https://purl.org/funwithsoftware/libPlasma).  The primary purpose is to bind the "pools" API from libPlasma, although some useful libLoam functionality is also provided.
 
-This library does not expose the "slaw" API from libPlasma.  Instead, marshaling of slawx is expected to be done with the [slaw](https://github.com/mignon-p/hs-slaw) Haskell library.
+This library does not expose the "slaw" API from libPlasma.  Instead, marshaling of slawx is expected to be done with the [hs-slaw](https://github.com/mignon-p/hs-slaw) Haskell library.
 
 ## Prerequisites
 
@@ -16,25 +16,25 @@ The Haskell Plasma binding can be built with either [Cabal](https://www.haskell.
 
 ```
 cd ~/some/where
-git clone https://github.com/mignon-p/hs-slaw.git   slaw
-git clone https://github.com/mignon-p/hs-plasma.git plasma
+git clone https://github.com/mignon-p/hs-slaw.git
+git clone https://github.com/mignon-p/hs-plasma.git
 ```
 
 Then you'll want to go into the `plasma` directory to build both libraries.  With Cabal:
 
 ```
-cd plasma
+cd hs-plasma
 cabal v2-build
 ```
 
 Or with Stack:
 
 ```
-cd plasma
+cd hs-plasma
 stack build
 ```
 
-The `cabal.project` file (in the case of Cabal) or the `stack.yaml` file (in the case of Stack) tells the build system to reach over into the sibling directory `slaw` to get the `slaw` library that the `plasma` library depends on.
+The `cabal.project` file (in the case of Cabal) or the `stack.yaml` file (in the case of Stack) tells the build system to reach over into the sibling directory `hs-slaw` to get the `hs-slaw` library that the `hs-plasma` library depends on.
 
 You can run the self-test with:
 
