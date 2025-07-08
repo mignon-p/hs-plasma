@@ -13,6 +13,7 @@ Portability : GHC
 import Control.Exception
 import Control.Monad
 -- import Data.Bifunctor
+import qualified Data.ByteString.Builder  as R
 -- import qualified Data.ByteString.Lazy     as L
 -- import Data.Char
 -- import Data.Complex
@@ -97,6 +98,7 @@ unitTests = testGroup "HUnit tests"
   [ testCase "YAML slaw IO"               $ testSlawIO
   , testCase "cityHash64"                 $ testCityHash64
   , testCase "hash functions"             $ testHash
+  , testCase "hash functions, large data" $ testLargeHash
   , testCase "Merge typeclass"            $ testMerge
   , testCase "time functions"             $ testTime
   , testCase "pool name validation"       $ testPoolName
@@ -298,6 +300,25 @@ testHash = do
   0x833870d4da30a39e @=? c64
   0xcfda188d7ad9ec2c @=? c64s
   0xf2cf4e6d03f7137a @=? c64s2
+
+testLargeHash :: Assertion
+testLargeHash = do
+  let bldr  = mconcat $ map R.word16BE [0, 17 .. 0xffff]
+      myBs  = toByteString $ R.toLazyByteString bldr
+      s32   = 0xC0DE_BABE
+      s64   = 0xDEFACED_BAD_FACADE
+      s64b  = 0x0123456789ABCDEF
+      jh32  = jenkinsHash32       s32      myBs
+      jh64  = jenkinsHash64       s64      myBs
+      c64   = cityHash64                   myBs
+      c64s  = cityHash64withSeed  s64      myBs
+      c64s2 = cityHash64withSeeds s64 s64b myBs
+
+  2946089748           @=? jh32
+  15409861163017311376 @=? jh64
+  12838808716745102289 @=? c64
+  16082252722761465086 @=? c64s
+  17686391379370221157 @=? c64s2
 
 testMerge :: Assertion
 testMerge = do
