@@ -1,20 +1,39 @@
-This library is a Haskell binding to the libLoam and libPlasma C libraries, which are in the [Plasma repository](https://purl.org/funwithsoftware/libPlasma).  The primary purpose is to bind the "pools" API from libPlasma, although some useful libLoam functionality is also provided.
+This library is a Haskell binding to the libLoam and libPlasma C
+libraries, which are in the [Plasma
+repository](https://purl.org/funwithsoftware/libPlasma).  The
+primary purpose is to bind the "pools" API from libPlasma,
+although some useful libLoam functionality is also provided.
 
-This library does not expose the "slaw" API from libPlasma.  Instead, marshaling of slawx is expected to be done with the [hs-slaw](https://github.com/mignon-p/hs-slaw) Haskell library.
+This library does not expose the "slaw" API from libPlasma.
+Instead, marshaling of slawx is expected to be done with the
+[hs-slaw](https://github.com/mignon-p/hs-slaw) Haskell library.
 
 ## Prerequisites
 
-Before building, you will need to have built and installed the libLoam and libPlasma C libraries.  See [their repository](https://purl.org/funwithsoftware/libPlasma) for information.
+Before building, you will need to have built and installed the
+libLoam and libPlasma C libraries.  See [their
+repository](https://purl.org/funwithsoftware/libPlasma) for
+information.
 
-Note: Currently, we expect the libLoam and libPlasma C libraries to be installed in `/opt/plasma`.  Unfortunately, for now, this is hardcoded in the `include-dirs` and `extra-lib-dirs` of `plasma.cabal`.  In the future, we would like to use the `pkg-config` files, but I ran into some trouble with that, and this was expedient.
+Note: Currently, we expect the libLoam and libPlasma C libraries
+to be installed in `/opt/plasma`.  Unfortunately, for now, this
+is hardcoded in the `include-dirs` and `extra-lib-dirs` of
+`plasma.cabal`.  In the future, we would like to use the
+`pkg-config` files, but I ran into some trouble with that, and
+this was expedient.
 
-So, for example, the files `/opt/plasma/lib/libLoam.a` and `/opt/plasma/lib/libPlasma.a` are expected to exist.
+So, for example, the files `/opt/plasma/lib/libLoam.a` and
+`/opt/plasma/lib/libPlasma.a` are expected to exist.
 
-You also need to have `perl` on your `PATH`, because Perl is used to preprocess some files in `hs-slaw`.
+You also need to have `perl` on your `PATH`, because Perl is used
+to preprocess some files in `hs-slaw`.
 
 ## Building
 
-The Haskell Plasma binding can be built with either [Cabal](https://www.haskell.org/cabal/) or [Stack](https://haskellstack.org/).  In either case, the hs-slaw and hs-plasma repositories should be checked out as siblings:
+The Haskell Plasma binding can be built with either
+[Cabal](https://www.haskell.org/cabal/) or
+[Stack](https://haskellstack.org/).  In either case, the hs-slaw
+and hs-plasma repositories should be checked out as siblings:
 
 ```
 cd ~/some/where
@@ -22,7 +41,8 @@ git clone https://github.com/mignon-p/hs-slaw.git
 git clone https://github.com/mignon-p/hs-plasma.git
 ```
 
-Then you'll want to go into the `plasma` directory to build both libraries.  With Cabal:
+Then you'll want to go into the `plasma` directory to build both
+libraries.  With Cabal:
 
 ```
 cd hs-plasma
@@ -36,7 +56,10 @@ cd hs-plasma
 stack build
 ```
 
-The `cabal.project` file (in the case of Cabal) or the `stack.yaml` file (in the case of Stack) tells the build system to reach over into the sibling directory `hs-slaw` to get the `hs-slaw` library that the `hs-plasma` library depends on.
+The `cabal.project` file (in the case of Cabal) or the
+`stack.yaml` file (in the case of Stack) tells the build system
+to reach over into the sibling directory `hs-slaw` to get the
+`hs-slaw` library that the `hs-plasma` library depends on.
 
 You can run the self-test with:
 
@@ -52,6 +75,9 @@ stack test
 
 ## License
 
-`hs-plasma` is licensed under the [MIT License](LICENSE).  © Mignon Pelletier, 2024-2025.
+`hs-plasma` is licensed under the [MIT License](LICENSE).
+© Mignon Pelletier, 2024-2025.
 
-Some documentation text has been taken from [libPlasma](https://purl.org/funwithsoftware/libPlasma), © oblong industries.
+Some documentation text has been taken from
+[libPlasma](https://purl.org/funwithsoftware/libPlasma),
+© oblong industries.
