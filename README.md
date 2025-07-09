@@ -10,6 +10,8 @@ Note: Currently, we expect the libLoam and libPlasma C libraries to be installed
 
 So, for example, the files `/opt/plasma/lib/libLoam.a` and `/opt/plasma/lib/libPlasma.a` are expected to exist.
 
+You also need to have `perl` on your `PATH`, because Perl is used to preprocess some files in `hs-slaw`.
+
 ## Building
 
 The Haskell Plasma binding can be built with either [Cabal](https://www.haskell.org/cabal/) or [Stack](https://haskellstack.org/).  In either case, the hs-slaw and hs-plasma repositories should be checked out as siblings:
@@ -47,3 +49,9 @@ or:
 ```
 stack test
 ```
+
+## License
+
+`hs-plasma` is licensed under the [MIT License](LICENSE).  © Mignon Pelletier, 2024-2025.
+
+Some documentation text has been taken from [libPlasma](https://purl.org/funwithsoftware/libPlasma), © oblong industries.
