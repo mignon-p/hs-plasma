@@ -240,6 +240,7 @@ test-suite test
 
   other-modules:       Comprehensive
                      , GangTest
+                     , LogTest
                      , OtherInstances
                      , PlasmaTestUtil
                      , PoolTestFixture

@@ -47,6 +47,7 @@ import Data.Slaw.IO.Yaml
 import Data.Slaw.Util
 import System.Loam.File
 import System.Loam.Hash
+import System.Loam.Log
 import System.Loam.Rand
 -- import System.Loam.Retorts.Constants
 import System.Loam.Time
@@ -54,6 +55,7 @@ import System.Plasma.Pool
 
 import Comprehensive
 import GangTest
+import LogTest
 import OtherInstances ()
 import PlasmaTestUtil
 import PoolTestFixture
@@ -112,6 +114,7 @@ unitTests = testGroup "HUnit tests"
   , testCase "+/ operator"                $ testPlusSlash
   , testCase "gang membership"            $ testGangMembership
   , testCase "nextMulti"                  $ testNextMulti
+  , testCase "log" $ testLog [FlgShowTime, FlgShowWhere, FlgShowCode, FlgShowPid, FlgShowProg, FlgShowTid]
   ]
 
 rtIoProp :: Slaw -> QC.Property

@@ -16,6 +16,7 @@ module PlasmaTestUtil
   , PropIO
   , fpHU
   , fpQC
+  , tmpDir
   , roundTripIOwr
   , checkSlawRead
   , checkSlawRead2
