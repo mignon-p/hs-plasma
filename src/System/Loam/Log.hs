@@ -8,7 +8,8 @@ Portability : GHC
 -}
 
 module System.Loam.Log
-  ( LogLevel           -- opaque type
+  ( -- * Types
+    LogLevel           -- opaque type
   , LogCode
   , AppendMode(..)
   , LogDest(..)
@@ -16,6 +17,7 @@ module System.Loam.Log
   , SyslogPriority(..) -- re-export
   , SyslogFacility     -- opaque type
   , SyslogFlag(..)     -- re-export
+    -- * Logging functions
   , logLoc
   , logCode
   , logMsg
@@ -23,14 +25,14 @@ module System.Loam.Log
   , logExcCode
   , logExcMsg
   , logExc
-    --
+    -- * Predefined log levels
   , lvBug
   , lvError
   , lvDeprecation
   , lvWarn
   , lvInfo
   , lvDebug
-    --
+    -- * Log level functions
   , newLogLevel
   , levelSetPrefix
   , levelGetPrefix
@@ -41,14 +43,14 @@ module System.Loam.Log
   , levelGetSyslogPriority
   , levelSetSyslogFacility
   , levelGetSyslogFacility
-    --
-  , facilityNames
-  , facilityFromName
-  , facilityToName
-    --
+    -- * Syslog
   , syslogOpen
   , syslogMask
   , syslogClose
+    -- ** Sylog facilities
+  , facilityNames
+  , facilityFromName
+  , facilityToName
   ) where
 
 import Control.Applicative
@@ -154,6 +156,7 @@ foreign import capi unsafe "ze-hs-syslog.h LOG_MASK"
 foreign import capi safe "ze-hs-syslog.h setlogmask"
     c_setlogmask :: CInt -> IO CInt
 
+-- | Calls the POSIX function @closelog()@.
 foreign import capi safe "ze-hs-syslog.h closelog"
     syslogClose :: IO ()
 
@@ -168,6 +171,9 @@ foreign import capi safe "ze-hs-log.h ze_hs_log_loc"
       -> C.ConstCString -- backtrace
       -> IO ()
 
+-- | Represents a log level.  Can be one of the six predefined log
+-- levels: 'lvBug', 'lvError', 'lvDeprecation', 'lvWarn', 'lvInfo',
+-- or 'lvDebug', or it can be a log level created with 'newLogLevel'.
 data LogLevel = LogLevel
   { llName :: !T.Text
   , llPtr  :: !(ForeignPtr FgnLogLvl)
@@ -212,12 +218,36 @@ lvWarn        = unsafePerformIO $ mkStaticLevel 'W' "Warn"
 lvInfo        = unsafePerformIO $ mkStaticLevel 'I' "Info"
 lvDebug       = unsafePerformIO $ mkStaticLevel 'G' "Debug"
 
+-- | A “code” is a unique 64-bit identifier which indicates which
+-- message is being logged.  There are at least three benefits to
+-- specifying such an identifier for each of your log messages:
+--
+--   1. Allows individual messages to be turned on or off from the
+--      @OB_LOG@ environment variable.  And since the bits in “code”
+--      are allocated hierarchically, by using a mask you can also
+--      enable or disable logging for entire modules at once.
+--
+--   2. Log messages can be suppressed once they have been printed
+--      a certain number of times, to avoid spamming the user.  The
+--      unique code identifies messages for this purpose.
+--
+--   3. The code can optionally be printed with the message, which may
+--      make customer support easier, since they can quote a specific
+--      number, rather than reading back the text of the message and
+--      possibly getting it wrong.
 type LogCode = Word64
 
+-- | When logging to a file, indicates whether to append to the
+-- existing file, or overwrite the existing file.  (If the file does
+-- not exist, then these behave the same.)
 data AppendMode = Append | Overwrite
                 deriving (Eq, Ord, Show, Read, Bounded, Enum,
                           Generic, NFData, Hashable)
 
+-- | Indicates a file to log to.  Can be standard output, standard
+-- error, or a named file.  A named file can be specified with
+-- either a 'FilePath' or an 'O.OsPath', and it is possible to
+-- either 'Append' to the file, or 'Overwrite' the file if it exists.
 data LogDest = DestNone
              | DestStdout
              | DestStderr
@@ -225,6 +255,7 @@ data LogDest = DestNone
              | DestOsPath   !AppendMode O.OsPath
              deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
+-- | Represents a syslog facility.
 newtype SyslogFacility = SyslogFacility Int32
                        deriving (Eq, Ord)
 
@@ -635,18 +666,22 @@ getFacName !idx = alloca $ \i32Ptr -> do
   i32 <- peek i32Ptr
   return (T.decodeUtf8With T.lenientDecode bs, i32)
 
+-- | List the names of the available syslog facilities.
 facilityNames :: [T.Text]
 facilityNames = map snd $ IM.toAscList facNum2Name
 
+-- | Return a syslog facility, given a name.
 facilityFromName :: T.Text -> Maybe SyslogFacility
 facilityFromName key = HM.lookup key' facName2Num
   where key' = T.toCaseFold key
 
+-- | Return a name, given a syslog facility.
 facilityToName :: SyslogFacility -> T.Text
 facilityToName (SyslogFacility n) =
   let dflt = T.pack $ printf "facility 0x%02x" n
   in IM.findWithDefault dflt (fromIntegral n) facNum2Name
 
+-- | Calls the POSIX function @openlog()@.
 syslogOpen :: Maybe T.Text -> [SyslogFlag] -> SyslogFacility -> IO ()
 syslogOpen ident flags (SyslogFacility fac) = do
   initialize
@@ -659,6 +694,7 @@ syslogOpen0 (Just ident) flags fac = do
   C.useAsConstCString (T.encodeUtf8 ident) $ \identPtr -> do
     c_syslog_open identPtr flags fac
 
+-- | Calls the POSIX function @setlogmask()@.
 syslogMask :: [SyslogPriority] -> IO [SyslogPriority]
 syslogMask pris = do
   let priMask = orList $ map pri2mask pris
