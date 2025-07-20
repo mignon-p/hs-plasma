@@ -9,16 +9,20 @@ Portability : GHC
 
 module LogTest
   ( testLog
+  , parseLine
   ) where
 
+-- import Control.Applicative
 import Control.Exception
 import Control.Monad
+import qualified Data.Attoparsec.Text     as A
 import Data.Char
 import Data.List
 import qualified Data.Text                as T
 import System.Directory
 import System.IO
 import Test.Tasty.HUnit
+import Text.Printf
 
 import System.Loam.Log
 
@@ -105,3 +109,58 @@ writeLines lvl f = writeLines1 lvl $ map f lns
 
 writeLines1 :: LogLevel -> [T.Text] -> IO ()
 writeLines1 lvl xs = forM_ myCodes $ \c -> forM_ xs (logCode lvl c)
+
+parseLine :: [LogFlag] -> LogCode -> T.Text -> T.Text -> A.Parser ()
+parseLine flags code prog msg = do
+  A.string pfx
+  when (FlgShowProg `elem` flags) $ do
+    A.string prog
+    skipString ": "
+  when (FlgShowPid `elem` flags) $ do
+    A.skipWhile isDigit
+    skipString ": "
+  when (FlgShowTime `elem` flags) $ do
+    parseDateTime
+  when (FlgShowWhere `elem` flags) $ do
+    A.string "LogTest.hs:"
+    A.skipWhile isDigit
+    skipString ": "
+  when (FlgShowCode `elem` flags && code /= 0) $ do
+    let codeStr = printf "%08x" code
+    A.char '<'
+    A.string $ T.pack codeStr
+    skipString "> "
+  when (FlgShowTid `elem` flags) $ do
+    A.string "[t"
+    A.skipWhile isDigit
+    skipString "] "
+  skipString msg
+
+skipString :: T.Text -> A.Parser ()
+skipString = void . A.string
+
+months :: [T.Text]
+months = T.words "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec"
+
+parseDateTime :: A.Parser ()
+parseDateTime = do
+  A.choice $ map A.string months
+  A.skipSpace
+  parseOneOrTwoDigits -- day
+  A.char ','
+  A.skipSpace
+  A.count 4 A.digit   -- year
+  A.skipSpace
+  parseOneOrTwoDigits -- hour
+  A.char ':'
+  A.count 2 A.digit   -- minute
+  A.char ':'
+  A.count 2 A.digit   -- second
+  A.char '.'
+  A.count 2 A.digit   -- hundredths of a second
+  A.skipSpace
+
+parseOneOrTwoDigits :: A.Parser ()
+parseOneOrTwoDigits = do
+  A.digit
+  void $ A.option 'x' A.digit
