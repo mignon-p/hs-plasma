@@ -98,23 +98,38 @@ qcProps = testGroup "QuickCheck tests"
 unitTests :: TestTree
 unitTests = testGroup "HUnit tests"
   [ testCase "YAML slaw IO"               $ testSlawIO
-  , testCase "cityHash64"                 $ testCityHash64
-  , testCase "hash functions"             $ testHash
-  , testCase "hash functions, large data" $ testLargeHash
   , testCase "Merge typeclass"            $ testMerge
   , testCase "time functions"             $ testTime
-  , testCase "pool name validation"       $ testPoolName
-  , testCase "listPools"                  $ testListPools
+  , hashTests
+  , logTests
+  , poolNameTests
+  , poolTests
+  ]
+
+hashTests :: TestTree
+hashTests = testGroup "hash tests"
+  [ testCase "cityHash64"                 $ testCityHash64
+  , testCase "hash functions"             $ testHash
+  , testCase "hash functions, large data" $ testLargeHash
+  ]
+
+poolNameTests :: TestTree
+poolNameTests = testGroup "PoolName tests"
+  [ testCase "pool name validation"       $ testPoolName
+  , testCase "+/ operator"                $ testPlusSlash
+  ]
+
+poolTests :: TestTree
+poolTests = testGroup "pool tests"
+  [ testCase "listPools"                  $ testListPools
   , testCase "fetch"                      $ testFetch
   , testCase "advanceOldest"              $ testAdvanceOldest
   , testCase "probe"                      $ testProbe
   , testCase "seekToTime"                 $ testSeekToTime
   , testCase "pool exists/in use"         $ testExists
   , testCase "changeOptions"              $ testOptions
-  , testCase "+/ operator"                $ testPlusSlash
   , testCase "gang membership"            $ testGangMembership
   , testCase "nextMulti"                  $ testNextMulti
-  , logTests
   ]
 
 logTests :: TestTree
