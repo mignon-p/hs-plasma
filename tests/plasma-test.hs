@@ -114,8 +114,29 @@ unitTests = testGroup "HUnit tests"
   , testCase "+/ operator"                $ testPlusSlash
   , testCase "gang membership"            $ testGangMembership
   , testCase "nextMulti"                  $ testNextMulti
-  , testCase "log" $ testLog [FlgShowTime, FlgShowWhere, FlgShowCode, FlgShowPid, FlgShowProg, FlgShowTid]
+  , logTests
   ]
+
+logTests :: TestTree
+logTests = testGroup "log tests" $ map mkLogCase cases
+  where
+    cases    = concat [ [ ("no flags",  []      ) ]
+                      , map mkLogPair   allFlags
+                      , [ ("all flags", allFlags) ]
+                      ]
+    allFlags = [ FlgShowTime
+               , FlgShowWhere
+               , FlgShowCode
+               , FlgShowPid
+               , FlgShowProg
+               , FlgShowTid
+               ]
+
+mkLogCase :: (TestName, [LogFlag]) -> TestTree
+mkLogCase (name, flags) = testCase name (testLog flags)
+
+mkLogPair :: LogFlag -> (TestName, [LogFlag])
+mkLogPair flag = (show flag, [flag])
 
 rtIoProp :: Slaw -> QC.Property
 rtIoProp s = QC.monadicIO $ do
