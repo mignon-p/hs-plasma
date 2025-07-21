@@ -184,20 +184,30 @@ parseLine flags code prog = do
     skipString ": "
   when (FlgShowTime `elem` flags) $ do
     parseDateTime
-  when (FlgShowWhere `elem` flags) $ do
-    A.string "LogTest.hs:"
-    A.skipWhile isDigit
-    skipString ": "
-  when (FlgShowCode `elem` flags && code /= 0) $ do
-    let codeStr = printf "%08x" code
-    A.char '<'
-    A.string $ T.pack codeStr
-    skipString "> "
+  when (FlgShowWhere        `elem` flags ||
+        (FlgShowCodeOrWhere `elem` flags && code == 0)) $ do
+    parseWhere
+  when ((FlgShowCode        `elem` flags ||
+         FlgShowCodeOrWhere `elem` flags) && code /= 0) $ do
+    parseCode code
   when (FlgShowTid `elem` flags) $ do
     A.string "[t"
     A.skipWhile isDigit
     skipString "] "
   A.takeText
+
+parseWhere :: A.Parser ()
+parseWhere = do
+  A.string "LogTest.hs:"
+  A.skipWhile isDigit
+  skipString ": "
+
+parseCode :: LogCode -> A.Parser ()
+parseCode code = do
+  let codeStr = printf "%08x" code
+  A.char '<'
+  A.string $ T.pack codeStr
+  skipString "> "
 
 skipString :: T.Text -> A.Parser ()
 skipString = void . A.string

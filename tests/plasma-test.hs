@@ -120,17 +120,19 @@ unitTests = testGroup "HUnit tests"
 logTests :: TestTree
 logTests = testGroup "log tests" $ map mkLogCase cases
   where
-    cases    = concat [ [ ("no flags",  []      ) ]
-                      , map mkLogPair   allFlags
-                      , [ ("all flags", allFlags) ]
-                      ]
-    allFlags = [ FlgShowTime
-               , FlgShowWhere
-               , FlgShowCode
-               , FlgShowPid
-               , FlgShowProg
-               , FlgShowTid
-               ]
+    cases     = concat [ [ ("no flags",               []      ) ]
+                       , map mkLogPair                allFlags
+                       , [ ("all of the above flags", allFlags) ]
+                       , map mkLogPair                moreFlags
+                       ]
+    allFlags  = [ FlgShowTime
+                , FlgShowWhere
+                , FlgShowCode
+                , FlgShowPid
+                , FlgShowProg
+                , FlgShowTid
+                ]
+    moreFlags = [ FlgShowCodeOrWhere ]
 
 mkLogCase :: (TestName, [LogFlag]) -> TestTree
 mkLogCase (name, flags) = testCase name (testLog flags)
