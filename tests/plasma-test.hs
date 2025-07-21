@@ -68,9 +68,6 @@ main = withTempDir "pool-" $ \dir -> do
   setIfNotSet "TASTY_COLOR" "always"
   defaultMain tests
 
-tests :: TestTree
-tests = testGroup "Tests" [qcProps, unitTests]
-
 setIfNotSet :: String -> String -> IO ()
 setIfNotSet var val = do
   old <- lookupEnv var
@@ -78,32 +75,31 @@ setIfNotSet var val = do
     Just (_:_) -> return ()
     _          -> setEnv var val
 
-qcProps :: TestTree
-qcProps = testGroup "QuickCheck tests"
+tests :: TestTree
+tests = testGroup "hs-plasma tests"
+  [ testCase "time functions"             $ testTime
+  , randTests
+  , hashTests
+  , yamlTests
+  , logTests
+  , optionTests
+  , poolNameTests
+  , poolTests
+  ]
+
+yamlTests :: TestTree
+yamlTests = testGroup "YAML tests"
   [ QC.testProperty "round-trip IO (yaml)"     $ rtIoProp
   , QC.testProperty "round-trip (yaml string)" $ rtStrProp
-  , QC.testProperty "randInt32 bounds"         $ randInt32Prop
+  , testCase        "YAML slaw IO"             $ testSlawIO
+  ]
+
+randTests :: TestTree
+randTests = testGroup "random number tests"
+  [ QC.testProperty "randInt32 bounds"         $ randInt32Prop
   , QC.testProperty "randFloat64 bounds"       $ randFloat64Prop
   , QC.testProperty "randWord32 repeatability" $ randRep32Prop
   , QC.testProperty "randWord64 repeatability" $ randRep64Prop
-  , QC.testProperty "ParsedPoolUri round-trip" $ poolUriProp
-  , QC.testProperty "ParsedPoolUri validity"   $ uriValidityProp
-  , QC.testProperty "ContextOptions"           $ ctxOptsProp
-  , QC.testProperty "WriteYamlOptions Merge"   $ wyoMergeProp
-  , QC.testProperty "PoolCreateOptions Merge"  $ pcoMergeProp
-  , QC.testProperty "WriteYamlOptions Merge id"  $ wyoMergeIdProp
-  , QC.testProperty "PoolCreateOptions Merge id" $ pcoMergeIdProp
-  ]
-
-unitTests :: TestTree
-unitTests = testGroup "HUnit tests"
-  [ testCase "YAML slaw IO"               $ testSlawIO
-  , testCase "Merge typeclass"            $ testMerge
-  , testCase "time functions"             $ testTime
-  , hashTests
-  , logTests
-  , poolNameTests
-  , poolTests
   ]
 
 hashTests :: TestTree
@@ -113,10 +109,22 @@ hashTests = testGroup "hash tests"
   , testCase "hash functions, large data" $ testLargeHash
   ]
 
+optionTests :: TestTree
+optionTests = testGroup "option tests"
+  [ QC.testProperty "ContextOptions"             $ ctxOptsProp
+  , QC.testProperty "WriteYamlOptions Merge"     $ wyoMergeProp
+  , QC.testProperty "PoolCreateOptions Merge"    $ pcoMergeProp
+  , QC.testProperty "WriteYamlOptions Merge id"  $ wyoMergeIdProp
+  , QC.testProperty "PoolCreateOptions Merge id" $ pcoMergeIdProp
+  , testCase        "Merge typeclass"            $ testMerge
+  ]
+
 poolNameTests :: TestTree
 poolNameTests = testGroup "PoolName tests"
-  [ testCase "pool name validation"       $ testPoolName
-  , testCase "+/ operator"                $ testPlusSlash
+  [ QC.testProperty "ParsedPoolUri round-trip" $ poolUriProp
+  , QC.testProperty "ParsedPoolUri validity"   $ uriValidityProp
+  , testCase        "pool name validation"     $ testPoolName
+  , testCase        "+/ operator"              $ testPlusSlash
   ]
 
 poolTests :: TestTree
