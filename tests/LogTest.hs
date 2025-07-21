@@ -175,9 +175,9 @@ mkFailMsg ctx leftover msg =
 
 parseLine :: [LogFlag] -> LogCode -> T.Text -> A.Parser T.Text
 parseLine flags code prog = do
-  A.string pfx
+  skipString pfx
   when (FlgShowProg `elem` flags) $ do
-    A.string prog
+    skipString prog
     skipString ": "
   when (FlgShowPid `elem` flags) $ do
     A.skipWhile isDigit
@@ -185,20 +185,23 @@ parseLine flags code prog = do
   when (FlgShowTime `elem` flags) $ do
     parseDateTime
   when (FlgShowWhere        `elem` flags ||
+        FlgShowWhereFull    `elem` flags ||
         (FlgShowCodeOrWhere `elem` flags && code == 0)) $ do
-    parseWhere
+    parseWhere flags
   when ((FlgShowCode        `elem` flags ||
          FlgShowCodeOrWhere `elem` flags) && code /= 0) $ do
     parseCode code
   when (FlgShowTid `elem` flags) $ do
-    A.string "[t"
+    skipString "[t"
     A.skipWhile isDigit
     skipString "] "
   A.takeText
 
-parseWhere :: A.Parser ()
-parseWhere = do
-  A.string "LogTest.hs:"
+parseWhere :: [LogFlag] -> A.Parser ()
+parseWhere flags = do
+  when (FlgShowWhereFull `elem` flags) $ do
+    skipString "tests/"
+  skipString "LogTest.hs:"
   A.skipWhile isDigit
   skipString ": "
 
@@ -206,7 +209,7 @@ parseCode :: LogCode -> A.Parser ()
 parseCode code = do
   let codeStr = printf "%08x" code
   A.char '<'
-  A.string $ T.pack codeStr
+  skipString $ T.pack codeStr
   skipString "> "
 
 skipString :: T.Text -> A.Parser ()

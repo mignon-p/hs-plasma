@@ -132,7 +132,9 @@ logTests = testGroup "log tests" $ map mkLogCase cases
                 , FlgShowProg
                 , FlgShowTid
                 ]
-    moreFlags = [ FlgShowCodeOrWhere ]
+    moreFlags = [ FlgShowCodeOrWhere
+                , FlgShowWhereFull
+                ]
 
 mkLogCase :: (TestName, [LogFlag]) -> TestTree
 mkLogCase (name, flags) = testCase name (testLog flags)
