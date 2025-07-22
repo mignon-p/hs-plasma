@@ -5,6 +5,8 @@ Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Hash functions for bytestrings and integers.
 -}
 
 {-# LANGUAGE CPP                        #-}

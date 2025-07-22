@@ -5,6 +5,8 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+A flexible, configurable logging facility.
 -}
 
 module System.Loam.Log
@@ -18,9 +20,9 @@ module System.Loam.Log
   , SyslogFacility     -- opaque type
   , SyslogFlag(..)     -- re-export
     -- * Logging functions
-  , logLoc
   , logCode
   , logMsg
+  , logLoc
   , logExcCodeMsg
   , logExcCode
   , logExcMsg
@@ -209,13 +211,28 @@ mkStaticLevel c name = do
                     , llPtr  = fptr
                     }
 
-lvBug, lvError, lvDeprecation, lvWarn, lvInfo, lvDebug :: LogLevel
-
+-- | A programming error
+lvBug         :: LogLevel
 lvBug         = unsafePerformIO $ mkStaticLevel 'B' "Bug"
+
+-- | An error caused by the user, or something external (file, network)
+lvError       :: LogLevel
 lvError       = unsafePerformIO $ mkStaticLevel 'E' "Error"
+
+-- | A warning about use of a deprecated function
+lvDeprecation :: LogLevel
 lvDeprecation = unsafePerformIO $ mkStaticLevel 'D' "Deprecation"
+
+-- | A warning caused by the user, or something external (file, network)
+lvWarn        :: LogLevel
 lvWarn        = unsafePerformIO $ mkStaticLevel 'W' "Warn"
+
+-- | Information (you might want to know, but you could safely ignore)
+lvInfo        :: LogLevel
 lvInfo        = unsafePerformIO $ mkStaticLevel 'I' "Info"
+
+-- | Debugging (very verbose, normally not printed)
+lvDebug       :: LogLevel
 lvDebug       = unsafePerformIO $ mkStaticLevel 'G' "Debug"
 
 -- | A “code” is a unique 64-bit identifier which indicates which
@@ -255,7 +272,8 @@ data LogDest = DestNone
              | DestOsPath   !AppendMode O.OsPath
              deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 
--- | Represents a syslog facility.
+-- | Represents a syslog facility.  Can be created with
+-- 'facilityFromName'.
 newtype SyslogFacility = SyslogFacility Int32
                        deriving (Eq, Ord)
 
@@ -397,6 +415,9 @@ logInternal
   -> IO ()
 logInternal cs = logInternal0 (fileLineFromCs cs) (prettyCallStack cs)
 
+-- | Like 'logCode', but uses a 'CallStack' passed as an argument,
+-- rather than the current call stack, when determining the file
+-- and line number for 'FlgShowWhere'.
 logLoc
   :: CallStack
   -> LogLevel
@@ -405,6 +426,8 @@ logLoc
   -> IO ()
 logLoc = logInternal
 
+-- | Logs to a given 'LogLevel', using the specified 'LogCode'
+-- and message.
 logCode
   :: HasCallStack
   => LogLevel
@@ -413,6 +436,7 @@ logCode
   -> IO ()
 logCode = logInternal callStack
 
+-- | Like logCode, but passes 0 as the 'LogCode'.
 logMsg
   :: HasCallStack
   => LogLevel
@@ -461,6 +485,8 @@ logExcInternal cs lev code msg exc = do
       excName = tyConName $ typeRepTyCon $ typeOf exc
   logExcInternal0 cs lev code msg se excName
 
+-- | Logs a given 'Exception' to the specified 'LogLevel',
+-- using the specified 'LogCode' and the specified message.
 logExcCodeMsg
   :: (HasCallStack, Exception e)
   => LogLevel
@@ -470,6 +496,8 @@ logExcCodeMsg
   -> IO ()
 logExcCodeMsg = logExcInternal callStack
 
+-- | Like 'logExcCodeMsg', but without any message other than the
+-- exception itself.
 logExcCode
   :: (HasCallStack, Exception e)
   => LogLevel
@@ -478,6 +506,7 @@ logExcCode
   -> IO ()
 logExcCode lev code = logExcInternal callStack lev code LT.empty
 
+-- | Like 'logExcCodeMsg', but the 'LogCode' is 0.
 logExcMsg
   :: (HasCallStack, Exception e)
   => LogLevel
@@ -486,6 +515,7 @@ logExcMsg
   -> IO ()
 logExcMsg lev = logExcInternal callStack lev 0
 
+-- | Like 'logExcCodeMsg', but with neither a 'LogCode' nor a message.
 logExc
   :: (HasCallStack, Exception e)
   => LogLevel
@@ -507,6 +537,12 @@ fmtThread = do
       capSfx    = if locked then ":C" ++ show cap else ""
   return $ pfxChr : (tidStr' ++ capSfx)
 
+-- | Creates a new log level, given the specified name.
+-- The name is used in the 'Show' instance.
+--
+-- Also, the prefix is initially set to the name, followed by
+-- a colon and space.  However, the prefix can be changed
+-- with 'levelSetPrefix'.
 newLogLevel :: HasCallStack => T.Text -> IO LogLevel
 newLogLevel name0 = do
   initialize
@@ -523,6 +559,10 @@ newLogLevel name0 = do
     levelSetPrefix lvl $ name0 <> ": "
   return lvl
 
+-- | Sets the prefix for the 'LogLevel', which is printed at the
+-- beginning of every line for that log level.  No space is
+-- printed after the prefix, so the prefix should probably end
+-- with a space.  (Or possibly a colon and a space.)
 levelSetPrefix :: LogLevel -> T.Text -> IO ()
 levelSetPrefix lev pfx = do
   let bs = T.encodeUtf8 pfx
@@ -530,6 +570,7 @@ levelSetPrefix lev pfx = do
     C.useAsConstCStringLen bs $ \(pfxPtr, pfxLen) -> do
       c_log_level_set_prefix levPtr pfxPtr (fromIntegral pfxLen)
 
+-- | Gets the current prefix for the given 'LogLevel'.
 levelGetPrefix :: LogLevel -> IO T.Text
 levelGetPrefix lev = do
   let bufLen = 32
@@ -539,8 +580,9 @@ levelGetPrefix lev = do
       bs <- B.packCString bufPtr
       return $ T.decodeUtf8With T.lenientDecode bs
 
+-- | Sets and/or clears flags on the given 'LogLevel'.
 levelModifyFlags
-  :: LogLevel
+  :: LogLevel  -- ^ log level to modify
   -> [LogFlag] -- ^ flags to set
   -> [LogFlag] -- ^ flags to clear
   -> IO ()
@@ -551,6 +593,7 @@ levelModifyFlags lev setFlags clearFlags = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     c_log_level_set_flags levPtr setMask allMask
 
+-- | Gets the current flags for the specified 'LogLevel'.
 levelGetFlags :: LogLevel -> IO [LogFlag]
 levelGetFlags lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
@@ -580,6 +623,8 @@ am2c :: AppendMode -> Char
 am2c Append    = 'A'
 am2c Overwrite = 'F'
 
+-- | Configures the given 'LogLevel' to log to the given
+-- 'LogDest' when 'DstFd' is set.
 levelSetDestFile :: HasCallStack => LogLevel -> LogDest -> IO ()
 levelSetDestFile lev dest = do
   let (c, fn) = logDestToBs dest
@@ -592,6 +637,8 @@ levelSetDestFile lev dest = do
       tort <- c_log_level_set_dest levPtr c' fnPtr
       throwRetortCS_ EtOther addn (Retort tort) (Just erl) cs
 
+-- | Configures the given 'LogLevel' to use the given
+-- 'SyslogPriority' when 'DstSyslog' is set.
 levelSetSyslogPriority :: LogLevel -> SyslogPriority -> IO ()
 levelSetSyslogPriority lev pri = do
   let pri' = syslogPriority2int pri
@@ -602,12 +649,17 @@ int2pri :: IM.IntMap SyslogPriority
 int2pri = IM.fromList $ map f [minBound..maxBound]
   where f pri = (fromIntegral (syslogPriority2int pri), pri)
 
+-- | Returns the current 'SyslogPriority' for this 'LogLevel'.
 levelGetSyslogPriority :: LogLevel -> IO SyslogPriority
 levelGetSyslogPriority lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     n <- c_log_level_get_sl_priority levPtr
     return $ IM.findWithDefault LogInfo (fromIntegral n) int2pri
 
+-- | Configures the given 'LogLevel' to use the given
+-- 'SyslogFacility' when 'DstSyslog' is set.
+-- 'Nothing' means to use the facility specified when
+-- 'syslogOpen' was called.
 levelSetSyslogFacility :: LogLevel -> Maybe SyslogFacility -> IO ()
 levelSetSyslogFacility lev fac = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
@@ -617,6 +669,7 @@ mf2i32 :: Maybe SyslogFacility -> Int32
 mf2i32 (Just (SyslogFacility fac)) = fac
 mf2i32 _                           = 0
 
+-- | Returns the current 'SyslogFacility' for this 'LogLevel'.
 levelGetSyslogFacility :: LogLevel -> IO (Maybe SyslogFacility)
 levelGetSyslogFacility lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
