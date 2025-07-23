@@ -38,6 +38,7 @@ module System.Loam.Log
   , newLogLevel
   , levelSetPrefix
   , levelGetPrefix
+  , levelMaxPrefixBytes
   , levelModifyFlags
   , levelGetFlags
   , levelSetDestFile
@@ -127,6 +128,9 @@ foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_set_prefix"
 
 foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_get_prefix"
     c_log_level_get_prefix :: Ptr FgnLogLvl -> CString -> CSize -> IO ()
+
+foreign import capi unsafe "ze-hs-log.h ze_hs_log_level_prefix_length"
+    c_log_level_prefix_length :: CSize
 
 foreign import capi safe "ze-hs-log.h ze_hs_log_level_set_dest"
     c_log_level_set_dest :: Ptr FgnLogLvl -> CChar -> C.ConstCString -> IO Int64
@@ -579,6 +583,12 @@ levelGetPrefix lev = do
       c_log_level_get_prefix levPtr bufPtr (fromIntegral bufLen)
       bs <- B.packCString bufPtr
       return $ T.decodeUtf8With T.lenientDecode bs
+
+-- | The maximum number of UTF-8 bytes allowed in the prefix.
+-- Prefixes longer than this will be truncated.
+levelMaxPrefixBytes :: Int
+levelMaxPrefixBytes =
+  fromIntegral c_log_level_prefix_length - 1   -- account for NUL byte
 
 -- | Sets and/or clears flags on the given 'LogLevel'.
 levelModifyFlags

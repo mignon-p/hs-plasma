@@ -420,3 +420,7 @@ main1 = do
       forM_ members $ \aHose -> do
         putStrLn $ "    " ++ show aHose
       withdrawAll gang
+
+  putStrLn ""
+
+  putStrLn $ show levelMaxPrefixBytes

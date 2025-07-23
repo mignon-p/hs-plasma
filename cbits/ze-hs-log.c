@@ -100,6 +100,11 @@ void ze_hs_log_level_get_prefix (ob_log_level *level,
     my_copy_string (dst, dst_len, level->prefix, sizeof (level->prefix));
 }
 
+size_t ze_hs_log_level_prefix_length (void)
+{
+    return sizeof (OBLV_INFO->prefix);
+}
+
 static int set_output_fd (ob_log_level *lev, int fd)
 {
   int r;
