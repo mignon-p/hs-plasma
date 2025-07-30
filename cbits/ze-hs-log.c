@@ -140,7 +140,7 @@ ob_retort ze_hs_log_level_set_dest (ob_log_level *lev,
         name  = devNull;
         break;
     default:
-        return ZE_HS_INTERNAL_ERROR;
+        return HSPLASMA_INTERNAL_ERROR;
     }
 
     if (fd > -1) {

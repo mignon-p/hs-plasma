@@ -15,12 +15,12 @@ static pool_hose get_hose (ze_hs_hose *zHose, ob_retort *tort_out)
 pool_hose ze_hs_get_hose (ze_hs_hose *zHose, ob_retort *tort_out)
 {
     if (zHose->magic[0] != ZE_HS_HOSE_MAGIC) {
-        *tort_out = ZE_HS_INTERNAL_ERROR;
+        *tort_out = HSPLASMA_INTERNAL_ERROR;
         return NULL;
     }
 
     pool_hose h = zHose->hose;
-    *tort_out = (h ? OB_OK : ZE_HS_ALREADY_CLOSED);
+    *tort_out = (h ? OB_OK : HSPLASMA_ALREADY_CLOSED);
     return h;
 }
 
@@ -153,7 +153,7 @@ protein ze_hs_protein_op (char            op,
     }
 
     protein   p    = NULL;
-    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    ob_retort tort = HSPLASMA_INTERNAL_ERROR;
 
     switch (op) {
     case 'n':
@@ -202,7 +202,7 @@ int64 ze_hs_get_index (char        op,
     }
 
     int64 idx      = -1;
-    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    ob_retort tort = HSPLASMA_INTERNAL_ERROR;
 
     switch (op) {
     case 'n':
@@ -224,7 +224,7 @@ ob_retort ze_hs_seek_op (char        op,
                          ze_hs_hose *zHose,
                          int64       idx)
 {
-    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    ob_retort tort = HSPLASMA_INTERNAL_ERROR;
     pool_hose h    = get_hose (zHose, &tort);
 
     if (!h) {
@@ -248,7 +248,7 @@ ob_retort ze_hs_seek_op (char        op,
         return pool_advance_oldest (h, idx);
     }
 
-    return ZE_HS_INTERNAL_ERROR;
+    return HSPLASMA_INTERNAL_ERROR;
 }
 
 void ze_hs_fetch (ze_hs_hose     *zHose,
@@ -258,7 +258,7 @@ void ze_hs_fetch (ze_hs_hose     *zHose,
                   int64          *oldest_idx_out,
                   int64          *newest_idx_out)
 {
-    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    ob_retort tort = HSPLASMA_INTERNAL_ERROR;
     pool_hose h    = get_hose (zHose, &tort);
     size_t    i;
 
@@ -346,7 +346,7 @@ ob_retort ze_hs_seek_time_op (char        op,
         tc = OB_CLOSEST_HIGHER;
         break;
     default:
-        return ZE_HS_INTERNAL_ERROR;
+        return HSPLASMA_INTERNAL_ERROR;
     }
 
     switch (op) {
@@ -356,7 +356,7 @@ ob_retort ze_hs_seek_time_op (char        op,
         return pool_seekby_time (h, timestamp, tc);
     }
 
-    return ZE_HS_INTERNAL_ERROR;
+    return HSPLASMA_INTERNAL_ERROR;
 }
 
 ob_retort ze_hs_change_options (ze_hs_hose *zHose,
@@ -389,5 +389,5 @@ ob_retort ze_hs_wakeup_op (char        op,
         return pool_hose_wake_up (h);
     }
 
-    return ZE_HS_INTERNAL_ERROR;
+    return HSPLASMA_INTERNAL_ERROR;
 }

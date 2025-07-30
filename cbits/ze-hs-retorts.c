@@ -9,27 +9,27 @@ const char *ze_hs_ioe_error_string (ob_retort err)
         return #x
 
     switch (err) {
-        E (ZE_HS_ALREADY_CLOSED,              "already closed");
-        E (ZE_HS_INTERNAL_ERROR,              "internal error");
-        E (ZE_HS_IOE_ALREADY_EXISTS,          "already exists");
-        E (ZE_HS_IOE_ALREADY_IN_USE,          "resource busy");
-        E (ZE_HS_IOE_DOES_NOT_EXIST,          "does not exist");
-        E (ZE_HS_IOE_EOF,                     "end of file");
-        E (ZE_HS_IOE_FULL,                    "resource exhausted");
-        E (ZE_HS_IOE_HARDWARE_FAULT,          "hardware fault");
-        E (ZE_HS_IOE_ILLEGAL_OPERATION,       "illegal operation");
-        E (ZE_HS_IOE_INAPPROPRIATE_TYPE,      "inappropriate type");
-        E (ZE_HS_IOE_INTERRUPTED,             "interrupted");
-        E (ZE_HS_IOE_INVALID_ARGUMENT,        "invalid argument");
-        E (ZE_HS_IOE_PERMISSION,              "permission denied");
-        E (ZE_HS_IOE_PROTOCOL_ERROR,          "protocol error");
-        E (ZE_HS_IOE_RESOURCE_VANISHED,       "resource vanished");
-        E (ZE_HS_IOE_SYSTEM_ERROR,            "system error");
-        E (ZE_HS_IOE_TIMEOUT,                 "timeout");
-        E (ZE_HS_IOE_UNKNOWN,                 "unspecified error");
-        E (ZE_HS_IOE_UNSATISFIED_CONSTRAINTS, "unsatisfied constraints");
-        E (ZE_HS_IOE_UNSUPPORTED_OPERATION,   "unsupported operation");
-        E (ZE_HS_IOE_USER,                    "user error");
+        E (HSPLASMA_ALREADY_CLOSED,       "already closed");
+        E (HSPLASMA_INTERNAL_ERROR,       "internal error");
+        E (IOERR_ALREADY_EXISTS,          "already exists");
+        E (IOERR_ALREADY_IN_USE,          "resource busy");
+        E (IOERR_DOES_NOT_EXIST,          "does not exist");
+        E (IOERR_EOF,                     "end of file");
+        E (IOERR_FULL,                    "resource exhausted");
+        E (IOERR_HARDWARE_FAULT,          "hardware fault");
+        E (IOERR_ILLEGAL_OPERATION,       "illegal operation");
+        E (IOERR_INAPPROPRIATE_TYPE,      "inappropriate type");
+        E (IOERR_INTERRUPTED,             "interrupted");
+        E (IOERR_INVALID_ARGUMENT,        "invalid argument");
+        E (IOERR_PERMISSION,              "permission denied");
+        E (IOERR_PROTOCOL_ERROR,          "protocol error");
+        E (IOERR_RESOURCE_VANISHED,       "resource vanished");
+        E (IOERR_SYSTEM_ERROR,            "system error");
+        E (IOERR_TIMEOUT,                 "timeout");
+        E (IOERR_UNKNOWN,                 "unspecified error");
+        E (IOERR_UNSATISFIED_CONSTRAINTS, "unsatisfied constraints");
+        E (IOERR_UNSUPPORTED_OPERATION,   "unsupported operation");
+        E (IOERR_USER,                    "user error");
     default:
         return NULL;
     }

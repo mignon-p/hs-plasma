@@ -439,108 +439,108 @@ tortTuples =
     , "A pool was successfully created"
     , Just EtPools
     )
-  , ( ZE_HS_ALREADY_CLOSED
-    , "ZE_HS_ALREADY_CLOSED"
+  , ( HSPLASMA_ALREADY_CLOSED
+    , "HSPLASMA_ALREADY_CLOSED"
     , "already closed"
     , Nothing
     )
-  , ( ZE_HS_INTERNAL_ERROR
-    , "ZE_HS_INTERNAL_ERROR"
+  , ( HSPLASMA_INTERNAL_ERROR
+    , "HSPLASMA_INTERNAL_ERROR"
     , "internal error"
     , Nothing
     )
-  , ( ZE_HS_IOE_ALREADY_EXISTS
-    , "ZE_HS_IOE_ALREADY_EXISTS"
+  , ( IOERR_ALREADY_EXISTS
+    , "IOERR_ALREADY_EXISTS"
     , "already exists"
     , Nothing
     )
-  , ( ZE_HS_IOE_ALREADY_IN_USE
-    , "ZE_HS_IOE_ALREADY_IN_USE"
+  , ( IOERR_ALREADY_IN_USE
+    , "IOERR_ALREADY_IN_USE"
     , "resource busy"
     , Nothing
     )
-  , ( ZE_HS_IOE_DOES_NOT_EXIST
-    , "ZE_HS_IOE_DOES_NOT_EXIST"
+  , ( IOERR_DOES_NOT_EXIST
+    , "IOERR_DOES_NOT_EXIST"
     , "does not exist"
     , Nothing
     )
-  , ( ZE_HS_IOE_EOF
-    , "ZE_HS_IOE_EOF"
+  , ( IOERR_EOF
+    , "IOERR_EOF"
     , "end of file"
     , Nothing
     )
-  , ( ZE_HS_IOE_FULL
-    , "ZE_HS_IOE_FULL"
+  , ( IOERR_FULL
+    , "IOERR_FULL"
     , "resource exhausted"
     , Nothing
     )
-  , ( ZE_HS_IOE_HARDWARE_FAULT
-    , "ZE_HS_IOE_HARDWARE_FAULT"
+  , ( IOERR_HARDWARE_FAULT
+    , "IOERR_HARDWARE_FAULT"
     , "hardware fault"
     , Nothing
     )
-  , ( ZE_HS_IOE_ILLEGAL_OPERATION
-    , "ZE_HS_IOE_ILLEGAL_OPERATION"
+  , ( IOERR_ILLEGAL_OPERATION
+    , "IOERR_ILLEGAL_OPERATION"
     , "illegal operation"
     , Nothing
     )
-  , ( ZE_HS_IOE_INAPPROPRIATE_TYPE
-    , "ZE_HS_IOE_INAPPROPRIATE_TYPE"
+  , ( IOERR_INAPPROPRIATE_TYPE
+    , "IOERR_INAPPROPRIATE_TYPE"
     , "inappropriate type"
     , Nothing
     )
-  , ( ZE_HS_IOE_INTERRUPTED
-    , "ZE_HS_IOE_INTERRUPTED"
+  , ( IOERR_INTERRUPTED
+    , "IOERR_INTERRUPTED"
     , "interrupted"
     , Nothing
     )
-  , ( ZE_HS_IOE_INVALID_ARGUMENT
-    , "ZE_HS_IOE_INVALID_ARGUMENT"
+  , ( IOERR_INVALID_ARGUMENT
+    , "IOERR_INVALID_ARGUMENT"
     , "invalid argument"
     , Nothing
     )
-  , ( ZE_HS_IOE_PERMISSION
-    , "ZE_HS_IOE_PERMISSION"
+  , ( IOERR_PERMISSION
+    , "IOERR_PERMISSION"
     , "permission denied"
     , Nothing
     )
-  , ( ZE_HS_IOE_PROTOCOL_ERROR
-    , "ZE_HS_IOE_PROTOCOL_ERROR"
+  , ( IOERR_PROTOCOL_ERROR
+    , "IOERR_PROTOCOL_ERROR"
     , "protocol error"
     , Nothing
     )
-  , ( ZE_HS_IOE_RESOURCE_VANISHED
-    , "ZE_HS_IOE_RESOURCE_VANISHED"
+  , ( IOERR_RESOURCE_VANISHED
+    , "IOERR_RESOURCE_VANISHED"
     , "resource vanished"
     , Nothing
     )
-  , ( ZE_HS_IOE_SYSTEM_ERROR
-    , "ZE_HS_IOE_SYSTEM_ERROR"
+  , ( IOERR_SYSTEM_ERROR
+    , "IOERR_SYSTEM_ERROR"
     , "system error"
     , Nothing
     )
-  , ( ZE_HS_IOE_TIMEOUT
-    , "ZE_HS_IOE_TIMEOUT"
+  , ( IOERR_TIMEOUT
+    , "IOERR_TIMEOUT"
     , "timeout"
     , Nothing
     )
-  , ( ZE_HS_IOE_UNKNOWN
-    , "ZE_HS_IOE_UNKNOWN"
+  , ( IOERR_UNKNOWN
+    , "IOERR_UNKNOWN"
     , "unspecified error"
     , Nothing
     )
-  , ( ZE_HS_IOE_UNSATISFIED_CONSTRAINTS
-    , "ZE_HS_IOE_UNSATISFIED_CONSTRAINTS"
+  , ( IOERR_UNSATISFIED_CONSTRAINTS
+    , "IOERR_UNSATISFIED_CONSTRAINTS"
     , "unsatisfied constraints"
     , Nothing
     )
-  , ( ZE_HS_IOE_UNSUPPORTED_OPERATION
-    , "ZE_HS_IOE_UNSUPPORTED_OPERATION"
+  , ( IOERR_UNSUPPORTED_OPERATION
+    , "IOERR_UNSUPPORTED_OPERATION"
     , "unsupported operation"
     , Nothing
     )
-  , ( ZE_HS_IOE_USER
-    , "ZE_HS_IOE_USER"
+  , ( IOERR_USER
+    , "IOERR_USER"
     , "user error"
     , Nothing
     )

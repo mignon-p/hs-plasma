@@ -359,26 +359,26 @@ codeFromEt EtPools           = etCode 9
 codeFromEt _                 = etCode 0
 
 codeFromRetort :: Retort -> Maybe Word64
-codeFromRetort ZE_HS_IOE_UNKNOWN                 = Just $ unkIoeCode
-codeFromRetort ZE_HS_IOE_ALREADY_EXISTS          = Just $ ioeCode 0x01
-codeFromRetort ZE_HS_IOE_ALREADY_IN_USE          = Just $ ioeCode 0x02
-codeFromRetort ZE_HS_IOE_DOES_NOT_EXIST          = Just $ ioeCode 0x03
-codeFromRetort ZE_HS_IOE_EOF                     = Just $ ioeCode 0x04
-codeFromRetort ZE_HS_IOE_FULL                    = Just $ ioeCode 0x05
-codeFromRetort ZE_HS_IOE_HARDWARE_FAULT          = Just $ ioeCode 0x06
-codeFromRetort ZE_HS_IOE_ILLEGAL_OPERATION       = Just $ ioeCode 0x07
-codeFromRetort ZE_HS_IOE_INAPPROPRIATE_TYPE      = Just $ ioeCode 0x08
-codeFromRetort ZE_HS_IOE_INTERRUPTED             = Just $ ioeCode 0x09
-codeFromRetort ZE_HS_IOE_INVALID_ARGUMENT        = Just $ ioeCode 0x0a
-codeFromRetort ZE_HS_IOE_PERMISSION              = Just $ ioeCode 0x0b
-codeFromRetort ZE_HS_IOE_PROTOCOL_ERROR          = Just $ ioeCode 0x0c
-codeFromRetort ZE_HS_IOE_RESOURCE_VANISHED       = Just $ ioeCode 0x0d
-codeFromRetort ZE_HS_IOE_SYSTEM_ERROR            = Just $ ioeCode 0x0e
-codeFromRetort ZE_HS_IOE_TIMEOUT                 = Just $ ioeCode 0x0f
-codeFromRetort ZE_HS_IOE_UNSATISFIED_CONSTRAINTS = Just $ ioeCode 0x10
-codeFromRetort ZE_HS_IOE_UNSUPPORTED_OPERATION   = Just $ ioeCode 0x11
-codeFromRetort ZE_HS_IOE_USER                    = Just $ ioeCode 0x12
-codeFromRetort _                                 = Nothing
+codeFromRetort IOERR_UNKNOWN                 = Just $ unkIoeCode
+codeFromRetort IOERR_ALREADY_EXISTS          = Just $ ioeCode 0x01
+codeFromRetort IOERR_ALREADY_IN_USE          = Just $ ioeCode 0x02
+codeFromRetort IOERR_DOES_NOT_EXIST          = Just $ ioeCode 0x03
+codeFromRetort IOERR_EOF                     = Just $ ioeCode 0x04
+codeFromRetort IOERR_FULL                    = Just $ ioeCode 0x05
+codeFromRetort IOERR_HARDWARE_FAULT          = Just $ ioeCode 0x06
+codeFromRetort IOERR_ILLEGAL_OPERATION       = Just $ ioeCode 0x07
+codeFromRetort IOERR_INAPPROPRIATE_TYPE      = Just $ ioeCode 0x08
+codeFromRetort IOERR_INTERRUPTED             = Just $ ioeCode 0x09
+codeFromRetort IOERR_INVALID_ARGUMENT        = Just $ ioeCode 0x0a
+codeFromRetort IOERR_PERMISSION              = Just $ ioeCode 0x0b
+codeFromRetort IOERR_PROTOCOL_ERROR          = Just $ ioeCode 0x0c
+codeFromRetort IOERR_RESOURCE_VANISHED       = Just $ ioeCode 0x0d
+codeFromRetort IOERR_SYSTEM_ERROR            = Just $ ioeCode 0x0e
+codeFromRetort IOERR_TIMEOUT                 = Just $ ioeCode 0x0f
+codeFromRetort IOERR_UNSATISFIED_CONSTRAINTS = Just $ ioeCode 0x10
+codeFromRetort IOERR_UNSUPPORTED_OPERATION   = Just $ ioeCode 0x11
+codeFromRetort IOERR_USER                    = Just $ ioeCode 0x12
+codeFromRetort _                             = Nothing
 
 fileLineFromCs
   :: CallStack

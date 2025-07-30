@@ -286,7 +286,7 @@ yInputReadFunc' yin 'r' bytePtr sizeIn sizeOutPtr = do
 yInputReadFunc' yin 'c' _ _ _ = do
   closeFileReader (yinReader yin)
   return OB_OK
-yInputReadFunc' _ _ _ _ _ = return ZE_HS_INTERNAL_ERROR
+yInputReadFunc' _ _ _ _ _ = return HSPLASMA_INTERNAL_ERROR
 
 makeInputFunc :: YInput -> IO ReadPtr
 makeInputFunc yin = createReadPtr (yInputReadFunc yin)
@@ -334,7 +334,7 @@ yOutputWriteFunc' yout 'c' _ _ = do
     then hClose h
     else hFlush h
   return OB_OK
-yOutputWriteFunc' _ _ _ _ = return ZE_HS_INTERNAL_ERROR
+yOutputWriteFunc' _ _ _ _ = return HSPLASMA_INTERNAL_ERROR
 
 advanceOffset :: Word64 -> YOutOffsets -> YOutOffsets
 advanceOffset !size yoo =

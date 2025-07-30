@@ -12,7 +12,7 @@ static pool_gang get_gang (ze_hs_gang *zGang,
     ze_hs_check_cleanup();
 
     if (zGang->magic[0] != ZE_HS_GANG_MAGIC) {
-        *tort_out = ZE_HS_INTERNAL_ERROR;
+        *tort_out = HSPLASMA_INTERNAL_ERROR;
         return NULL;
     }
 
@@ -98,7 +98,7 @@ ob_retort ze_hs_gang_op (char        op,
     case 'l':
         return pool_leave_gang (g, h);
     default:
-        return ZE_HS_INTERNAL_ERROR;
+        return HSPLASMA_INTERNAL_ERROR;
     }
 }
 
@@ -118,7 +118,7 @@ protein ze_hs_gang_next_op (char            op,
     }
 
     protein   p    = NULL;
-    ob_retort tort = ZE_HS_INTERNAL_ERROR;
+    ob_retort tort = HSPLASMA_INTERNAL_ERROR;
 
     switch (op) {
     case 'n':
@@ -165,6 +165,6 @@ ob_retort ze_hs_gang_misc_op (char            op,
         zGang->gang = NULL;
        return tort;
     default:
-        return ZE_HS_INTERNAL_ERROR;
+        return HSPLASMA_INTERNAL_ERROR;
     }
 }

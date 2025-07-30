@@ -128,7 +128,7 @@ slaw ze_hs_read_input (ze_hs_input *inp,
                        ob_retort   *tort_out,
                        int64       *len_out)
 {
-    ob_retort  tort = ZE_HS_ALREADY_CLOSED;
+    ob_retort  tort = HSPLASMA_ALREADY_CLOSED;
     slaw_input si   = inp->si;
     slaw       ret  = NULL;
 
@@ -170,7 +170,7 @@ void ze_hs_finalize_input (ze_hs_input *inp)
 
 ob_retort ze_hs_write_output (ze_hs_output *out, bslaw s)
 {
-    ob_retort   tort = ZE_HS_ALREADY_CLOSED;
+    ob_retort   tort = HSPLASMA_ALREADY_CLOSED;
     slaw_output so   = out->so;
 
     ze_hs_check_cleanup();

@@ -94,27 +94,27 @@ module System.Loam.Retorts.Constants
   , pattern POOL_TLS_ERROR
   , pattern POOL_NOT_A_GREENHOUSE_SERVER
   , pattern POOL_CREATED
-  , pattern ZE_HS_ALREADY_CLOSED
-  , pattern ZE_HS_INTERNAL_ERROR
-  , pattern ZE_HS_IOE_ALREADY_EXISTS
-  , pattern ZE_HS_IOE_ALREADY_IN_USE
-  , pattern ZE_HS_IOE_DOES_NOT_EXIST
-  , pattern ZE_HS_IOE_EOF
-  , pattern ZE_HS_IOE_FULL
-  , pattern ZE_HS_IOE_HARDWARE_FAULT
-  , pattern ZE_HS_IOE_ILLEGAL_OPERATION
-  , pattern ZE_HS_IOE_INAPPROPRIATE_TYPE
-  , pattern ZE_HS_IOE_INTERRUPTED
-  , pattern ZE_HS_IOE_INVALID_ARGUMENT
-  , pattern ZE_HS_IOE_PERMISSION
-  , pattern ZE_HS_IOE_PROTOCOL_ERROR
-  , pattern ZE_HS_IOE_RESOURCE_VANISHED
-  , pattern ZE_HS_IOE_SYSTEM_ERROR
-  , pattern ZE_HS_IOE_TIMEOUT
-  , pattern ZE_HS_IOE_UNKNOWN
-  , pattern ZE_HS_IOE_UNSATISFIED_CONSTRAINTS
-  , pattern ZE_HS_IOE_UNSUPPORTED_OPERATION
-  , pattern ZE_HS_IOE_USER
+  , pattern HSPLASMA_ALREADY_CLOSED
+  , pattern HSPLASMA_INTERNAL_ERROR
+  , pattern IOERR_ALREADY_EXISTS
+  , pattern IOERR_ALREADY_IN_USE
+  , pattern IOERR_DOES_NOT_EXIST
+  , pattern IOERR_EOF
+  , pattern IOERR_FULL
+  , pattern IOERR_HARDWARE_FAULT
+  , pattern IOERR_ILLEGAL_OPERATION
+  , pattern IOERR_INAPPROPRIATE_TYPE
+  , pattern IOERR_INTERRUPTED
+  , pattern IOERR_INVALID_ARGUMENT
+  , pattern IOERR_PERMISSION
+  , pattern IOERR_PROTOCOL_ERROR
+  , pattern IOERR_RESOURCE_VANISHED
+  , pattern IOERR_SYSTEM_ERROR
+  , pattern IOERR_TIMEOUT
+  , pattern IOERR_UNKNOWN
+  , pattern IOERR_UNSATISFIED_CONSTRAINTS
+  , pattern IOERR_UNSUPPORTED_OPERATION
+  , pattern IOERR_USER
   ) where
 
 import Data.Slaw (Retort(..))
@@ -485,98 +485,98 @@ pattern POOL_CREATED         :: Retort
 pattern POOL_CREATED         =  Retort (#{const POOL_CREATED})
 
 -- | Already closed.
-pattern ZE_HS_ALREADY_CLOSED :: Retort
-pattern ZE_HS_ALREADY_CLOSED =  Retort (#{const ZE_HS_ALREADY_CLOSED})
+pattern HSPLASMA_ALREADY_CLOSED :: Retort
+pattern HSPLASMA_ALREADY_CLOSED =  Retort (#{const HSPLASMA_ALREADY_CLOSED})
 
 -- | Internal error.
-pattern ZE_HS_INTERNAL_ERROR :: Retort
-pattern ZE_HS_INTERNAL_ERROR =  Retort (#{const ZE_HS_INTERNAL_ERROR})
+pattern HSPLASMA_INTERNAL_ERROR :: Retort
+pattern HSPLASMA_INTERNAL_ERROR =  Retort (#{const HSPLASMA_INTERNAL_ERROR})
 
 -- | Already exists.
-pattern ZE_HS_IOE_ALREADY_EXISTS :: Retort
-pattern ZE_HS_IOE_ALREADY_EXISTS =
-  Retort (#{const ZE_HS_IOE_ALREADY_EXISTS})
+pattern IOERR_ALREADY_EXISTS :: Retort
+pattern IOERR_ALREADY_EXISTS =
+  Retort (#{const IOERR_ALREADY_EXISTS})
 
 -- | Resource busy.
-pattern ZE_HS_IOE_ALREADY_IN_USE :: Retort
-pattern ZE_HS_IOE_ALREADY_IN_USE =
-  Retort (#{const ZE_HS_IOE_ALREADY_IN_USE})
+pattern IOERR_ALREADY_IN_USE :: Retort
+pattern IOERR_ALREADY_IN_USE =
+  Retort (#{const IOERR_ALREADY_IN_USE})
 
 -- | Does not exist.
-pattern ZE_HS_IOE_DOES_NOT_EXIST :: Retort
-pattern ZE_HS_IOE_DOES_NOT_EXIST =
-  Retort (#{const ZE_HS_IOE_DOES_NOT_EXIST})
+pattern IOERR_DOES_NOT_EXIST :: Retort
+pattern IOERR_DOES_NOT_EXIST =
+  Retort (#{const IOERR_DOES_NOT_EXIST})
 
 -- | End of file.
-pattern ZE_HS_IOE_EOF        :: Retort
-pattern ZE_HS_IOE_EOF        =  Retort (#{const ZE_HS_IOE_EOF})
+pattern IOERR_EOF        :: Retort
+pattern IOERR_EOF        =  Retort (#{const IOERR_EOF})
 
 -- | Resource exhausted.
-pattern ZE_HS_IOE_FULL       :: Retort
-pattern ZE_HS_IOE_FULL       =  Retort (#{const ZE_HS_IOE_FULL})
+pattern IOERR_FULL       :: Retort
+pattern IOERR_FULL       =  Retort (#{const IOERR_FULL})
 
 -- | Hardware fault.
-pattern ZE_HS_IOE_HARDWARE_FAULT :: Retort
-pattern ZE_HS_IOE_HARDWARE_FAULT =
-  Retort (#{const ZE_HS_IOE_HARDWARE_FAULT})
+pattern IOERR_HARDWARE_FAULT :: Retort
+pattern IOERR_HARDWARE_FAULT =
+  Retort (#{const IOERR_HARDWARE_FAULT})
 
 -- | Illegal operation.
-pattern ZE_HS_IOE_ILLEGAL_OPERATION :: Retort
-pattern ZE_HS_IOE_ILLEGAL_OPERATION =
-  Retort (#{const ZE_HS_IOE_ILLEGAL_OPERATION})
+pattern IOERR_ILLEGAL_OPERATION :: Retort
+pattern IOERR_ILLEGAL_OPERATION =
+  Retort (#{const IOERR_ILLEGAL_OPERATION})
 
 -- | Inappropriate type.
-pattern ZE_HS_IOE_INAPPROPRIATE_TYPE :: Retort
-pattern ZE_HS_IOE_INAPPROPRIATE_TYPE =
-  Retort (#{const ZE_HS_IOE_INAPPROPRIATE_TYPE})
+pattern IOERR_INAPPROPRIATE_TYPE :: Retort
+pattern IOERR_INAPPROPRIATE_TYPE =
+  Retort (#{const IOERR_INAPPROPRIATE_TYPE})
 
 -- | Interrupted.
-pattern ZE_HS_IOE_INTERRUPTED :: Retort
-pattern ZE_HS_IOE_INTERRUPTED =
-  Retort (#{const ZE_HS_IOE_INTERRUPTED})
+pattern IOERR_INTERRUPTED :: Retort
+pattern IOERR_INTERRUPTED =
+  Retort (#{const IOERR_INTERRUPTED})
 
 -- | Invalid argument.
-pattern ZE_HS_IOE_INVALID_ARGUMENT :: Retort
-pattern ZE_HS_IOE_INVALID_ARGUMENT =
-  Retort (#{const ZE_HS_IOE_INVALID_ARGUMENT})
+pattern IOERR_INVALID_ARGUMENT :: Retort
+pattern IOERR_INVALID_ARGUMENT =
+  Retort (#{const IOERR_INVALID_ARGUMENT})
 
 -- | Permission denied.
-pattern ZE_HS_IOE_PERMISSION :: Retort
-pattern ZE_HS_IOE_PERMISSION =  Retort (#{const ZE_HS_IOE_PERMISSION})
+pattern IOERR_PERMISSION :: Retort
+pattern IOERR_PERMISSION =  Retort (#{const IOERR_PERMISSION})
 
 -- | Protocol error.
-pattern ZE_HS_IOE_PROTOCOL_ERROR :: Retort
-pattern ZE_HS_IOE_PROTOCOL_ERROR =
-  Retort (#{const ZE_HS_IOE_PROTOCOL_ERROR})
+pattern IOERR_PROTOCOL_ERROR :: Retort
+pattern IOERR_PROTOCOL_ERROR =
+  Retort (#{const IOERR_PROTOCOL_ERROR})
 
 -- | Resource vanished.
-pattern ZE_HS_IOE_RESOURCE_VANISHED :: Retort
-pattern ZE_HS_IOE_RESOURCE_VANISHED =
-  Retort (#{const ZE_HS_IOE_RESOURCE_VANISHED})
+pattern IOERR_RESOURCE_VANISHED :: Retort
+pattern IOERR_RESOURCE_VANISHED =
+  Retort (#{const IOERR_RESOURCE_VANISHED})
 
 -- | System error.
-pattern ZE_HS_IOE_SYSTEM_ERROR :: Retort
-pattern ZE_HS_IOE_SYSTEM_ERROR =
-  Retort (#{const ZE_HS_IOE_SYSTEM_ERROR})
+pattern IOERR_SYSTEM_ERROR :: Retort
+pattern IOERR_SYSTEM_ERROR =
+  Retort (#{const IOERR_SYSTEM_ERROR})
 
 -- | Timeout.
-pattern ZE_HS_IOE_TIMEOUT    :: Retort
-pattern ZE_HS_IOE_TIMEOUT    =  Retort (#{const ZE_HS_IOE_TIMEOUT})
+pattern IOERR_TIMEOUT    :: Retort
+pattern IOERR_TIMEOUT    =  Retort (#{const IOERR_TIMEOUT})
 
 -- | Unspecified error.
-pattern ZE_HS_IOE_UNKNOWN    :: Retort
-pattern ZE_HS_IOE_UNKNOWN    =  Retort (#{const ZE_HS_IOE_UNKNOWN})
+pattern IOERR_UNKNOWN    :: Retort
+pattern IOERR_UNKNOWN    =  Retort (#{const IOERR_UNKNOWN})
 
 -- | Unsatisfied constraints.
-pattern ZE_HS_IOE_UNSATISFIED_CONSTRAINTS :: Retort
-pattern ZE_HS_IOE_UNSATISFIED_CONSTRAINTS =
-  Retort (#{const ZE_HS_IOE_UNSATISFIED_CONSTRAINTS})
+pattern IOERR_UNSATISFIED_CONSTRAINTS :: Retort
+pattern IOERR_UNSATISFIED_CONSTRAINTS =
+  Retort (#{const IOERR_UNSATISFIED_CONSTRAINTS})
 
 -- | Unsupported operation.
-pattern ZE_HS_IOE_UNSUPPORTED_OPERATION :: Retort
-pattern ZE_HS_IOE_UNSUPPORTED_OPERATION =
-  Retort (#{const ZE_HS_IOE_UNSUPPORTED_OPERATION})
+pattern IOERR_UNSUPPORTED_OPERATION :: Retort
+pattern IOERR_UNSUPPORTED_OPERATION =
+  Retort (#{const IOERR_UNSUPPORTED_OPERATION})
 
 -- | User error.
-pattern ZE_HS_IOE_USER       :: Retort
-pattern ZE_HS_IOE_USER       =  Retort (#{const ZE_HS_IOE_USER})
+pattern IOERR_USER       :: Retort
+pattern IOERR_USER       =  Retort (#{const IOERR_USER})
