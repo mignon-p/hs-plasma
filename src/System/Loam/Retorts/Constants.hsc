@@ -1,7 +1,7 @@
 {-|
 Module      : System.Loam.Retorts.Constants
 Description : Constants from ob-retorts.h and plasma-retorts.h
-Copyright   : © Mignon Pelletier, 2024
+Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
@@ -486,39 +486,37 @@ pattern POOL_CREATED         =  Retort (#{const POOL_CREATED})
 
 -- | Already closed.
 pattern HSPLASMA_ALREADY_CLOSED :: Retort
-pattern HSPLASMA_ALREADY_CLOSED =  Retort (#{const HSPLASMA_ALREADY_CLOSED})
+pattern HSPLASMA_ALREADY_CLOSED =
+  Retort (#{const HSPLASMA_ALREADY_CLOSED})
 
 -- | Internal error.
 pattern HSPLASMA_INTERNAL_ERROR :: Retort
-pattern HSPLASMA_INTERNAL_ERROR =  Retort (#{const HSPLASMA_INTERNAL_ERROR})
+pattern HSPLASMA_INTERNAL_ERROR =
+  Retort (#{const HSPLASMA_INTERNAL_ERROR})
 
 -- | Already exists.
 pattern IOERR_ALREADY_EXISTS :: Retort
-pattern IOERR_ALREADY_EXISTS =
-  Retort (#{const IOERR_ALREADY_EXISTS})
+pattern IOERR_ALREADY_EXISTS =  Retort (#{const IOERR_ALREADY_EXISTS})
 
 -- | Resource busy.
 pattern IOERR_ALREADY_IN_USE :: Retort
-pattern IOERR_ALREADY_IN_USE =
-  Retort (#{const IOERR_ALREADY_IN_USE})
+pattern IOERR_ALREADY_IN_USE =  Retort (#{const IOERR_ALREADY_IN_USE})
 
 -- | Does not exist.
 pattern IOERR_DOES_NOT_EXIST :: Retort
-pattern IOERR_DOES_NOT_EXIST =
-  Retort (#{const IOERR_DOES_NOT_EXIST})
+pattern IOERR_DOES_NOT_EXIST =  Retort (#{const IOERR_DOES_NOT_EXIST})
 
 -- | End of file.
-pattern IOERR_EOF        :: Retort
-pattern IOERR_EOF        =  Retort (#{const IOERR_EOF})
+pattern IOERR_EOF            :: Retort
+pattern IOERR_EOF            =  Retort (#{const IOERR_EOF})
 
 -- | Resource exhausted.
-pattern IOERR_FULL       :: Retort
-pattern IOERR_FULL       =  Retort (#{const IOERR_FULL})
+pattern IOERR_FULL           :: Retort
+pattern IOERR_FULL           =  Retort (#{const IOERR_FULL})
 
 -- | Hardware fault.
 pattern IOERR_HARDWARE_FAULT :: Retort
-pattern IOERR_HARDWARE_FAULT =
-  Retort (#{const IOERR_HARDWARE_FAULT})
+pattern IOERR_HARDWARE_FAULT =  Retort (#{const IOERR_HARDWARE_FAULT})
 
 -- | Illegal operation.
 pattern IOERR_ILLEGAL_OPERATION :: Retort
@@ -531,9 +529,8 @@ pattern IOERR_INAPPROPRIATE_TYPE =
   Retort (#{const IOERR_INAPPROPRIATE_TYPE})
 
 -- | Interrupted.
-pattern IOERR_INTERRUPTED :: Retort
-pattern IOERR_INTERRUPTED =
-  Retort (#{const IOERR_INTERRUPTED})
+pattern IOERR_INTERRUPTED    :: Retort
+pattern IOERR_INTERRUPTED    =  Retort (#{const IOERR_INTERRUPTED})
 
 -- | Invalid argument.
 pattern IOERR_INVALID_ARGUMENT :: Retort
@@ -541,13 +538,12 @@ pattern IOERR_INVALID_ARGUMENT =
   Retort (#{const IOERR_INVALID_ARGUMENT})
 
 -- | Permission denied.
-pattern IOERR_PERMISSION :: Retort
-pattern IOERR_PERMISSION =  Retort (#{const IOERR_PERMISSION})
+pattern IOERR_PERMISSION     :: Retort
+pattern IOERR_PERMISSION     =  Retort (#{const IOERR_PERMISSION})
 
 -- | Protocol error.
 pattern IOERR_PROTOCOL_ERROR :: Retort
-pattern IOERR_PROTOCOL_ERROR =
-  Retort (#{const IOERR_PROTOCOL_ERROR})
+pattern IOERR_PROTOCOL_ERROR =  Retort (#{const IOERR_PROTOCOL_ERROR})
 
 -- | Resource vanished.
 pattern IOERR_RESOURCE_VANISHED :: Retort
@@ -555,17 +551,16 @@ pattern IOERR_RESOURCE_VANISHED =
   Retort (#{const IOERR_RESOURCE_VANISHED})
 
 -- | System error.
-pattern IOERR_SYSTEM_ERROR :: Retort
-pattern IOERR_SYSTEM_ERROR =
-  Retort (#{const IOERR_SYSTEM_ERROR})
+pattern IOERR_SYSTEM_ERROR   :: Retort
+pattern IOERR_SYSTEM_ERROR   =  Retort (#{const IOERR_SYSTEM_ERROR})
 
 -- | Timeout.
-pattern IOERR_TIMEOUT    :: Retort
-pattern IOERR_TIMEOUT    =  Retort (#{const IOERR_TIMEOUT})
+pattern IOERR_TIMEOUT        :: Retort
+pattern IOERR_TIMEOUT        =  Retort (#{const IOERR_TIMEOUT})
 
 -- | Unspecified error.
-pattern IOERR_UNKNOWN    :: Retort
-pattern IOERR_UNKNOWN    =  Retort (#{const IOERR_UNKNOWN})
+pattern IOERR_UNKNOWN        :: Retort
+pattern IOERR_UNKNOWN        =  Retort (#{const IOERR_UNKNOWN})
 
 -- | Unsatisfied constraints.
 pattern IOERR_UNSATISFIED_CONSTRAINTS :: Retort
@@ -578,5 +573,5 @@ pattern IOERR_UNSUPPORTED_OPERATION =
   Retort (#{const IOERR_UNSUPPORTED_OPERATION})
 
 -- | User error.
-pattern IOERR_USER       :: Retort
-pattern IOERR_USER       =  Retort (#{const IOERR_USER})
+pattern IOERR_USER           :: Retort
+pattern IOERR_USER           =  Retort (#{const IOERR_USER})

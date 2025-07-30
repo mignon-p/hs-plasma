@@ -1,7 +1,7 @@
 {-|
 Module      : System.Loam.Retorts.Internal.Descriptions
 Description : Descriptions from ob-retorts.h and plasma-retorts.h
-Copyright   : © Mignon Pelletier, 2024
+Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
