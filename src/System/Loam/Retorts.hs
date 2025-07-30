@@ -5,6 +5,28 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Success and failure codes in libPlasma are indicated with a 'Retort',
+which is a signed 64-bit integer.  Failure codes are indicated with
+negative 'Retort's, and success is indicated with nonnegative
+'Retort's.  The canonical success value is
+'System.Loam.Retorts.Constants.OB_OK', with the numerical value 0, but
+it is possible to define other, positive, success codes, which convey
+additional information.  But failure codes are where most of the
+action is.
+
+In order to make it easy to print user-friendly error messages,
+it's possible to convert a 'Retort' into a string, using the
+function 'getRetortInfo'.
+
+Constants for specific 'Retort' values are available in
+"System.Loam.Retorts.Constants" in the form of pattern synonyms.
+
+The exception 'PlasmaException' can be thrown by @hs-slaw@ and
+@hs-plasma@ functions to indicate a failure.  'PlasmaException'
+can optionally contain a 'Retort' if the error originated in C
+code.  Most of the time, 'peRetort' will be 'Nothing' if the
+error originated in Haskell code.
 -}
 
 module System.Loam.Retorts
@@ -102,7 +124,7 @@ getRetortString r = do
     else return txt
 
 -- | Given a 'Retort', returns a 'RetortInfo' that describes the
--- 'Retort'.  For unknown returns, returns a 'RetortInfo' where the
+-- 'Retort'.  For unknown retorts, returns a 'RetortInfo' where the
 -- 'riName' contains the numeric value of the retort, and 'riDesc'
 -- is the empty string, and 'riType' is 'Nothing'.
 getRetortInfo :: Retort -> IO RetortInfo

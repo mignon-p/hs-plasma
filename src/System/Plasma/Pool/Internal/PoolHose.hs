@@ -612,7 +612,7 @@ advanceOldest h idx = do
   return $ tort == OB_OK
 
 -- | Executes the specified 'FetchOp's.  Returns a list of
--- 'FetchResults', where each 'FetchResult' corresponds to
+-- 'FetchResult's, where each 'FetchResult' corresponds to
 -- one 'FetchOp' in the query, in order.
 --
 -- Also returns a pair of (oldest, newest) indicating the
@@ -726,15 +726,15 @@ keyForIndex idx
 
 -- | Returns a protein with information about a pool.
 -- (Therefore, the most useful return types would be 'Slaw',
--- 'Protein', or 'PoolInfo'.)
+-- 'Protein', or 'System.Plasma.Pool.PoolInfo'.)
 --
 -- The returned protein should always include an ingest @type@, which
 -- is a string naming the pool type, and @terminal@, which is a
 -- boolean which is true if this is a terminal pool type like @mmap@,
 -- or false if this is a transport pool type like @tcp@.
 --
--- If @hops@ is 'Just 0', means return information about this pool
--- hose.  If @hops@ is 'Just 1', means return information about the
+-- If @hops@ is @Just 0@, means return information about this pool
+-- hose.  If @hops@ is @Just 1@, means return information about the
 -- pool beyond this hose (assuming this hose is a nonterminal type
 -- like TCP).  And higher values of @hops@ mean go further down the
 -- line, if multiple nonterminal types are chained together.  If

@@ -9,8 +9,8 @@ Portability : GHC
 Functions for getting information about the current system.  You can
 get things like the g-speak version number and the yobuild version
 number (neither of which mean anything in the current state that
-Zeugma is in).  You can also get things like the OS version, compiler
-version, and CPU model.
+libPlasma is in).  You can also get things like the OS version,
+compiler version, and CPU model.
 -}
 
 module System.Loam.Version

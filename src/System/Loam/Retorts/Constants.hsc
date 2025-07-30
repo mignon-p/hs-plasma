@@ -5,6 +5,8 @@ Copyright   : © Mignon Pelletier, 2024
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
+
+Pattern synonyms for specific 'Retort' values.
 -}
 
 {-# LANGUAGE PatternSynonyms            #-}
