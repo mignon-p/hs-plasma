@@ -12,7 +12,8 @@ Pattern synonyms for specific 'Retort' values.
 {-# LANGUAGE PatternSynonyms            #-}
 
 module System.Loam.Retorts.Constants
-  ( pattern OB_OK
+  ( -- * General retorts
+    pattern OB_OK
   , pattern OB_NO_MEM
   , pattern OB_BAD_INDEX
   , pattern OB_ARGUMENT_WAS_NULL
@@ -31,6 +32,7 @@ module System.Loam.Retorts.Constants
   , pattern OB_YES
   , pattern OB_NO
   , pattern OB_BOUNCE
+    -- * Slaw retorts
   , pattern SLAW_CORRUPT_PROTEIN
   , pattern SLAW_CORRUPT_SLAW
   , pattern SLAW_FABRICATOR_BADNESS
@@ -47,6 +49,7 @@ module System.Loam.Retorts.Constants
   , pattern SLAW_WRONG_VERSION
   , pattern SLAW_YAML_ERR
   , pattern SLAW_NO_YAML
+    -- * Pool retorts
   , pattern POOL_NO_POOLS_DIR
   , pattern POOL_FILE_BADTH
   , pattern POOL_NULL_HOSE
@@ -94,8 +97,14 @@ module System.Loam.Retorts.Constants
   , pattern POOL_TLS_ERROR
   , pattern POOL_NOT_A_GREENHOUSE_SERVER
   , pattern POOL_CREATED
+    -- * hs-plasma retorts
+    --
+    -- | Retorts that are specific to @hs-plasma@.
   , pattern HSPLASMA_ALREADY_CLOSED
   , pattern HSPLASMA_INTERNAL_ERROR
+    -- * IOError retorts
+    --
+    -- | Retorts that encapsulate a Haskell 'System.IO.Error.IOError'.
   , pattern IOERR_ALREADY_EXISTS
   , pattern IOERR_ALREADY_IN_USE
   , pattern IOERR_DOES_NOT_EXIST
