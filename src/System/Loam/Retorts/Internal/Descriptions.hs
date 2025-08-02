@@ -428,12 +428,6 @@ tortTuples =
     , "Something went wrong with TLS... not very specific"
     , Just EtPools
     )
-  , ( POOL_NOT_A_GREENHOUSE_SERVER
-    , "POOL_NOT_A_GREENHOUSE_SERVER"
-    , "Greenhouse-enabled client tried to connect to non-Greenhouse \
-      \server"
-    , Just EtPools
-    )
   , ( POOL_CREATED
     , "POOL_CREATED"
     , "A pool was successfully created"

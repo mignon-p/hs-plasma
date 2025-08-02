@@ -95,7 +95,6 @@ module System.Loam.Retorts.Constants
   , pattern POOL_NO_TLS
   , pattern POOL_TLS_REQUIRED
   , pattern POOL_TLS_ERROR
-  , pattern POOL_NOT_A_GREENHOUSE_SERVER
   , pattern POOL_CREATED
     -- * hs-plasma retorts
     --
@@ -506,12 +505,6 @@ pattern POOL_TLS_REQUIRED    =  Retort (#{const POOL_TLS_REQUIRED})
 -- very specific.
 pattern POOL_TLS_ERROR       :: Retort
 pattern POOL_TLS_ERROR       =  Retort (#{const POOL_TLS_ERROR})
-
--- | __Failure code:__ Greenhouse-enabled client tried to
--- connect to non-Greenhouse server.
-pattern POOL_NOT_A_GREENHOUSE_SERVER :: Retort
-pattern POOL_NOT_A_GREENHOUSE_SERVER =
-  Retort (#{const POOL_NOT_A_GREENHOUSE_SERVER})
 
 -- | __Success code:__ A pool was successfully created.
 pattern POOL_CREATED         :: Retort
