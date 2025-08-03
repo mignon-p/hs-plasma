@@ -109,7 +109,7 @@ parseTime txt = do
 loamTimeToPosixTime :: LoamTime -> POSIXTime
 loamTimeToPosixTime = realToFrac
 
--- | Convert 'LoamTime' to 'UTCTime'.
+-- | Convert 'LoamTime' to t'UTCTime'.
 loamTimeToUtcTime :: LoamTime -> UTCTime
 loamTimeToUtcTime = posixSecondsToUTCTime . loamTimeToPosixTime
 
@@ -117,7 +117,7 @@ loamTimeToUtcTime = posixSecondsToUTCTime . loamTimeToPosixTime
 posixTimeToLoamTime :: POSIXTime -> LoamTime
 posixTimeToLoamTime = realToFrac
 
--- | Convert 'UTCTime' to 'LoamTime'.
+-- | Convert t'UTCTime' to 'LoamTime'.
 utcTimeToLoamTime :: UTCTime -> LoamTime
 utcTimeToLoamTime = posixTimeToLoamTime . utcTimeToPOSIXSeconds
 

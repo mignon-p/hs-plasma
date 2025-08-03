@@ -6,25 +6,25 @@ License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
 
-Success and failure codes in libPlasma are indicated with a 'Retort',
+Success and failure codes in libPlasma are indicated with a t'Retort',
 which is a signed 64-bit integer.  Failure codes are indicated with
-negative 'Retort's, and success is indicated with nonnegative
-'Retort's.  The canonical success value is
+negative t'Retort's, and success is indicated with nonnegative
+t'Retort's.  The canonical success value is
 'System.Loam.Retorts.Constants.OB_OK', with the numerical value 0, but
 it is possible to define other, positive, success codes, which convey
 additional information.  But failure codes are where most of the
 action is.
 
 In order to make it easy to print user-friendly error messages,
-it's possible to convert a 'Retort' into a string, using the
+it's possible to convert a t'Retort' into a string, using the
 function 'getRetortInfo'.
 
-Constants for specific 'Retort' values are available in
+Constants for specific t'Retort' values are available in
 "System.Loam.Retorts.Constants" in the form of pattern synonyms.
 
-The exception 'PlasmaException' can be thrown by @hs-slaw@ and
-@hs-plasma@ functions to indicate a failure.  'PlasmaException'
-can optionally contain a 'Retort' if the error originated in C
+The exception t'PlasmaException' can be thrown by @hs-slaw@ and
+@hs-plasma@ functions to indicate a failure.  t'PlasmaException'
+can optionally contain a t'Retort' if the error originated in C
 code.  Most of the time, 'peRetort' will be 'Nothing' if the
 error originated in Haskell code.
 -}
@@ -83,7 +83,7 @@ foreign import capi "libLoam/c/ob-retorts.h ob_error_string_literal"
 foreign import capi unsafe "libLoam/c/ob-retorts.h ob_retort_to_errno"
     c_retort_to_errno :: Int64 -> CInt
 
--- | Information about a particular 'Retort'.  Can be retrieved
+-- | Information about a particular t'Retort'.  Can be retrieved
 -- with 'getRetortInfo'.
 data RetortInfo = RetortInfo
   { riName :: T.Text
@@ -123,8 +123,8 @@ getRetortString r = do
     then return $ T.pack $ "Retort " ++ show (unRetort r)
     else return txt
 
--- | Given a 'Retort', returns a 'RetortInfo' that describes the
--- 'Retort'.  For unknown retorts, returns a 'RetortInfo' where the
+-- | Given a t'Retort', returns a t'RetortInfo' that describes the
+-- t'Retort'.  For unknown retorts, returns a t'RetortInfo' where the
 -- 'riName' contains the numeric value of the retort, and 'riDesc'
 -- is the empty string, and 'riType' is 'Nothing'.
 getRetortInfo :: Retort -> IO RetortInfo
@@ -149,8 +149,8 @@ isFailure :: Retort -> Bool
 isFailure (Retort r) = r < 0
 
 {-# INLINABLE retortToErrno #-}
--- | Tests whether the 'Retort' encapsulates an @errno@ value from
--- the C library.  If it is, returns the 'Errno'.  If not, returns
+-- | Tests whether the t'Retort' encapsulates an @errno@ value from
+-- the C library.  If it is, returns the t'Errno'.  If not, returns
 -- 'Nothing'.
 retortToErrno :: Retort -> Maybe Errno
 retortToErrno (Retort r) =
@@ -159,7 +159,7 @@ retortToErrno (Retort r) =
      then Just (Errno eno)
      else Nothing
 
--- | Convert a 'Retort' into a 'PlasmaException'.
+-- | Convert a t'Retort' into a t'PlasmaException'.
 retortToPlasmaException
   :: PlasmaExceptionType
   -- ^ Default exception type; used if 'riType' is 'Nothing'.
@@ -168,7 +168,7 @@ retortToPlasmaException
   -- ^ Optionally, additional information about the error, such as
   -- the function it occurred in.
   -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -- ^ The t'Retort' to be converted to a t'PlasmaException'.
   -> Maybe ErrLocation
   -- ^ Optionally, the file or pool associated with the error.
   -> IO PlasmaException
@@ -188,13 +188,13 @@ retortToPlasmaException et addn r erl = do
                , peLocation = erl
                }
 
--- | Given a 'Retort', throws an exception if the retort is a
+-- | Given a t'Retort', throws an exception if the retort is a
 -- failure code (i. e. negative numerical value).  Returns normally
 -- if the retort is a success code.
 --
 -- If the retort encapsulates an @errno@ from the standard C
 -- library, throws an 'IOException'.  For any other failure
--- retort, throws a 'PlasmaException'.
+-- retort, throws a t'PlasmaException'.
 throwRetort_
   :: HasCallStack
   => PlasmaExceptionType
@@ -204,7 +204,7 @@ throwRetort_
   -- ^ Optionally, additional information about the error, such as
   -- the function it occurred in.
   -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -- ^ The t'Retort' to be converted to a t'PlasmaException'.
   -> Maybe ErrLocation
   -- ^ Optionally, the file or pool associated with the error.
   -> IO ()
@@ -221,7 +221,7 @@ throwRetortCS_
   -- ^ Optionally, additional information about the error, such as
   -- the function it occurred in.
   -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -- ^ The t'Retort' to be converted to a t'PlasmaException'.
   -> Maybe ErrLocation
   -- ^ Optionally, the file or pool associated with the error.
   -> CallStack
@@ -243,7 +243,7 @@ throwRetort
   -- ^ Optionally, additional information about the error, such as
   -- the function it occurred in.
   -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -- ^ The t'Retort' to be converted to a t'PlasmaException'.
   -> Maybe ErrLocation
   -- ^ Optionally, the file or pool associated with the error.
   -> IO Retort
@@ -260,7 +260,7 @@ throwRetortCS
   -- ^ Optionally, additional information about the error, such as
   -- the function it occurred in.
   -> Retort
-  -- ^ The 'Retort' to be converted to a 'PlasmaException'.
+  -- ^ The t'Retort' to be converted to a t'PlasmaException'.
   -> Maybe ErrLocation
   -- ^ Optionally, the file or pool associated with the error.
   -> CallStack

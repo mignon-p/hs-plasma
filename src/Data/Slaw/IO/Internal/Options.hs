@@ -60,7 +60,7 @@ import Data.Slaw.Util
 
 -- | Represents either a string or an integer.
 -- Used for representing user and group IDs in either string or
--- numeric form in 'PoolCreateOptions'.
+-- numeric form in t'PoolCreateOptions'.
 data StrOrInt = StringValue  !T.Text
               | NumericValue !Integer
               deriving (Eq, Ord, Show, Read, Generic, NFData, Hashable)

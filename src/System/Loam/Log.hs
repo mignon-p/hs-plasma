@@ -430,7 +430,7 @@ logLoc
   -> IO ()
 logLoc = logInternal
 
--- | Logs to a given 'LogLevel', using the specified 'LogCode'
+-- | Logs to a given t'LogLevel', using the specified 'LogCode'
 -- and message.
 logCode
   :: HasCallStack
@@ -489,7 +489,7 @@ logExcInternal cs lev code msg exc = do
       excName = tyConName $ typeRepTyCon $ typeOf exc
   logExcInternal0 cs lev code msg se excName
 
--- | Logs a given 'Exception' to the specified 'LogLevel',
+-- | Logs a given 'Exception' to the specified t'LogLevel',
 -- using the specified 'LogCode' and the specified message.
 logExcCodeMsg
   :: (HasCallStack, Exception e)
@@ -563,7 +563,7 @@ newLogLevel name0 = do
     levelSetPrefix lvl $ name0 <> ": "
   return lvl
 
--- | Sets the prefix for the 'LogLevel', which is printed at the
+-- | Sets the prefix for the t'LogLevel', which is printed at the
 -- beginning of every line for that log level.  No space is
 -- printed after the prefix, so the prefix should probably end
 -- with a space.  (Or possibly a colon and a space.)
@@ -574,7 +574,7 @@ levelSetPrefix lev pfx = do
     C.useAsConstCStringLen bs $ \(pfxPtr, pfxLen) -> do
       c_log_level_set_prefix levPtr pfxPtr (fromIntegral pfxLen)
 
--- | Gets the current prefix for the given 'LogLevel'.
+-- | Gets the current prefix for the given t'LogLevel'.
 levelGetPrefix :: LogLevel -> IO T.Text
 levelGetPrefix lev = do
   let bufLen = 32
@@ -590,7 +590,7 @@ levelMaxPrefixBytes :: Int
 levelMaxPrefixBytes =
   fromIntegral c_log_level_prefix_length - 1   -- account for NUL byte
 
--- | Sets and/or clears flags on the given 'LogLevel'.
+-- | Sets and/or clears flags on the given t'LogLevel'.
 levelModifyFlags
   :: LogLevel  -- ^ log level to modify
   -> [LogFlag] -- ^ flags to set
@@ -603,7 +603,7 @@ levelModifyFlags lev setFlags clearFlags = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     c_log_level_set_flags levPtr setMask allMask
 
--- | Gets the current flags for the specified 'LogLevel'.
+-- | Gets the current flags for the specified t'LogLevel'.
 levelGetFlags :: LogLevel -> IO [LogFlag]
 levelGetFlags lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
@@ -633,7 +633,7 @@ am2c :: AppendMode -> Char
 am2c Append    = 'A'
 am2c Overwrite = 'F'
 
--- | Configures the given 'LogLevel' to log to the given
+-- | Configures the given t'LogLevel' to log to the given
 -- 'LogDest' when 'DstFd' is set.
 levelSetDestFile :: HasCallStack => LogLevel -> LogDest -> IO ()
 levelSetDestFile lev dest = do
@@ -647,7 +647,7 @@ levelSetDestFile lev dest = do
       tort <- c_log_level_set_dest levPtr c' fnPtr
       throwRetortCS_ EtOther addn (Retort tort) (Just erl) cs
 
--- | Configures the given 'LogLevel' to use the given
+-- | Configures the given t'LogLevel' to use the given
 -- 'SyslogPriority' when 'DstSyslog' is set.
 levelSetSyslogPriority :: LogLevel -> SyslogPriority -> IO ()
 levelSetSyslogPriority lev pri = do
@@ -659,15 +659,15 @@ int2pri :: IM.IntMap SyslogPriority
 int2pri = IM.fromList $ map f [minBound..maxBound]
   where f pri = (fromIntegral (syslogPriority2int pri), pri)
 
--- | Returns the current 'SyslogPriority' for this 'LogLevel'.
+-- | Returns the current 'SyslogPriority' for this t'LogLevel'.
 levelGetSyslogPriority :: LogLevel -> IO SyslogPriority
 levelGetSyslogPriority lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do
     n <- c_log_level_get_sl_priority levPtr
     return $ IM.findWithDefault LogInfo (fromIntegral n) int2pri
 
--- | Configures the given 'LogLevel' to use the given
--- 'SyslogFacility' when 'DstSyslog' is set.
+-- | Configures the given t'LogLevel' to use the given
+-- t'SyslogFacility' when 'DstSyslog' is set.
 -- 'Nothing' means to use the facility specified when
 -- 'syslogOpen' was called.
 levelSetSyslogFacility :: LogLevel -> Maybe SyslogFacility -> IO ()
@@ -679,7 +679,7 @@ mf2i32 :: Maybe SyslogFacility -> Int32
 mf2i32 (Just (SyslogFacility fac)) = fac
 mf2i32 _                           = 0
 
--- | Returns the current 'SyslogFacility' for this 'LogLevel'.
+-- | Returns the current t'SyslogFacility' for this t'LogLevel'.
 levelGetSyslogFacility :: LogLevel -> IO (Maybe SyslogFacility)
 levelGetSyslogFacility lev = do
   withForeignPtr (llPtr lev) $ \levPtr -> do

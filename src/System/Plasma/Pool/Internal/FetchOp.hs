@@ -144,7 +144,7 @@ instance Default FetchOp where
 -- It contains the protein, index, and timestamp, much like
 -- 'System.Plasma.Pool.RetProtein'.  (Except that 'frProtein' may
 -- be a trimmed-down version of the protein, depending on which
--- options were selected in 'FetchOp'.)
+-- options were selected in t'FetchOp'.)
 --
 -- In addition, it also contains some statistics about the full protein,
 -- regardless of which parts of the protein were actually returned.
@@ -173,7 +173,7 @@ data FetchResult = FetchResult
   , frNumIngests   :: Maybe Int64
     -- | The returned protein, which may be a cut-down version of the
     -- actual protein in the pool, depending on the options specified
-    -- in 'FetchOp'.
+    -- in t'FetchOp'.
   , frProtein      :: Slaw
   } deriving (Eq, Ord, Show, Generic, NFData, Hashable)
 

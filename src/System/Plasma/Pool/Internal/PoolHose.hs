@@ -273,7 +273,7 @@ erlFromHose = erlFromPoolName . hosePool
 erlFromHoseIdx :: Hose -> PoolIndex -> ErrLocation
 erlFromHoseIdx h idx = erlFromPoolIdx (hosePool h) idx
 
--- | Closes a 'Hose'.  Any further operations on the hose will fail.
+-- | Closes a t'Hose'.  Any further operations on the hose will fail.
 --
 -- Although hoses will be withdrawn automatically when they are
 -- garbage collected, it is much better to call 'withdraw'
@@ -290,13 +290,13 @@ withdraw hose = withForeignPtr (hosePtr hose) $ \ptr -> do
   tort <- c_withdraw ptr
   throwRetortCS_ EtPools addn (Retort tort) (Just erl) callStack
 
--- | The 'Context' that was specified when the hose was created.
+-- | The t'Context' that was specified when the hose was created.
 getHoseContext :: Hose -> IO Context
 getHoseContext h = withForeignPtr (hosePtr h) $ \hPtr -> do
   c_get_context hPtr >>= deRefStablePtr
 
 -- | Create a new connection exactly like the original.  The index of
--- the new 'Hose' will be set to the same point as the original.
+-- the new t'Hose' will be set to the same point as the original.
 cloneHose
   :: HasCallStack
   => T.Text       -- ^ Name of new Hose.
@@ -319,7 +319,7 @@ cloneHose name orig = withForeignPtr (hosePtr orig) $ \origPtr -> do
 -- deposited.
 --
 -- Only proteins can be deposited in a pool; therefore the argument
--- should be a 'SlawProtein' or a 'Protein'.
+-- should be a 'SlawProtein' or a t'Protein'.
 deposit
   :: (HasCallStack, ToSlaw a)
   => Hose -- ^ Hose to deposit protein into.
@@ -354,7 +354,7 @@ forceProt s@(SlawNumeric _ _) =
 forceProt s                   = s
 
 -- | Retrieve the protein with the given index.  Throws a
--- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN' if the index is
+-- t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN' if the index is
 -- previous to that of the oldest index or if it is after that of the
 -- newest index.
 nthProtein
@@ -407,7 +407,7 @@ proteinOp cs loc op h srch timeout = do
 -- hose's index and advance the index to position following.  May skip
 -- proteins since the protein immediately following the last read
 -- protein may have been discarded.  If no proteins are available,
--- this function throws a 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
+-- this function throws a t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 next
   :: HasCallStack
   => Hose
@@ -418,7 +418,7 @@ next h = proteinOp callStack "next" 'n' h Nothing def
 -- available now.  The 'PoolTimeout' specifies how long to wait
 -- for a protein.
 --
--- Throws a 'PlasmaException' of 'POOL_AWAIT_TIMEDOUT' if no protein
+-- Throws a t'PlasmaException' of 'POOL_AWAIT_TIMEDOUT' if no protein
 -- arrived before the timeout expired.
 awaitNext
   :: HasCallStack
@@ -428,7 +428,7 @@ awaitNext
 awaitNext h = proteinOp callStack "awaitNext" 'a' h Nothing
 
 -- | Retrieve the protein at the pool hose's index. If no protein
--- is available, this function throws a 'PlasmaException' of
+-- is available, this function throws a t'PlasmaException' of
 -- 'POOL_NO_SUCH_PROTEIN'.
 curr
   :: HasCallStack
@@ -439,7 +439,7 @@ curr h = proteinOp callStack "curr" 'c' h Nothing def
 -- | Retrieve the protein just previous to the pool hose's current
 -- index.  Move the pool hose's index to this position.  If no
 -- protein before the current one is available, this function throws
--- a 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
+-- a t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 prev
   :: HasCallStack
   => Hose
@@ -448,7 +448,7 @@ prev h = proteinOp callStack "prev" 'p' h Nothing def
 
 -- | Search forward in the pool for a protein with a descrip matching
 -- that of the search argument.  On success, the hose's current index
--- will be 1 + the index returned in 'RetProtein'.  On failure
+-- will be 1 + the index returned in t'RetProtein'.  On failure
 -- (exception), the hose's current index will remain unchanged.
 --
 -- Note: The search slaw is matched against candidate proteins
@@ -464,7 +464,7 @@ probeFrwd h srch = proteinOp callStack "probeFrwd" 'f' h (Just srch) def
 
 -- | The same as 'probeFrwd', but wait if necessary.
 --
--- Throws a 'PlasmaException' of 'POOL_AWAIT_TIMEDOUT' if no protein
+-- Throws a t'PlasmaException' of 'POOL_AWAIT_TIMEDOUT' if no protein
 -- arrived before the timeout expired.  The timeout is overall, and
 -- does not restart when a non-matching protein is found.
 awaitProbeFrwd
@@ -479,10 +479,10 @@ awaitProbeFrwd h srch =
 -- | Search backward in the pool for a protein with a descrip matching
 -- that of the search argument.  If the beginning of the pool is
 -- reached without finding a match, this function throws a
--- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
+-- t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 --
 -- On success, the hose's current index will be the same as the index
--- returned in 'RetProtein'.  On failure (exception), the hose's
+-- returned in t'RetProtein'.  On failure (exception), the hose's
 -- current index will remain unchanged.
 probeBack
   :: HasCallStack
@@ -508,7 +508,7 @@ indexOp cs loc op h = do
 -- | Get the index of the newest protein in this pool.
 --
 -- If no proteins are in the pool, this function throws a
--- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
+-- t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 newestIndex
   :: HasCallStack
   => Hose
@@ -518,7 +518,7 @@ newestIndex = indexOp callStack "newestIndex" 'n'
 -- | Get the index of the oldest protein in this pool.
 --
 -- If no proteins are in the pool, this function throws a
--- 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
+-- t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN'.
 oldestIndex
   :: HasCallStack
   => Hose
@@ -598,7 +598,7 @@ seekTo h idx = void $ seekOp callStack "seekTo" 's' h idx
 -- protein was erased.  Returns 'False' if the given index is older
 -- than the current oldest index.
 --
--- Throws a 'PlasmaException' of 'POOL_NO_SUCH_PROTEIN' if the given
+-- Throws a t'PlasmaException' of 'POOL_NO_SUCH_PROTEIN' if the given
 -- index is newer than the newest index.
 advanceOldest
   :: HasCallStack
@@ -611,9 +611,9 @@ advanceOldest h idx = do
   -- proteins erased) or OB_NOTHING_TO_DO (no proteins erased).
   return $ tort == OB_OK
 
--- | Executes the specified 'FetchOp's.  Returns a list of
--- 'FetchResult's, where each 'FetchResult' corresponds to
--- one 'FetchOp' in the query, in order.
+-- | Executes the specified t'FetchOp's.  Returns a list of
+-- t'FetchResult's, where each t'FetchResult' corresponds to
+-- one t'FetchOp' in the query, in order.
 --
 -- Also returns a pair of (oldest, newest) indicating the
 -- oldest and newest indices in the pool at the time of query.
@@ -622,10 +622,10 @@ advanceOldest h idx = do
 -- the range of valid proteins in the pool.  (i. e. if you request
 -- a protein which is too old, you will get the oldest available
 -- protein, rather than an error.)  If clamped, the 'frIdx' member
--- of the 'FetchResult' will reflect the index of the protein
+-- of the t'FetchResult' will reflect the index of the protein
 -- actually retrieved.
 --
--- Throws an exception if a significant error (any 'Retort'
+-- Throws an exception if a significant error (any t'Retort'
 -- other than 'POOL_NO_SUCH_PROTEIN') occurs.
 -- If 'POOL_NO_SUCH_PROTEIN' occurs for a particular part of the
 -- query, returns 'Nothing' for that part of the query.
@@ -726,7 +726,7 @@ keyForIndex idx
 
 -- | Returns a protein with information about a pool.
 -- (Therefore, the most useful return types would be 'Slaw',
--- 'Protein', or 'System.Plasma.Pool.PoolInfo'.)
+-- t'Protein', or 'System.Plasma.Pool.PoolInfo'.)
 --
 -- The returned protein should always include an ingest @type@, which
 -- is a string naming the pool type, and @terminal@, which is a
@@ -846,13 +846,13 @@ enableWakeup = wakeupOp callStack "enableWakeup" 'e'
 
 -- | A thread-safe function to interrupt any call to 'awaitNext' on
 -- this hose.  For each time that this function is called, one call to
--- 'awaitNext' will throw a 'PlasmaException' of 'POOL_AWAIT_WOKEN'.
+-- 'awaitNext' will throw a t'PlasmaException' of 'POOL_AWAIT_WOKEN'.
 -- (That's not really true if enough wakeup requests pile up.  They
 -- will eventually be eaten if no one looks at them.)
 --
 -- It is an error to call this function without previously having
 -- called 'enableWakeup' on this hose.  In that case, this function
--- will throw a 'PlasmaException' of 'POOL_WAKEUP_NOT_ENABLED'.
+-- will throw a t'PlasmaException' of 'POOL_WAKEUP_NOT_ENABLED'.
 wakeUp
   :: HasCallStack
   => Hose

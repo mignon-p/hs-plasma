@@ -121,12 +121,12 @@ clampByte n
   | otherwise             = 0x3f
 
 -- | Convert a string from any instance of 'TextClass' into a
--- 'PoolName'.  Characters outside the range 0x20 to 0x7E are
+-- t'PoolName'.  Characters outside the range 0x20 to 0x7E are
 -- changed to 0x3F (@?@).
 toPoolName :: TextClass a => a -> PoolName
 toPoolName = fromString . toString
 
--- | Convert a string from 'PoolName' into any instance of
+-- | Convert a string from t'PoolName' into any instance of
 -- 'TextClass'.
 fromPoolName :: TextClass a => PoolName -> a
 fromPoolName = fromString . toString
@@ -161,7 +161,7 @@ needsSlash (PoolName sbs) =
     Just (_, 0x3a) -> False -- ':'
     _              -> True
 
--- | Determines whether a 'PoolName' represents a syntactically
+-- | Determines whether a t'PoolName' represents a syntactically
 -- valid pool name.  This wraps the C function
 -- @pool_validate_name()@.
 isPoolPathValid :: PoolName -> Bool
@@ -208,16 +208,16 @@ data PoolAuthority = PoolAuthority
 instance Nameable PoolAuthority where
   typeName _ = "PoolAuthority"
 
--- | Parse a 'PoolName' into its URI components, as a
--- 'ParsedPoolUri'.
+-- | Parse a t'PoolName' into its URI components, as a
+-- t'ParsedPoolUri'.
 parsePoolUri :: PoolName -> ParsedPoolUri
 parsePoolUri (PoolName sbs) =
   case A.parseOnly (poolNameP <* A.endOfInput) (SBS.fromShort sbs) of
     Left  _   -> ParsedPoolUri Nothing (PoolName sbs)
     Right ppn -> ppn
 
--- | Convert a 'ParsedPoolUri' into a single string, as a
--- 'PoolName'.
+-- | Convert a t'ParsedPoolUri' into a single string, as a
+-- t'PoolName'.
 makePoolUri :: ParsedPoolUri -> PoolName
 makePoolUri ppn =
   mconcat $ locParts (poolLocation ppn) ++ [poolPath ppn]
@@ -328,7 +328,7 @@ ipv6P = do
 portP :: A.Parser Int
 portP = A.char ':' >> A.decimal
 
--- | Determines whether a given 'ParsedPoolUri' represents a
+-- | Determines whether a given t'ParsedPoolUri' represents a
 -- syntactically valid pool URI.
 isParsedPoolUriValid :: ParsedPoolUri -> Bool
 isParsedPoolUriValid ppu = hostOk && pathOk
@@ -358,7 +358,7 @@ isParsedPoolUriValid ppu = hostOk && pathOk
     pathOk2   = not hasAuth && not pathEmpty && isPoolPathValid uri
     pathOk    = if isLocal scheme then pathOk2 else pathOk1
 
--- | Determines whether a given string (as a 'PoolName')
+-- | Determines whether a given string (as a t'PoolName')
 -- represents a syntactically valid DNS name, or IPv4 or IPv6
 -- address.
 --
@@ -370,7 +370,7 @@ isPoolHostValid (PoolName sbs) =
     Left  _ -> False
     Right _ -> True
 
--- | Determines whether a given 'PoolName' represents a
+-- | Determines whether a given t'PoolName' represents a
 -- syntactically valid pool URI.
 isPoolUriValid :: PoolName -> Bool
 isPoolUriValid = isParsedPoolUriValid . parsePoolUri

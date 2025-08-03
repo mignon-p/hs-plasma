@@ -89,12 +89,12 @@ emptyCtx :: Context
 emptyCtx = unsafePerformIO $ newContext "(default context)" emptyMap
   where emptyMap = SlawMap []
 
--- | Creates a new 'Context'.
+-- | Creates a new t'Context'.
 newContext
   :: (HasCallStack, ToSlaw a)
   -- | Name of this Context (only used in 'Show' instance).
   => T.Text
-  -- | Context options (usually a 'ContextOptions').
+  -- | Context options (usually a t'ContextOptions').
   -> a
   -> IO Context
 newContext name0 opts = do
@@ -116,7 +116,7 @@ noMem = unsafePerformIO $ do
   let addn = Just "getContextOptions"
   retortToPlasmaException EtPools addn OB_NO_MEM Nothing
 
--- | Returns the options that were used when creating the 'Context'.
+-- | Returns the options that were used when creating the t'Context'.
 getContextOptions
   :: (HasCallStack, FromSlaw a)
   => Context

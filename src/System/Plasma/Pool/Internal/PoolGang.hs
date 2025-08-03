@@ -127,7 +127,7 @@ instance Show Gang where
 instance Nameable Gang where
   typeName _ = "Gang"
 
--- | Creates a new, empty 'Gang'.
+-- | Creates a new, empty t'Gang'.
 newGang
   :: HasCallStack
   -- | Name of this Gang (only used in 'Show' instance).
@@ -147,12 +147,12 @@ newGang name0 = do
                 , gangPtr  = fptr
                 }
 
--- | Returns all members of a 'Gang', in the order they were added.
+-- | Returns all members of a t'Gang', in the order they were added.
 getGangMembers :: Gang -> IO [Hose]
 getGangMembers g = getHoses g >>= listHoses
 
--- | Add a 'Hose' to a 'Gang'.  Fails if this 'Hose' is already a
--- member of this 'Gang', or of any other 'Gang'.
+-- | Add a t'Hose' to a t'Gang'.  Fails if this t'Hose' is already a
+-- member of this t'Gang', or of any other t'Gang'.
 joinGang
   :: HasCallStack
   => Gang
@@ -164,7 +164,7 @@ joinGang gang hose = do
   hosesRef <- getHoses gang
   addToHoses ei hosesRef hose
 
--- | Remove a 'Hose' from a 'Gang'.
+-- | Remove a t'Hose' from a t'Gang'.
 leaveGang
   :: HasCallStack
   => Gang
@@ -176,8 +176,8 @@ leaveGang gang hose = do
   hosesRef <- getHoses gang
   removeFromHoses ei hosesRef hose
 
--- | Remove all 'Hose's from a 'Gang'.  Similar to the C function
--- @pool_disband_gang (gang, false)@, except that the 'Gang' still
+-- | Remove all t'Hose's from a t'Gang'.  Similar to the C function
+-- @pool_disband_gang (gang, false)@, except that the t'Gang' still
 -- exists (but is empty) upon return.
 clearGang
   :: HasCallStack
@@ -189,9 +189,9 @@ clearGang gang = do
   hosesRef <- getHoses gang
   clearHoses hosesRef
 
--- | Remove all 'Hose's from a 'Gang', and then performs a
--- 'withdraw' on each 'Hose'.  Similar to the C function
--- @pool_disband_gang (gang, true)@, except that the 'Gang' still
+-- | Remove all t'Hose's from a t'Gang', and then performs a
+-- 'withdraw' on each t'Hose'.  Similar to the C function
+-- @pool_disband_gang (gang, true)@, except that the t'Gang' still
 -- exists (but is empty) upon return.
 withdrawAll
   :: HasCallStack
@@ -203,11 +203,11 @@ withdrawAll gang = do
   mapM_ withdraw hs
 
 -- | A threadsafe way to interrupt any call to 'awaitNextMulti'
--- on this 'Gang'.  For each time that this function is called, one
--- call to 'awaitNextMulti' will throw a 'PlasmaException' with a
--- 'Retort' of 'System.Loam.Retorts.Constants.POOL_AWAIT_WOKEN'.
+-- on this t'Gang'.  For each time that this function is called, one
+-- call to 'awaitNextMulti' will throw a t'PlasmaException' with a
+-- t'Retort' of 'System.Loam.Retorts.Constants.POOL_AWAIT_WOKEN'.
 --
--- Unlike 'Hose's, all gangs have wakeup enabled. Thus there is
+-- Unlike t'Hose's, all gangs have wakeup enabled. Thus there is
 -- no need for an equivalent of 'enableWakeup' for gangs.
 wakeGang
   :: HasCallStack
@@ -218,12 +218,12 @@ wakeGang gang = do
   gangMiscOp ei 'w' gang def
 
 -- | Retrieve the next protein available from one of the pools in
--- the specified gang.  Also returns a 'Hose' indicating which
+-- the specified gang.  Also returns a t'Hose' indicating which
 -- pool the protein came from.
 --
 -- Besides the errors that can be thrown by
--- 'next', this function can throw a 'PlasmaException' with a
--- 'Retort' of 'System.Loam.Retorts.Constants.POOL_EMPTY_GANG'
+-- 'next', this function can throw a t'PlasmaException' with a
+-- t'Retort' of 'System.Loam.Retorts.Constants.POOL_EMPTY_GANG'
 -- if the specified gang contains no hoses.
 nextMulti
   :: HasCallStack

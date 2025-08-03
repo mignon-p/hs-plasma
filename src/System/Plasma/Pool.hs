@@ -120,9 +120,9 @@ module System.Plasma.Pool
   , seekByTime
     -- * Pool gangs
     --
-    -- | A 'Gang' is a collection of 'Hose's.  A 'Hose' can only belong
-    -- to one 'Gang' at a time.  It is possible to “await” on a 'Gang',
-    -- which “awaits” on all 'Hose's in the 'Gang' simultaneously,
+    -- | A t'Gang' is a collection of t'Hose's.  A t'Hose' can only belong
+    -- to one t'Gang' at a time.  It is possible to “await” on a t'Gang',
+    -- which “awaits” on all t'Hose's in the t'Gang' simultaneously,
     -- similar to the C @select()@ function.
   , Gang               -- opaque
   , newGang
@@ -194,10 +194,10 @@ foreign import capi safe "libPlasma/c/pool.h pool_sleep_ctx"
 foreign import capi safe "libPlasma/c/pool.h pool_check_in_use_ctx"
     c_check_in_use_ctx :: PoolNameFunc
 
--- | Open a new 'Hose' to a given pool.  It is an error
+-- | Open a new t'Hose' to a given pool.  It is an error
 -- ('POOL_NO_SUCH_POOL') if the pool does not already exist.
 --
--- In case of error, throws a 'PlasmaException' or an 'IOException'.
+-- In case of error, throws a t'PlasmaException' or an 'IOException'.
 --
 -- In case of success, returns the new hose.  The current index for
 -- the hose will be set to the newest available protein in the pool.
@@ -217,7 +217,7 @@ participate ctx name pool = do
       cs  = callStack
   participateInternal loc False cs ctx name pool SlawNil
 
--- | Open a new 'Hose' to a given pool, as in 'participate'.
+-- | Open a new t'Hose' to a given pool, as in 'participate'.
 -- However, if the pool does not exist, it is created.  The
 -- specified options are used when creating the pool.
 participateCreatingly
@@ -225,7 +225,7 @@ participateCreatingly
   => Context  -- ^ pool context
   -> T.Text   -- ^ name for new hose
   -> PoolName -- ^ name of pool to participate in
-  -> a        -- ^ pool create options (usually 'PoolCreateOptions')
+  -> a        -- ^ pool create options (usually t'PoolCreateOptions')
   -> IO Hose
 participateCreatingly ctx name pool opts = do
   let loc = "participateCreatingly"
@@ -274,7 +274,7 @@ withHoseCreatingly
   => Context        -- ^ pool context
   -> T.Text         -- ^ name for new hose
   -> PoolName       -- ^ name of pool to participate in
-  -> a              -- ^ pool create options (usually 'PoolCreateOptions')
+  -> a              -- ^ pool create options (usually t'PoolCreateOptions')
   -> (Hose -> IO b) -- ^ action to run with hose
   -> IO b
 withHoseCreatingly ctx name pool opts action =
@@ -283,12 +283,12 @@ withHoseCreatingly ctx name pool opts action =
 -- | Creates the specified pool, using the specified options.
 -- It is an error ('POOL_EXISTS') if the pool already exists.
 --
--- In case of error, throws a 'PlasmaException' or an 'IOException'.
+-- In case of error, throws a t'PlasmaException' or an 'IOException'.
 create
   :: (HasCallStack, ToSlaw a)
   => Context  -- ^ pool context
   -> PoolName -- ^ name of pool to create
-  -> a        -- ^ pool create options (usually 'PoolCreateOptions')
+  -> a        -- ^ pool create options (usually t'PoolCreateOptions')
   -> IO ()
 create ctx pool opts = do
   initialize
@@ -305,7 +305,7 @@ create ctx pool opts = do
 -- 'POOL_NO_SUCH_POOL' if the pool does not exist, and
 -- 'POOL_IN_USE' if there is still a hose open to this pool.
 --
--- In case of error, throws a 'PlasmaException' or an 'IOException'.
+-- In case of error, throws a t'PlasmaException' or an 'IOException'.
 dispose
   :: HasCallStack
   => Context  -- ^ pool context
@@ -324,7 +324,7 @@ dispose ctx pool = do
 -- | Renames a pool.  It is an error ('POOL_IN_USE') to attempt
 -- to rename a pool if there are any open hoses to it.
 --
--- In case of error, throws a 'PlasmaException' or an 'IOException'.
+-- In case of error, throws a t'PlasmaException' or an 'IOException'.
 rename
   :: HasCallStack
   => Context  -- ^ pool context
@@ -449,7 +449,7 @@ nameOnlyOp cs loc func pairs dflt ctx pool = do
           return dflt
 
 -- | Returns 'True' if the specified pool exists, and returns 'False'
--- if the specified pool does not exist.  Throws 'PlasmaException' or
+-- if the specified pool does not exist.  Throws t'PlasmaException' or
 -- 'IOException' in case of error.
 --
 -- Beware of TOCTOU!  In most cases, it would be more robust to just
@@ -467,7 +467,7 @@ doesPoolExist =
 
 -- | If the named pool exists and there are currently no hoses open to it,
 -- returns 'False'.  If the named pool currently has one or more hoses
--- open to it, returns 'True'.  Throws 'PlasmaException' or
+-- open to it, returns 'True'.  Throws t'PlasmaException' or
 -- 'IOException' in case of error.
 --
 -- Beware of TOCTOU issues, though:

@@ -6,7 +6,7 @@ License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
 
-Pattern synonyms for specific 'Retort' values.
+Pattern synonyms for specific t'Retort' values.
 -}
 
 {-# LANGUAGE PatternSynonyms            #-}

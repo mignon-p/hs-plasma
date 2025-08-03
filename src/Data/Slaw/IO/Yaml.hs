@@ -7,7 +7,7 @@ Maintainer  : code@funwithsoftware.org
 Portability : GHC
 
 Adds additional capabilities to "Data.Slaw.IO", by allowing
-'SlawInputStream' and 'SlawOutputStream' to be created with YAML
+t'SlawInputStream' and t'SlawOutputStream' to be created with YAML
 slaw files, in addition to binary slaw files.  The streams can then
 be used with existing functions like 'siRead' and 'soWrite'.
 -}
@@ -128,7 +128,7 @@ foreign import capi "ze-hs-slawio.h &ze_hs_finalize_output"
 
 --
 
--- | Run an action with a 'SlawInputStream'.
+-- | Run an action with a t'SlawInputStream'.
 withSlawInput
   :: (HasCallStack, FileClass a, ToSlaw b)
   => a                         -- ^ name (or handle) of file to read
@@ -150,7 +150,7 @@ readSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
 readSlawFile fname opts = withFrozenCallStack $ do
   withSlawInput fname opts readAllSlawx
 
--- | Run an action with a 'SlawInputStream'.
+-- | Run an action with a t'SlawInputStream'.
 withYamlSlawInput
   :: (HasCallStack, FileClass a, ToSlaw b)
   => a                         -- ^ name (or handle) of file to read
@@ -171,7 +171,7 @@ readYamlSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
 readYamlSlawFile fname opts = withFrozenCallStack $ do
   withYamlSlawInput fname opts readAllSlawx
 
--- | Run an action with a 'SlawOutputStream'.
+-- | Run an action with a t'SlawOutputStream'.
 withYamlSlawOutput
   :: (HasCallStack, FileClass a, ToSlaw b)
   => a                          -- ^ name (or handle) of file to read
@@ -192,7 +192,7 @@ writeYamlSlawFile :: (HasCallStack, FileClass a, ToSlaw b)
 writeYamlSlawFile fname opts ss = withFrozenCallStack $ do
   withYamlSlawOutput fname opts $ \sos -> mapM_ (soWrite sos) ss
 
--- | Run an action with a 'SlawOutputStream'.
+-- | Run an action with a t'SlawOutputStream'.
 withSlawOutput
   :: (HasCallStack, FileClass a, ToSlaw b)
   => a                          -- ^ name (or handle) of file to read
@@ -222,9 +222,9 @@ writeSlawFile fname opts ss = withFrozenCallStack $ do
 fileMagicLBS :: L.ByteString
 fileMagicLBS = R.toLazyByteString $ R.word32BE fileMagic
 
--- | Opens a 'SlawInputStream' for reading slawx from a file.
+-- | Opens a t'SlawInputStream' for reading slawx from a file.
 -- Automatically detects whether the file is binary or YAML.
--- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+-- If an error occurs, may throw 'IOException' or t'PlasmaException'.
 --
 -- Does not currently take any options, so the second argument is
 -- placeholder which is just ignored.  The easiest thing to do
@@ -348,8 +348,8 @@ makeOutputFunc yout = createWritePtr (yOutputWriteFunc yout)
 
 --
 
--- | Opens a 'SlawInputStream' for reading slawx from a YAML file.
--- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+-- | Opens a t'SlawInputStream' for reading slawx from a YAML file.
+-- If an error occurs, may throw 'IOException' or t'PlasmaException'.
 --
 -- Does not currently take any options, so the second argument is
 -- placeholder which is just ignored.  The easiest thing to do
@@ -431,11 +431,11 @@ yiClose y2 cs = do
 
 --
 
--- | Opens a 'SlawOutputStream' for writing slawx to a YAML file.
--- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+-- | Opens a t'SlawOutputStream' for writing slawx to a YAML file.
+-- If an error occurs, may throw 'IOException' or t'PlasmaException'.
 --
 -- The second argument is a map or protein which specifies options.
--- The easiest thing is to pass in 'WriteYamlOptions' if you want
+-- The easiest thing is to pass in t'WriteYamlOptions' if you want
 -- to specify any non-default options, or just pass @()@ to use
 -- the defaults.
 openYamlSlawOutput :: (HasCallStack, FileClass a, ToSlaw b)
@@ -534,10 +534,10 @@ extStrings = makeEnumStrings
   , ("yaml txt pro", YamlFile)
   ]
 
--- | Opens a 'SlawOutputStream' for writing slawx to a file.
+-- | Opens a t'SlawOutputStream' for writing slawx to a file.
 -- Can write either a binary or YAML file, depending on the options
 -- given, or the file extension.
--- If an error occurs, may throw 'IOException' or 'PlasmaException'.
+-- If an error occurs, may throw 'IOException' or t'PlasmaException'.
 --
 -- The second argument is a map or protein which specifies options.
 -- If the map has a key named @format@, with a value of @binary@
@@ -549,8 +549,8 @@ extStrings = makeEnumStrings
 -- indicates a YAML file.  If all else fails, a default is
 -- used.  (Currently YAML, but subject to change.)
 --
--- The easiest thing is to pass in 'WriteBinaryOptions' for the
--- second argument if you want a binary file, or 'WriteYamlOptions'
+-- The easiest thing is to pass in t'WriteBinaryOptions' for the
+-- second argument if you want a binary file, or t'WriteYamlOptions'
 -- if you want a YAML file.  Or just pass @()@ to use the
 -- file extension.
 openSlawOutput :: (HasCallStack, FileClass a, ToSlaw b)
@@ -572,7 +572,7 @@ openSlawOutput file opts = do
 --
 
 -- | Reads zero or more slawx from a string containing YAML.
--- If an error occurs, returns a 'PlasmaException'.
+-- If an error occurs, returns a t'PlasmaException'.
 --
 -- Does not currently take any options, so the second argument is
 -- placeholder which is just ignored.  The easiest thing to do
@@ -587,7 +587,7 @@ slawFromYamlString txt opts = unsafePerformIO $ do
     slawFromYamlStringIO' "slawFromYamlString" txt opts callStack
 
 -- | Like 'slawFromYamlString', but runs in the IO monad,
--- and throws a 'PlasmaException' on error.
+-- and throws a t'PlasmaException' on error.
 slawFromYamlStringIO
   :: (HasCallStack, ToSlaw b)
   => LT.Text -- ^ string to read YAML from
@@ -657,10 +657,10 @@ makeStrFunc y1 = createWritePtr (yStrWriteFunc y1)
 
 -- | Writes zero or more slawx as YAML into a string, and returns
 -- that string.
--- If an error occurs, returns a 'PlasmaException'.
+-- If an error occurs, returns a t'PlasmaException'.
 --
 -- The second argument is a map or protein which specifies options.
--- The easiest thing is to pass in 'WriteYamlOptions' if you want
+-- The easiest thing is to pass in t'WriteYamlOptions' if you want
 -- to specify any non-default options, or just pass @()@ to use
 -- the defaults.
 slawToYamlString
@@ -673,7 +673,7 @@ slawToYamlString ss opts = withFrozenCallStack $ unsafePerformIO $ do
     slawToYamlStringIO' "slawToYamlString" ss opts
 
 -- | Like 'slawToYamlString', but runs in the IO monad,
--- and throws a 'PlasmaException' on error.
+-- and throws a t'PlasmaException' on error.
 slawToYamlStringIO
   :: (HasCallStack, ToSlaw b)
   => [Slaw] -- ^ slawx to write to string
