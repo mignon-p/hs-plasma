@@ -54,6 +54,9 @@ foreign import capi "ze-hs-misc.h ze_hs_spew_overview_to_string"
 -- Unlike the C function, which prints addresses of the slaw
 -- in memory, this version prints byte offsets from the beginning
 -- of the slaw.
+--
+-- The returned string will contain internal newlines to separate
+-- lines, but the last line does not end in a newline.
 spewOverview :: HasCallStack => Slaw -> LT.Text
 spewOverview = fixAddrs . unsafePerformIO . spewOverview0 callStack
 
