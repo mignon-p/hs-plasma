@@ -390,6 +390,7 @@ openYamlSlawInput1 loc nam rdr _ cs = do
                      , yinYin = yin
                      }
   return $ SlawInputStream { siName   = nam
+                           , siType   = yamlTypeStr
                            , siShow   = yamPtr iPtr
                            , siUniq   = uniq
                            , siRead'  = yiRead  yin2
@@ -473,6 +474,7 @@ openYamlSlawOutput1 addn file opts cs = do
                        , youtYout = yout
                        }
   return $ SlawOutputStream { soName   = nam
+                            , soType   = yamlTypeStr
                             , soShow   = yamPtr oPtr
                             , soUniq   = uniq
                             , soWrite' = yoWrite yout2
@@ -734,6 +736,7 @@ slawOpenYamlString addn nam opts cs = do
                     , yStr2Out = y1
                     }
   return ( SlawOutputStream { soName   = nam
+                            , soType   = yamlTypeStr
                             , soShow   = yamPtr oPtr
                             , soUniq   = uniq
                             , soWrite' = ysWrite y2
@@ -781,3 +784,6 @@ tryAndConvertExc f = do
 
 yamPtr :: Ptr a -> String
 yamPtr p = "YAML <" ++ fmtPtr p ++ ">"
+
+yamlTypeStr :: String
+yamlTypeStr = "YAML file"
