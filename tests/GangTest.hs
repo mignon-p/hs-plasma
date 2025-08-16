@@ -36,7 +36,7 @@ makeHoses pfx num = do
     let name  = pfx ++ show n
         pName = toPoolName name
         hName = toText     name
-    hose <- participateCreatingly def hName pName small
+    (hose, _) <- participateCreatingly def hName pName small
     return (pName, hose)
 
 addHose :: Gang -> Hose -> GangMap -> IO GangMap

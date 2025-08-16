@@ -148,6 +148,7 @@ import Foreign.C.Types
 import Foreign.ForeignPtr
 import Foreign.Marshal.Utils
 import Foreign.Ptr
+import Foreign.Storable
 import GHC.Stack
 
 import Data.Slaw
@@ -215,7 +216,7 @@ participate
 participate ctx name pool = do
   let loc = "participate"
       cs  = callStack
-  participateInternal loc False cs ctx name pool SlawNil
+  fst <$> participateInternal loc False cs ctx name pool SlawNil
 
 -- | Open a new t'Hose' to a given pool, as in 'participate'.
 -- However, if the pool does not exist, it is created.  The
@@ -226,11 +227,12 @@ participateCreatingly
   -> T.Text   -- ^ name for new hose
   -> PoolName -- ^ name of pool to participate in
   -> a        -- ^ pool create options (usually t'PoolCreateOptions')
-  -> IO Hose
+  -> IO (Hose, Bool) -- ^ boolean is true iff pool was created
 participateCreatingly ctx name pool opts = do
   let loc = "participateCreatingly"
       cs  = callStack
-  participateInternal loc True cs ctx name pool (š opts)
+  (h, tort) <- participateInternal loc True cs ctx name pool (š opts)
+  return (h, tort == POOL_CREATED)
 
 participateInternal
   :: String   -- ^ name of API function
@@ -240,18 +242,21 @@ participateInternal
   -> T.Text   -- ^ name for new hose
   -> PoolName -- ^ name of pool to participate in
   -> Slaw     -- ^ pool create options
-  -> IO Hose
+  -> IO (Hose, Retort)
 participateInternal loc crtly cs ctx name pool opts = do
   initialize
   let cbool = fromBool crtly
       erl   = Just $ erlFromPoolName pool
       addn  = Just loc
-  hPtr <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
+  (hPtr, ret) <- withReturnedRetortCS EtPools addn erl cs $ \tortPtr -> do
     C.useAsConstCString (toByteString pool) $ \pnPtr -> do
       withForeignPtr (ctxPtr ctx) $ \cPtr -> do
         withSlaw opts $ \optPtr -> do
-          c_participate cbool cPtr pnPtr optPtr tortPtr
-  newHose loc cs name pool ctx hPtr
+          p <- c_participate cbool cPtr pnPtr optPtr tortPtr
+          r <- peek tortPtr
+          return (p, Retort r)
+  h <- newHose loc cs name pool ctx hPtr
+  return (h, ret)
 
 -- | Like 'participate', but guarantees that the hose will be
 -- closed (withdrawn) when the given IO action completes, regardless
@@ -269,16 +274,23 @@ withHose ctx name pool action =
 -- | Like 'participateCreatingly', but guarantees that the hose will be
 -- closed (withdrawn) when the given IO action completes, regardless
 -- of whether that is normally or by an exception being thrown.
+--
+-- The callback is given the hose, and also a boolean, where
+-- 'False' indicates the pool already existed, and 'True' means that
+-- it was created.
 withHoseCreatingly
   :: (HasCallStack, ToSlaw a)
   => Context        -- ^ pool context
   -> T.Text         -- ^ name for new hose
   -> PoolName       -- ^ name of pool to participate in
   -> a              -- ^ pool create options (usually t'PoolCreateOptions')
-  -> (Hose -> IO b) -- ^ action to run with hose
+  -> ((Hose, Bool) -> IO b) -- ^ action to run with hose
   -> IO b
-withHoseCreatingly ctx name pool opts action =
-  bracket (participateCreatingly ctx name pool opts) withdraw action
+withHoseCreatingly ctx name pool opts action = do
+  bracket
+    (participateCreatingly ctx name pool opts)
+    (withdraw . fst)
+    action
 
 -- | Creates the specified pool, using the specified options.
 -- It is an error ('POOL_EXISTS') if the pool already exists.
