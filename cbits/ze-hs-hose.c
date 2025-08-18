@@ -232,7 +232,7 @@ ob_retort ze_hs_seek_op (char        op,
     }
 
     switch (op) {
-    case 'r':
+    case 'w':
         return pool_rewind (h);
     case 'l':
         return pool_tolast (h);
