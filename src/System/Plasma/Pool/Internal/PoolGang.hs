@@ -10,9 +10,12 @@ Portability : GHC
 module System.Plasma.Pool.Internal.PoolGang
   ( Gang(..)
   , newGang
+  , newGangWithMembers
   , getGangMembers
   , joinGang
+  , addGangMembers
   , leaveGang
+  , removeGangMembers
   , clearGang
   , withdrawAll
   , wakeGang
@@ -21,6 +24,7 @@ module System.Plasma.Pool.Internal.PoolGang
   , awaitMulti
   ) where
 
+import Control.Monad
 import Control.DeepSeq
 import Control.Exception
 -- import Control.Monad
@@ -147,6 +151,18 @@ newGang name0 = do
                 , gangPtr  = fptr
                 }
 
+-- | Creates a new t'Gang' containing the specified hoses.
+newGangWithMembers
+  :: HasCallStack
+  -- | Name of this Gang (only used in 'Show' instance).
+  => T.Text
+  -> [Hose]
+  -> IO Gang
+newGangWithMembers name hoses = do
+  gang <- newGang name
+  addGangMembers gang hoses
+  return gang
+
 -- | Returns all members of a t'Gang', in the order they were added.
 getGangMembers :: Gang -> IO [Hose]
 getGangMembers g = getHoses g >>= listHoses
@@ -164,6 +180,15 @@ joinGang gang hose = do
   hosesRef <- getHoses gang
   addToHoses ei hosesRef hose
 
+-- | Like 'joinGang', but adds multiple hoses at once.
+addGangMembers :: HasCallStack => Gang -> [Hose] -> IO ()
+addGangMembers gang hoses = do
+  let ei = mkErrInfo "addGangMembers" gang callStack
+  hosesRef <- getHoses gang
+  forM_ hoses $ \hose -> do
+    gangOp ei 'j' gang hose
+    addToHoses ei hosesRef hose
+
 -- | Remove a t'Hose' from a t'Gang'.
 leaveGang
   :: HasCallStack
@@ -175,6 +200,15 @@ leaveGang gang hose = do
   gangOp ei 'l' gang hose
   hosesRef <- getHoses gang
   removeFromHoses ei hosesRef hose
+
+-- | Like 'leaveGang', but removes multiple hoses at once.
+removeGangMembers :: HasCallStack => Gang -> [Hose] -> IO ()
+removeGangMembers gang hoses = do
+  let ei = mkErrInfo "leaveGang" gang callStack
+  hosesRef <- getHoses gang
+  forM_ hoses $ \hose -> do
+    gangOp ei 'l' gang hose
+    removeFromHoses ei hosesRef hose
 
 -- | Remove all t'Hose's from a t'Gang'.  Similar to the C function
 -- @pool_disband_gang (gang, false)@, except that the t'Gang' still

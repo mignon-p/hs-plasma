@@ -127,10 +127,13 @@ module System.Plasma.Pool
   , Gang               -- opaque
   , newGang
   , gangName
+  , newGangWithMembers
     -- ** Gang membership
   , getGangMembers
   , joinGang
+  , addGangMembers
   , leaveGang
+  , removeGangMembers
   , clearGang
   , withdrawAll
     -- ** Gang operations
