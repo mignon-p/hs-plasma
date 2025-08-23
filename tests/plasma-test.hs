@@ -133,6 +133,7 @@ poolTests = testGroup "pool tests"
   , testCase "fetch"                      $ testFetch
   , testCase "advanceOldest"              $ testAdvanceOldest
   , testCase "probe"                      $ testProbe
+  , testCase "seeking"                    $ testSeeking
   , testCase "seekToTime"                 $ testSeekToTime
   , testCase "pool exists/in use"         $ testExists
   , testCase "changeOptions"              $ testOptions
@@ -638,6 +639,30 @@ testOptions = do
 
     pi2 <- getInfo hose Nothing
     Just True  @=? piFrozen   pi2
+
+testSeeking :: Assertion
+testSeeking = do
+  (ro, posns, ni, oi) <- namedPoolTestFixture $ \pname deps -> do
+    let total = fromIntegral $ length deps
+    withHose def "" pname $ \hose -> do
+      let funcs = [ const (return ())
+                  , rewind
+                  , toLast
+                  , runout
+                  , (`seekTo` 2)
+                  , (`frwdBy` 1)
+                  , (`backBy` 2)
+                  ]
+      indices <- forM funcs $ \func -> do
+        func      hose
+        currIndex hose
+      newestIdx <- newestIndex hose
+      oldestIdx <- oldestIndex hose
+      return (total, indices, newestIdx, oldestIdx)
+
+  [ro, 0, (ro - 1), ro, 2, 3, 1] @=? posns
+  0                              @=? oi
+  (ro - 1)                       @=? ni
 
 testPlusSlash :: Assertion
 testPlusSlash = do

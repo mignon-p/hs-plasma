@@ -9,6 +9,7 @@ Portability : GHC
 
 module PoolTestFixture
   ( poolTestFixture
+  , namedPoolTestFixture
   , tstProteins
   , tstFops
   , expProteins
@@ -126,3 +127,9 @@ depositTestProteins hose = do
   forM tstProteins $ \p -> do
     (actualIdx, ts) <- deposit hose p
     return $ RetProtein p actualIdx ts
+
+namedPoolTestFixture :: (PoolName -> [RetProtein] -> IO a) -> IO a
+namedPoolTestFixture action = do
+  withTemporaryPool def Nothing small $ \pool -> do
+    deps <- withHose def "" pool $ \hose -> depositTestProteins hose
+    action pool deps

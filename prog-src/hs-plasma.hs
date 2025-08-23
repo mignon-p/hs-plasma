@@ -425,3 +425,30 @@ main1 = do
   putStrLn ""
 
   putStrLn $ show levelMaxPrefixBytes
+
+  putStrLn ""
+
+  let testPoolName = "testpool"
+  (h1, _) <- participateCreatingly def "deposit" testPoolName small
+
+  forM_ [1..3] $ \n -> do
+    let prot = protein "foo bar" [("n", š (n :: Word8))]
+    deposit h1 prot
+
+  withdraw h1
+
+  h2 <- participate def "position" "testpool"
+
+  let pairs = [ ("initial", \_ -> return ())
+              , ("rewind",  rewind)
+              , ("toLast",  toLast)
+              , ("runout",  runout)
+              ]
+
+  forM_ pairs $ \(name, func) -> do
+    func h2
+    idx <- currIndex h2
+    putStrLn $ printf "%-8s %d" (name :: String) idx
+
+  withdraw h2
+  dispose def testPoolName
