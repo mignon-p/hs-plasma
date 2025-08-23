@@ -204,7 +204,8 @@ foreign import capi safe "libPlasma/c/pool.h pool_check_in_use_ctx"
 -- In case of error, throws a t'PlasmaException' or an 'IOException'.
 --
 -- In case of success, returns the new hose.  The current index for
--- the hose will be set to the newest available protein in the pool.
+-- the hose will be set to one past the newest available protein in
+-- the pool.  (The equivalent of calling 'runout'.)
 --
 -- When you are done with the hose, you should call 'withdraw' to
 -- close it.  (Eventually, the hose would be closed during garbage
