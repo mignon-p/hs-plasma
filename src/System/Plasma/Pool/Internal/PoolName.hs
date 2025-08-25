@@ -48,6 +48,7 @@ import Data.Default.Class
 import Data.Hashable
 import Data.Int
 import Data.String
+import qualified Data.Text.Lazy.Builder           as R
 import Data.Word
 import GHC.Generics (Generic)
 import System.IO.Unsafe
@@ -92,6 +93,7 @@ instance TextClass PoolName where
   toText       = toText     . toString
   toLazyText   = toLazyText . toString
   toUtf8       = toLazyByteString
+  toTxtBld     = R.fromString . toString
 
   fromText     = fromString . toString
   fromLazyText = fromString . toString
