@@ -456,7 +456,7 @@ getInd (Just w)
   | w >= w80  = maxInd
   | otherwise = ind `max` minInd
   where
-    w80 = 80
+    w80 = 78
     dec = (w80 - w) `div` 2
     ind = maxInd - dec
 
