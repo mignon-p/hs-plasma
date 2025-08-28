@@ -73,6 +73,18 @@ or:
 stack test
 ```
 
+To install the executables (such as `slawcat`), do:
+
+```
+cabal v2-install
+```
+
+or:
+
+```
+stack install
+```
+
 ## License
 
 `hs-plasma` is licensed under the [MIT License](LICENSE).
