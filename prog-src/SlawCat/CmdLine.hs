@@ -3,6 +3,7 @@
 module SlawCat.CmdLine
   ( ScOpts(..)
   , scUsage
+  , scPod
   , scGetOpts
   , scCheckDups
   , valNames
@@ -30,7 +31,7 @@ import SlawCat.Units
 
 data ScOpt = OptError    String
            -- global options
-           | OptHelp     !Visibility
+           | OptHelp     !Help
            | OptVersion
            | OptAwait
            | OptQuiet
@@ -66,7 +67,7 @@ instance Default ScOpts where
 
 updOpts :: ScOpts -> ScOpt -> ScOpts
 -- global options
-updOpts !o (OptHelp     v) = updGlob o $ \g -> g { goptHelp    = Just v }
+updOpts !o (OptHelp     v) = updGlob o $ \g -> g { goptHelp    = v      }
 updOpts !o OptVersion      = updGlob o $ \g -> g { goptVersion = True   }
 updOpts !o OptAwait        = updGlob o $ \g -> g { goptAwait   = True   }
 updOpts !o OptQuiet        = updGlob o $ \g -> g { goptQuiet   = True   }
@@ -231,17 +232,24 @@ nr = AR { shrt = ""
 descrs :: [UsgD]
 descrs = concatMap expandR
   [ VS Brief
-  , LN "Usage: slawcat \t[global-options] [[opts] INFILE] \
-       \... [[opts] -o OUTFILE] ..."
+  , LN $ mconcat [ "Usage: slawcat \t[global-options] "
+                 , noBreak "[[opts] INFILE] ..."
+                 , " "
+                 , noBreak "[[opts] -o OUTFILE] ..."
+                 ]
   , LN ""
   , LN "Help options:"
-  , AX "h" "help"    (OptHelp Normal) "print short help message and exit"
-  , AX "H" "full-help" (OptHelp Full) "print full help message and exit"
-  , AX "V" "version"   OptVersion     "print version number and exit"
-  , VS Full
+  , AX "h" "help"      (hlpVis Normal) "print short help message and exit"
+  , AX "H" "full-help" (hlpVis Full)   "print full help message and exit"
+  , AX "V" "version"   OptVersion      "print version number and exit"
+  , VS Hidden
   , AR { shrt = "w", long = "width", argD = "INTEGER"
        , optS = intArg OptWidth
        , desc = "number of columns to wrap help message to"
+       }
+  , nx { long = "pod"
+       , optX = OptHelp HelpPod
+       , desc = "print help in pod format"
        }
   , VS Normal
   , LN ""
@@ -370,6 +378,14 @@ descrs = concatMap expandR
   , VS Normal
   ]
 
+noBreak :: T.Text -> T.Text
+noBreak = T.map f
+  where f ' ' = chr 0xA0
+        f c   = c
+
+hlpVis :: Visibility -> ScOpt
+hlpVis = OptHelp . HelpUsage
+
 cfgBin :: WriteBinaryOptions -> ScOpt
 cfgBin wbo = OptConfig IoBinary (toSlaw wbo)
 
@@ -487,6 +503,9 @@ getInd (Just w)
     w80 = 78
     dec = (w80 - w) `div` 2
     ind = maxInd - dec
+
+scPod :: LT.Text
+scPod = makePodWithVisibility (<= Full) $ usageOpts (Just 70) ++ descrs
 
 scGetOpts :: [String] -> ScOpts
 scGetOpts args =

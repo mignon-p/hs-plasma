@@ -4,6 +4,7 @@ module SlawCat.Types
   , InitialPos(..)
   , IoEntity(..)
   , Visibility(..)
+  , Help(..)
   , GlobalOpts(..)
   , InputEntity(..)
   , OutputEntity(..)
@@ -67,11 +68,16 @@ instance Default IoEntity where
                  , entPos   = PosRewind
                  }
 
-data Visibility = Brief | Normal | Full
+data Visibility = Brief | Normal | Full | Hidden
                 deriving (Eq, Ord, Show, Read, Bounded, Enum)
 
+data Help = HelpNone
+          | HelpPod
+          | HelpUsage !Visibility
+          deriving (Eq, Ord, Show)
+
 data GlobalOpts = GlobalOpts
-  { goptHelp     :: Maybe Visibility
+  { goptHelp     :: !Help
   , goptVersion  :: !Bool
   , goptAwait    :: !Bool
   , goptQuiet    :: !Bool
@@ -85,7 +91,7 @@ data GlobalOpts = GlobalOpts
   } deriving (Eq, Ord, Show)
 
 instance Default GlobalOpts where
-  def = GlobalOpts { goptHelp     = Nothing
+  def = GlobalOpts { goptHelp     = HelpNone
                    , goptVersion  = False
                    , goptAwait    = False
                    , goptQuiet    = False

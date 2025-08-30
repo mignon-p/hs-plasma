@@ -138,7 +138,8 @@ main = do
       gopts = optGlobal opts
   case optErrors opts of
     [] -> case goptHelp gopts of
-            Just vis              -> printUsage vis gopts
+            HelpUsage vis         -> printUsage vis gopts
+            HelpPod               -> LT.putStr scPod
             _ | goptVersion gopts -> printVersion
               | otherwise         -> main1 opts
     xs -> do
