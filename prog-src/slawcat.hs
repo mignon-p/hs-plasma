@@ -24,6 +24,7 @@ import SlawCat.Vers
 printVersion :: IO ()
 printVersion = do
   T.putStrLn "slawcat © 2025 Mignon Pelletier"
+  T.putStrLn "https://github.com/mignon-p/hs-plasma"
   T.putStrLn ""
   pairs <- scVers
   mapM_ (T.putStrLn . mv1) pairs
