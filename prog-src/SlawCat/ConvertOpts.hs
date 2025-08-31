@@ -633,7 +633,9 @@ openPoolOutput ent = do
 openFileOutput :: IoEntity -> IO OutputEntity
 openFileOutput ent = do
   (h, clo) <- openOutHandle (entName ent)
-  return $ OutFile h clo
+  af       <- getAutoFlush  (entOpts ent) h
+  ref      <- newIORef      0
+  return $ OutFile h clo ref af
 
 openStreamOutput :: IoEntity -> GlobalOpts -> IO (OutputEntity, T.Text)
 openStreamOutput ent glOpts = do
@@ -643,6 +645,16 @@ openStreamOutput ent glOpts = do
               then openSlawOutput          h  opts
               else openSlawOutput (NoClose h) opts
   return (OutStream h so, T.pack (soType so))
+
+getAutoFlush :: Slaw -> Handle -> IO Bool
+getAutoFlush opts h = do
+  let af = case ŝm opts of
+             Just (WriteYamlOptions { wyoAutoFlush = Just x }) -> x
+             _ -> AutoFlushIfNotSeekable
+  case af of
+    AutoFlushNever         -> return False
+    AutoFlushAlways        -> return True
+    AutoFlushIfNotSeekable -> not <$> hIsSeekable h
 
 -- Default wyoComment to False, if:
 --   • This is a YAML output
@@ -676,10 +688,10 @@ openOutHandle fp
 closeOutput :: AnnEntity OutputEntity -> IO ()
 closeOutput ae = do
   case aeAnn ae of
-    Nothing                -> return ()
-    Just (OutPool   h    ) -> withdraw h
-    Just (OutStream _ so ) -> soClose  so
-    Just (OutFile   h clo) -> when clo $ hClose h
+    Nothing                    -> return ()
+    Just (OutPool   h        ) -> withdraw h
+    Just (OutStream _ so     ) -> soClose  so
+    Just (OutFile   h clo _ _) -> when clo $ hClose h
 
 prependPoolType :: Hose -> T.Text -> IO T.Text
 prependPoolType h tTxt = do

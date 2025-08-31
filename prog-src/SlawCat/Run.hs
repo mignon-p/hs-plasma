@@ -382,9 +382,9 @@ makeMetaTS :: PoolTimestamp -> (Slaw, Slaw)
 makeMetaTS ts = ("timestamp", toSlaw ts)
 
 wo1 :: MyOpts -> MetaSlaw -> IoEntity -> OutputEntity -> IO ()
-wo1 mo ms ent (OutPool   h   ) = write2Pool   mo ms ent h
-wo1 mo ms ent (OutFile   h _ ) = write2File   mo ms ent h
-wo1 mo ms ent (OutStream h so) = write2Stream mo ms ent h so
+wo1 mo ms ent (OutPool   h       ) = write2Pool   mo ms ent h
+wo1 mo ms ent (OutFile   h _ c af) = write2File   mo ms ent h c af
+wo1 mo ms ent (OutStream h so    ) = write2Stream mo ms ent h so
 
 write2Pool :: MyOpts -> MetaSlaw -> IoEntity -> Hose -> IO ()
 write2Pool _ ms _ h = void $ deposit h $ ensureProtein $ msSlaw ms
@@ -393,13 +393,30 @@ ensureProtein :: Slaw -> Slaw
 ensureProtein p@(SlawProtein {}) = p
 ensureProtein s                  = SlawProtein Nothing (Just s) mempty
 
-write2File :: MyOpts -> MetaSlaw -> IoEntity -> Handle -> IO ()
-write2File mo ms ent h = do
+write2File
+  :: MyOpts
+  -> MetaSlaw
+  -> IoEntity
+  -> Handle
+  -> IORef Integer
+  -> Bool
+  -> IO ()
+write2File mo ms ent h ref af = do
   let spew = spewOverview $ msSlaw ms
       gopt = moGlobal mo
+  count <- incrRef ref
+  when (count > 0)          $ hPutStrLn h ""
   when (not $ entQuiet ent) $ writeFileComment gopt h ms
   LT.hPutStrLn h spew
-  hPutStrLn    h ""
+  when af                   $ hFlush h
+
+incrRef :: IORef Integer -> IO Integer
+incrRef ref = do
+  count <- readIORef ref
+  let newCount = count + 1
+  evaluate newCount
+  writeIORef ref newCount
+  return count
 
 writeFileComment :: GlobalOpts -> Handle -> MetaSlaw -> IO ()
 writeFileComment gopt h ms = do

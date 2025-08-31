@@ -17,6 +17,7 @@ module SlawCat.Types
   ) where
 
 import Data.Default.Class
+import Data.IORef
 import qualified Data.Text                as T
 import qualified Data.Text.Lazy.Builder   as R
 import System.Exit
@@ -100,11 +101,19 @@ data InputEntity = InPool     { ieHose   :: Hose            }
 data OutputEntity = OutPool   { oeHose   :: Hose            }
                   | OutFile   { oeHandle :: Handle
                               , oeClose  :: Bool
+                              , oeCount  :: IORef Integer
+                              , oeFlush  :: Bool
                               }
                   | OutStream { oeHandle :: Handle
                               , oeStream :: SlawOutputStream
                               }
-                  deriving (Show, Eq)
+                  deriving (Eq)
+
+-- Can't derive Show because IORef doesn't implement Show.
+instance Show OutputEntity where
+  show (OutPool   {}) = "OutPool"
+  show (OutFile   {}) = "OutFile"
+  show (OutStream {}) = "OutStream"
 
 data AnnEntity a = AnnEntity
   { aeEnt  :: IoEntity
