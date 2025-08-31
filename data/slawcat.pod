@@ -1,0 +1,379 @@
+date: 2025-09-01
+
+=head1 NAME
+
+slawcat - copy slawx between files and/or pools
+
+=head1 SYNOPSIS
+
+B<slawcat> [I<GLOBAL-OPTIONS>] S<[[I<OPTS>] I<INFILE>] ...> S<[[I<OPTS>] B<-o> I<OUTFILE>] ...>
+
+=head1 DESCRIPTION
+
+B<slawcat> takes one or more input pools or files, and one or more output pools or files, and copies the inputs to the outputs.  It has the following features:
+
+=over
+
+=item * Input pools/files are read in the order they are specified on the command line.
+
+=item * Each slaw is written to all of the output files/pools.
+
+=item * Optionally, it's possible to await on the input pools for more proteins to arrive.  (Await indefinitely with the B<-a> option, or await for a specified time with the B<-t> option.)
+
+=item * It's possible to validate the slawx that are read against several different criteria, using the B<-v> option.  This can be used in conjunction with output pools/files, or it can be used with no outputs, just to validate the inputs.
+
+=back
+
+B<slawcat> will attempt to guess whether an input or output name is a file or a pool.  However, you can tell it what you mean by using B<-p> for a pool or B<-f> for a file.  For output files, you can also be more specific as to the type of output file by specifying B<-b> (binary), B<-y> (YAML), or B<-s> (spew).
+
+B<slawcat> "guesses" in the following way:
+
+=over
+
+=item 1.
+
+If the name looks like a pool URI, it is treated as a pool.
+
+=item 2.
+
+If the name has a recognized extension (see below), it is treated as a file.
+
+=item 3.
+
+If neither of the above apply, for inputs it is tested to see if the file exists.  If it exists, the file is used.  Otherwise, it is assumed to be a pool.  For outputs, if the first two rules don't apply, it is always assumed to be a pool.
+
+=back
+
+If you do not specify the type of the output file, B<slawcat> guesses a type from the extension.  These are the recognized extensions:
+
+=over
+
+=item C<.slaw> or C<.bin>
+
+Binary slaw format
+
+=item C<.yaml> or C<.pro>
+
+YAML slaw format
+
+=item C<.spew> or C<.txt>
+
+"spew overview" format
+
+=back
+
+B<slawcat> automatically detects the type of input files, so you do not need to specify the type for input files.  Note that only binary and YAML are supported for input files.  "spew" is not supported as an input format, only an output format.
+
+Normally, input pools are rewound, so that you will get everything in the pool.  However, you can specify B<-i> to seek to a specific index.  You can also specify B<-L> to go to the last protein (useful if you'd just like to peek at the most recent protein in a pool) or B<-R> to go one past the last protein (useful in conjuction with B<-a> if you only want to await new proteins, and don't want to see any of the existing proteins in the pool).
+
+=head1 OPTIONS
+
+=head2 Help options
+
+=over
+
+=item B<-h>, B<--help>
+
+Print short help message and exit.
+
+=item B<-H>, B<--full-help>
+
+Print full help message and exit.
+
+=item B<-V>, B<--version>
+
+Print version number and exit.
+
+=back
+
+=head2 Global options
+
+=over
+
+=item B<-q>, B<--quiet>
+
+Don't print stuff to stderr, unless an error occurs.  Normally,
+B<slawcat> will print a summary of what it's going to do to stderr,
+and it may also print warning or informational messages.
+
+=item B<-a>, B<--await>
+
+Keep waiting for more proteins to arrive, after processing the
+existing proteins in files and pools.  If you only want to process new
+proteins, combine the B<-a> global option with the C<-R> per-pool
+option, to avoid processing the proteins that are already in the pool.
+
+B<-a> will wait forever (until Control-C is pressed), unless the B<-t>
+or B<-c> options are used to limit the time and/or the number of
+proteins processed.
+
+=item B<-t> I<DURATION>, B<--timeout>=I<DURATION>
+
+Total time to await (number followed by one of these units: ns, us,
+ms, s, m, h, d).  This automatically implies the B<-a> option.
+
+=item B<-c> I<INTEGER>, B<--count>=I<INTEGER>
+
+Maximum number of slawx to process.  B<slawcat> will exit after this
+many slawx have been processed.  Slawx which are filtered out by the
+B<-D> and B<-I> options do not count as being "processed", and are not
+counted against this limit.
+
+=item B<-v> I<LETTERS>, B<--validate>=I<LETTERS>
+
+Check that the slawx meet the criteria specified by one or more of the
+following I<LETTERS>:
+
+=over
+
+=item B<c>
+
+supported by C-plasma
+
+=item B<s>
+
+strings are valid UTF-8
+
+=item B<p>
+
+proteins have list for descrips, map for ingests
+
+=item B<m>
+
+maps do not contain duplicate keys
+
+=back
+
+If case of validation failure, a message will be printed to stderr
+(even if B<-q> was specified), and the exit code of B<slawcat> will be
+nonzero.  However, B<slawcat> will not terminate early, and the slaw
+will still be written to the outputs.
+
+=item B<-d> I<INTEGER>, B<--frac-digs>=I<INTEGER>
+
+Number of fractional digits of seconds to display in timestamps.
+(default=6)
+
+=item B<-D> I<WORDS>, B<--descrips>=I<WORDS>
+
+Only process proteins that match the specified descrips (I<WORDS> is
+split on whitespace).  The protein's descrips must contain all of the
+elements in I<WORDS>, in order, although not necessarily contiguously.
+
+Only slawx which match the descrips and ingests filters will be
+counted against the limit specified with the B<-c> option.
+
+=item B<-I> I<WORDS>, B<--ingests>=I<WORDS>
+
+Only process proteins that have the specified ingests (I<WORDS> is
+split on whitespace).  The protein's ingests must contain all of the
+keys specified in I<WORDS>.  (Order is not important.)
+
+Only slawx which match the descrips and ingests filters will be
+counted against the limit specified with the B<-c> option.
+
+=back
+
+=head2 Per-file/pool options
+
+=over
+
+=item B<-o> I<NAME>, B<--output>=I<NAME>
+
+Output to a pool or file.  All of the per-file/pool options that occur
+before B<-o> are applied to this file/pool.  Then all of the
+per-file/pool options are reset to defaults for the next file/pool on
+the command line.
+
+=item B<-b>, B<--binary>
+
+Write to a binary slaw file.  Native endianness will be used, if not
+specified with the B<--big-endian> or B<--little-endian> options.
+
+=item B<--big-endian>
+
+Write to a big-endian binary slaw file.  Implies B<-b>.
+
+=item B<--little-endian>
+
+Write to a little-endian binary slaw file.  Implies B<-b>.
+
+=item B<-y>, B<--yaml>
+
+Write to a YAML slaw file.
+
+=item B<--tag-numbers>
+
+Tag numbers with type information.  Implies B<-y>.
+
+=item B<--no-tag-numbers>
+
+Do not tag numbers with type information.  Implies B<-y>.
+
+=item B<--directives>
+
+Emit C<%YAML> and C<%TAG> directives.  Implies B<-y>.
+
+=item B<--no-directives>
+
+Do not emit C<%YAML> and C<%TAG> directives.  Implies B<-y>.
+
+=item B<--ordered-maps>
+
+Use C<!!omap> for maps.  Implies B<-y>.
+
+=item B<--no-ordered-maps>
+
+Do not use C<!!omap> for maps.  Implies B<-y>.
+
+=item B<--comment>
+
+Add comment at beginning of file, which contains Plasma version number
+and libYaml version number.  Implies B<-y>.
+
+=item B<--no-comment>
+
+do not add comment at beginning of file.  Implies B<-y>.
+
+=item B<--max-array>=I<INTEGER>
+
+Truncate arrays with more than I<INTEGER> elements.  Implies B<-y>.
+
+=item B<-s>, B<--spew>
+
+Write to a "spew overview" file.
+
+=item B<-p>, B<--pool>
+
+Read from/write to a pool.
+
+=item B<-L>, B<--to-last>
+
+Seek to the last protein in an input pool.
+(Default is to rewind input pools.)
+
+=item B<-R>, B<--runout>
+
+Seek to one past the last protein in an input pool.
+(Default is to rewind input pools.)
+
+=item B<-i> I<INTEGER>, B<--seek-to>=I<INTEGER>
+
+Seek to specified index in an input pool.
+(Default is to rewind input pools.)
+
+=item B<-f>, B<--file>
+
+Read from a file.  The type of the file is auto-detected, but this
+option clarifies that the input is not a pool.
+
+=item B<-F>, B<--flush>
+
+Flush output file after each slaw is written.
+
+=item B<--no-flush>
+
+Do not flush output file after each slaw.
+
+=item B<-m>[I<KEY>], B<--add-metadata>[=I<KEY>]
+
+Add an ingest named I<KEY> to the protein before writing it to the
+pool/file.  This ingest is a map which contains the name of the pool
+or file the protein was originally read from, the index of the protein
+within the input pool/file, and (for pools only) the timestamp of the
+protein in the input pool.
+
+If I<KEY> is not specified, it defaults to C<origin>.
+
+=item B<-Q>, B<--no-metadata-comment>
+
+Normally, for "spew" and YAML outputs, B<slawcat> will output a
+comment before each slaw, indicating the pool/file name, index, and
+timestamp that the protein was originally read from.  The B<-Q> option
+suppresses this behavior.
+
+=back
+
+=head1 EXAMPLES
+
+Print proteins to stdout in YAML format, as they arrive in C<testpool>:
+
+    slawcat -a -R testpool -y -o -
+
+Convert a little-endian binary slaw file to a big-endian binary slaw file:
+
+    slawcat le.slaw --big-endian -o be.slaw
+
+Read the first 3 slawx from a YAML file and write them to both a YAML
+file and a binary file:
+
+    slawcat -c3 example.yaml -y -o yamout.yaml -b -o binout.slaw
+
+Concatenate C<first.yaml> and C<second.yaml> into C<out.yaml>.
+
+    slawcat first.yaml second.yaml -y -o out.yaml
+
+Validate the proteins in testpool, to make sure that the strings are
+valid UTF-8, and the maps do not contain duplicate keys:
+
+    slawcat --validate=sm testpool
+
+Wait for proteins in C<pool1> and C<pool2>, and copy them to C<pool3>:
+
+    slawcat -a -R pool1 -R pool2 -o pool3
+
+Only copy proteins from C<pool1> to C<pool2> which have descrips that
+contain both "foo" and "bar", with "foo" appearing before "bar":
+
+    slawcat -D "foo bar" pool1 -o pool2
+
+Print proteins from the file C<proteins.yaml> to stdout in "spew"
+format, only if they contain an ingest named "bunnies".
+
+    slawcat -I bunnies proteins.yaml -s -o -
+
+=head1 EXIT STATUS
+
+=over
+
+=item B<0>
+
+Success.
+
+=item B<1>
+
+An exception/fatal error occurred.
+
+=item B<2>
+
+An error occurred processing command-line arguments.
+
+=item B<3>
+
+A slaw was corrupt, or a validation error occurred.  This does not
+result in premature termination of the program, although it does
+result in a nonzero exit status.
+
+=back
+
+=head1 ENVIRONMENT
+
+=over
+
+=item B<OB_POOLS_DIR>
+
+Directory where pools are located.
+
+=back
+
+=head1 BUGS
+
+Because the YAML and "spew" formats are handled by C-plasma, these
+formats cannot encode types which are not supported by C-plasma.
+Currently, the unsupported types are "symbols" and 16-bit floats.
+
+Use B<-v=c> to check for types which are not supported by C-plasma.
+
+=head1 AUTHOR
+
+Mignon Pelletier E<lt>code at funwithsoftware dot orgE<gt>

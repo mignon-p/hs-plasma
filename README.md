@@ -85,6 +85,26 @@ or:
 stack install
 ```
 
+By default, Cabal will install the executables in `~/.cabal/bin`, while Stack will install the executables in `~/.local/bin`.  So you'll want to make sure the appropriate directory is on your `PATH`.
+
+To install the manpage for `slawcat`, run the `install-man.pl` script in this directory:
+
+```
+./install-man.pl
+```
+
+By default, it install the manpage in `~/.local/share/man/man1`.  However, you can specify a `--prefix`, and then it will install into `$prefix/share/man/man1`.  For example:
+
+```
+sudo ./install-man.pl --prefix=/usr/local
+```
+
+or:
+
+```
+sudo ./install-man.pl --prefix=/opt/plasma
+```
+
 ## License
 
 `hs-plasma` is licensed under the [MIT License](LICENSE).
