@@ -363,6 +363,8 @@ dmpGlobal gopt = SlawMap $ catMaybes
   , fmap   dmpGCount    (goptCount    gopt)
   , Just $ dmpGValidate (goptValidate gopt)
   , Just ("digits of fractional seconds", toSlaw (goptFracDigs gopt))
+  , dmpGDesIng "descrip" (goptDescrips gopt)
+  , dmpGDesIng "ingest"  (goptIngests  gopt)
   ]
 
 dmpGTimeout :: Duration -> (Slaw, Slaw)
@@ -379,6 +381,11 @@ dgv1 :: ValidationFlag -> Slaw
 dgv1 vf = toSlaw $ case vf `lookup` valNames of
                      Nothing -> T.pack $ show vf
                      Just x  -> x
+
+dmpGDesIng :: T.Text -> [Slaw] -> Maybe (Slaw, Slaw)
+dmpGDesIng _ []  = Nothing
+dmpGDesIng t [x] = Just (š (t <>  " to filter on"),  x)
+dmpGDesIng t xs  = Just (š (t <> "s to filter on"), SlawList xs)
 
 dmpEntities :: [AnnEntity a] -> Slaw
 dmpEntities []   = "none"

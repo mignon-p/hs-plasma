@@ -80,6 +80,8 @@ data GlobalOpts = GlobalOpts
   , goptFracDigs :: !Int
   , goptTimeout  :: Maybe Duration
   , goptWidth    :: Maybe Int
+  , goptDescrips :: [Slaw]
+  , goptIngests  :: [Slaw]
   } deriving (Eq, Ord, Show)
 
 instance Default GlobalOpts where
@@ -92,6 +94,8 @@ instance Default GlobalOpts where
                    , goptFracDigs = dfltFracDigs
                    , goptTimeout  = Nothing
                    , goptWidth    = Nothing
+                   , goptDescrips = []
+                   , goptIngests  = []
                    }
 
 data InputEntity = InPool     { ieHose   :: Hose            }

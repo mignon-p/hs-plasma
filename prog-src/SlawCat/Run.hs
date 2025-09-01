@@ -5,7 +5,9 @@ import Control.Exception
 import Control.Monad
 import Data.Char
 import Data.IORef
+import Data.List
 import Data.Maybe
+import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 -- import qualified Data.Text.IO               as T
 -- import qualified Data.Text.Lazy             as LT
@@ -78,24 +80,28 @@ readInputs mo cRef inps@(inp:rest) !serial !ec = do
   case done of
     True  -> return ec
     False -> do
-      (success, ec1) <- readInput mo inp serial
+      (success, ec1, serial') <- readInput mo inp serial
       let ec2 = ec `combineExitCode` ec1
       case success of
         False -> readInputs mo cRef rest 0 ec2
         True  -> do
           decrCount cRef
-          readInputs mo cRef inps (serial + 1) ec2
+          readInputs mo cRef inps serial' ec2
 
-readInput :: MyOpts -> AnnInput -> PoolIndex -> IO (Bool, ExitCode)
+readInput
+  :: MyOpts
+  -> AnnInput
+  -> PoolIndex
+  -> IO (Bool, ExitCode, PoolIndex)
 readInput mo ae@(AnnEntity { aeAnn = Just ie }) serial = do
   let ent = aeEnt ae
   maybeSlaw <- ri1 mo ent serial ie
   case maybeSlaw of
-    Nothing -> return (False, ExitSuccess)
-    Just s  -> do
-      ec <- processSlaw mo s
-      return (True, ec)
-readInput _ _ _ = return (False, ExitSuccess)
+    Nothing -> return (False, ExitSuccess, serial)
+    Just ms -> do
+      ec <- processSlaw mo ms
+      return (True, ec, msIndex ms + 1)
+readInput _ _ serial = return (False, ExitSuccess, serial)
 
 ri1
   :: MyOpts
@@ -106,12 +112,25 @@ ri1
 ri1 mo ent _      (InPool   h ) = readPool   mo ent h
 ri1 mo ent serial (InStream si) = readStream mo ent serial si
 
-readPool :: MyOpts -> IoEntity -> Hose -> IO (Maybe MetaSlaw)
-readPool _ ent h = do
-  eth <- tryJust isNoSuchProtein $ next h
+readPool
+  :: MyOpts
+  -> IoEntity
+  -> Hose
+  -> IO (Maybe MetaSlaw)
+readPool mo ent h = do
+  let gopt = moGlobal     mo
+      desc = goptDescrips gopt
+      f    = case desc of
+               [] -> next
+               _  -> (`probeFrwd` SlawList desc)
+  eth <- tryJust isNoSuchProtein $ f h
   case eth of
     Left  _  -> return Nothing
-    Right rp -> return $ Just $ rpToMetaSlaw rp $ entName ent
+    Right rp
+      | matchIngests (rpProtein rp) mo ->
+          return $ Just $ rpToMetaSlaw rp $ entName ent
+      | otherwise ->
+          readPool mo ent h
 
 isNoSuchProtein :: PlasmaException -> Maybe PlasmaException
 isNoSuchProtein pe@(PlasmaException { peRetort = Just tort })
@@ -132,17 +151,48 @@ readStream
   -> PoolIndex
   -> SlawInputStream
   -> IO (Maybe MetaSlaw)
-readStream _ ent serial si = do
-  let name = entName ent
+readStream mo ent serial si = do
+  let name    = entName ent
   maybeSlaw <- siRead si
   case maybeSlaw of
-    Nothing -> return Nothing
-    Just s  ->
-      return $ Just $ MetaSlaw { msSlaw      = s
-                               , msIndex     = serial
-                               , msTimestamp = Nothing
-                               , msSource    = ("file", name)
-                               }
+    Nothing                -> return Nothing
+    Just s
+      | matchDescrips s mo && matchIngests s mo ->
+          return $ Just $ MetaSlaw { msSlaw      = s
+                                   , msIndex     = serial
+                                   , msTimestamp = Nothing
+                                   , msSource    = ("file", name)
+                                   }
+      | otherwise          ->
+          readStream mo ent (serial + 1) si
+
+matchDescrips :: Slaw -> MyOpts -> Bool
+matchDescrips haystack mo =
+  case goptDescrips (moGlobal mo) of
+    []     -> True
+    needle -> md1 haystack needle
+
+md1 :: Slaw -> [Slaw] -> Bool
+md1 (SlawProtein (Just d) _ _) needle = md1 d needle
+md1 (SlawList    haystack    ) needle = needle `isSubsequenceOf` haystack
+md1 _                          _      = False
+
+matchIngests :: Slaw -> MyOpts -> Bool
+matchIngests haystack mo =
+  case goptIngests (moGlobal mo) of
+    []     -> True
+    needle -> mi1 haystack needle
+
+mi1 :: Slaw -> [Slaw] -> Bool
+mi1 (SlawProtein _ (Just i) _) needle = mi1 i        needle
+mi1 (SlawMap     haystack    ) needle = mi2 haystack needle
+mi1 _                          _      = False
+
+mi2 :: [(Slaw, Slaw)] -> [Slaw] -> Bool
+mi2 pairs [needle] = needle `elem` map fst pairs
+mi2 pairs  needle  =
+  let haystack = S.fromList $ map fst pairs
+  in all (`S.member` haystack) needle
 
 -- await inputs
 
@@ -206,25 +256,28 @@ ai1 mo cRef g !ec endTime = do
           notify mo "stopped awaiting because timeout was reached"
           return ec
     (False, _      )           -> do
-      ec1 <- catchJust isTimeout (ai2 mo g waitTime) return
+      (found, ec1) <- catchJust isTimeout (ai2 mo g waitTime) return
       let ec2 = ec `combineExitCode` ec1
-      decrCount cRef
+      when found $ decrCount cRef
       ai1 mo cRef g ec2 endTime
 
-ai2 :: MyOpts -> Gang -> Maybe Duration -> IO ExitCode
+ai2 :: MyOpts -> Gang -> Maybe Duration -> IO (Bool, ExitCode)
 ai2 mo g wt = do
   (rp, h) <- awaitNextMulti g $ durToTimeout wt
   let name = fromPoolName $ hosePool h
       ms   = rpToMetaSlaw rp name
-  processSlaw mo ms
+      prot = rpProtein rp
+  if matchDescrips prot mo && matchIngests prot mo
+    then (True,) <$> processSlaw mo ms
+    else return (False, ExitSuccess)
 
 durToTimeout :: Maybe Duration -> PoolTimeout
 durToTimeout Nothing  = WaitForever
 durToTimeout (Just t) = Timeout $ realToFrac t
 
-isTimeout :: PlasmaException -> Maybe ExitCode
+isTimeout :: PlasmaException -> Maybe (Bool, ExitCode)
 isTimeout (PlasmaException { peRetort = Just POOL_AWAIT_TIMEDOUT }) =
-  Just ExitSuccess
+  Just (False, ExitSuccess)
 isTimeout _ = Nothing
 
 notify :: MyOpts -> T.Text -> IO ()

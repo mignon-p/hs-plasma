@@ -10,6 +10,7 @@ module SlawCat.CmdLine
 
 import Data.Bifunctor
 import Data.Char
+import Data.Containers.ListUtils
 import Data.Default.Class
 import Data.Int
 import Data.List
@@ -38,6 +39,8 @@ data ScOpt = OptError    String
            | OptFracDigs !Int
            | OptTimeout  !Duration
            | OptWidth    !Int
+           | OptDescrips [Slaw]
+           | OptIngests  [Slaw]
            -- per-entity options
            | OptConfig   !IoType !Slaw
            | OptCfgOnly          !Slaw
@@ -74,6 +77,8 @@ updOpts !o (OptTimeout  t) = updGlob o $ \g -> g { goptAwait   = True
                                                  , goptTimeout = Just t
                                                  }
 updOpts !o (OptWidth    w) = updGlob o $ \g -> g { goptWidth   = Just w }
+updOpts !o (OptDescrips d) = updGlob o (updDescrips d)
+updOpts !o (OptIngests  i) = updGlob o (updIngests  i)
 -- per-entity options
 updOpts !o (OptConfig t s) = updCfg  o (Just t) s
 updOpts !o (OptCfgOnly  s) = updCfg  o Nothing  s
@@ -91,10 +96,16 @@ updEnt :: ScOpts -> (IoEntity -> IoEntity) -> ScOpts
 updEnt o f = o { optAccum = f (optAccum o) }
 
 updVal :: [ValidationFlag] -> GlobalOpts -> GlobalOpts
-updVal v g = g { goptValidate = uv1 (goptValidate g) v }
+updVal v g = g { goptValidate = goptValidate g `appendUniq` v }
 
-uv1 :: [ValidationFlag] -> [ValidationFlag] -> [ValidationFlag]
-uv1 v1 v2 = nub $ v1 ++ v2
+updDescrips :: [Slaw] -> GlobalOpts -> GlobalOpts
+updDescrips d g = g { goptDescrips = goptDescrips g ++ d }
+
+updIngests :: [Slaw] -> GlobalOpts -> GlobalOpts
+updIngests i g = g { goptIngests = goptIngests g `appendUniq` i }
+
+appendUniq :: Ord a => [a] -> [a] -> [a]
+appendUniq v1 v2 = nubOrd $ v1 ++ v2
 
 updCfg :: ScOpts -> Maybe IoType -> Slaw -> ScOpts
 updCfg o t s = updEnt o (uc1 t s)
@@ -262,6 +273,20 @@ descrs = concatMap expandR
                        , ")"
                        ]
        }
+  , AR { shrt = "D", long = "descrips", argD = "WORDS"
+       , optS = OptDescrips . wordsArg
+       , desc = concat [ "only process proteins that match the "
+                       , "specified descrips "
+                       , "(WORDS is split on whitespace)"
+                       ]
+       }
+  , AR { shrt = "I", long = "ingests", argD = "WORDS"
+       , optS = OptIngests . wordsArg
+       , desc = concat [ "only process proteins that have the "
+                       , "specified ingests "
+                       , "(WORDS is split on whitespace)"
+                       ]
+       }
   , VS Normal
   , LN ""
   , LN "Per-file/pool options:"
@@ -403,6 +428,9 @@ pv1 cs c =
                                  , " in "
                                  , show cs
                                  ]
+
+wordsArg :: String -> [Slaw]
+wordsArg = map toSlaw . words
 
 maxArray :: Int64 -> ScOpt
 maxArray n = cfgYaml $ def { wyoMaxArrayElements = Just (toInteger n) }
