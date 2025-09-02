@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.CmdLine.Pretty
+Description : produce a prettier usage message than System.Console.GetOpt
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 module SlawCat.CmdLine.Pretty
   ( UsageDescrV(..)
   , UsageDescr

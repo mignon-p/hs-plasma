@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.Vers
+Description : version information which is displayed with "--version"
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 {-# LANGUAGE CPP                        #-}
 {-# OPTIONS_GHC -Wno-unused-imports     #-}
 

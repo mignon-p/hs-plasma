@@ -1,3 +1,12 @@
+{-|
+Module      : Main
+Description : copy slawx between files and/or pools
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 import Control.Exception
 import Data.List
 import qualified Data.Text                as T

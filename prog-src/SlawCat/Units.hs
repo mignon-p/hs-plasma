@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.Units
+Description : parse and format durations and numbers of bytes
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 module SlawCat.Units
   ( Duration
   , formatNumBytes

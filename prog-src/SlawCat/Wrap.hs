@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.Wrap
+Description : utility functions for handling text wrapping
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 module SlawCat.Wrap
   ( wrapMessage
   , wrapOnSep

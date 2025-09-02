@@ -1,3 +1,12 @@
+{-|
+Module      : Main
+Description : basically just an example program/screwing around
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 import Control.Exception
 import Control.Monad
 import qualified Data.ByteString          as B

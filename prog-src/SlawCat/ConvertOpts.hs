@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.ConvertOpts
+Description : convert ScOpts to MyOpts, and open files and hoses
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 module SlawCat.ConvertOpts
   ( MyOpts(..)
   , invokeWithOpts

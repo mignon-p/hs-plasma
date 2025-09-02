@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.Types
+Description : common types (and constants) for slawcat
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 module SlawCat.Types
   ( IoType(..)
   , IoDir(..)

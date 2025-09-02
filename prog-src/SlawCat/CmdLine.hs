@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.CmdLine
+Description : parse the command line for slawcat
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 {-# LANGUAGE ScopedTypeVariables        #-}
 
 module SlawCat.CmdLine

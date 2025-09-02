@@ -1,3 +1,12 @@
+{-|
+Module      : SlawCat.Run
+Description : do the actual reading, processing, and writing of slawx
+Copyright   : © Mignon Pelletier, 2025
+License     : MIT
+Maintainer  : code@funwithsoftware.org
+Portability : GHC
+-}
+
 module SlawCat.Run (scRun) where
 
 import Control.Concurrent
