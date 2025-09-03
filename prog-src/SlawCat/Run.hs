@@ -19,7 +19,8 @@ import Data.Maybe
 import qualified Data.Set                   as S
 import qualified Data.Text                  as T
 -- import qualified Data.Text.IO               as T
--- import qualified Data.Text.Lazy             as LT
+import qualified Data.Text.IO.Utf8          as T8
+import qualified Data.Text.Lazy             as LT
 import qualified Data.Text.Lazy.Builder     as R
 import qualified Data.Text.Lazy.Builder.Int as R
 import qualified Data.Text.Lazy.IO          as LT
@@ -475,9 +476,9 @@ write2File mo ms ent h ref af = do
   let spew = spewOverview $ msSlaw ms
       gopt = moGlobal mo
   count <- incrRef ref
-  when (count > 0)          $ hPutStrLn h ""
+  when (count > 0)          $ hPutLT8Ln h mempty
   when (not $ entQuiet ent) $ writeFileComment gopt h ms
-  LT.hPutStrLn h spew
+  hPutLT8Ln h spew
   when af                   $ hFlush h
 
 incrRef :: IORef Integer -> IO Integer
@@ -492,7 +493,7 @@ writeFileComment :: GlobalOpts -> Handle -> MetaSlaw -> IO ()
 writeFileComment gopt h ms = do
   let pfx  = "*** "
       meta = R.toLazyText $ fmtLocation gopt pfx pfx ms
-  LT.hPutStrLn h meta
+  hPutLT8Ln h meta
 
 write2Stream
   :: MyOpts
@@ -515,4 +516,12 @@ writeStreamComment :: GlobalOpts -> Handle -> MetaSlaw -> IO ()
 writeStreamComment gopt h ms = do
   let pfx  = "# "
       meta = R.toLazyText $ fmtLocation gopt pfx pfx ms
-  LT.hPutStr h meta
+  hPutLT8 h meta
+
+hPutLT8 :: Handle -> LT.Text -> IO ()
+hPutLT8 h = mapM_ (T8.hPutStr h) . LT.toChunks
+
+hPutLT8Ln :: Handle -> LT.Text -> IO ()
+hPutLT8Ln h ltxt = do
+  hPutLT8    h ltxt
+  T8.hPutStr h "\n"
