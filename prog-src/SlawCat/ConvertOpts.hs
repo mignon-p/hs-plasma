@@ -225,7 +225,7 @@ warnInPos _   IoPool = []
 warnInPos pos _      =
   case posOption pos of
     Nothing  -> []
-    Just opt -> [opt <> "has no effect on file inputs"]
+    Just opt -> [opt <> " has no effect on file inputs"]
 
 posOption :: InitialPos -> Maybe T.Text
 posOption PosRewind     = Nothing -- (default option)
@@ -331,7 +331,7 @@ warnOutPos :: InitialPos -> [T.Text]
 warnOutPos pos =
   case posOption pos of
     Nothing  -> []
-    Just opt -> [opt <> "has no effect on outputs"]
+    Just opt -> [opt <> " has no effect on outputs"]
 
 noComment :: IoType -> Maybe T.Text
 noComment IoBinary = Just "binary"
@@ -383,7 +383,7 @@ dmpGCount :: Integer -> (Slaw, Slaw)
 dmpGCount n = ("count", toSlaw n)
 
 dmpGValidate :: [ValidationFlag] -> (Slaw, Slaw)
-dmpGValidate []    = ("validation", "standard validation only")
+dmpGValidate []    = ("validation", "only check for invalid encoding")
 dmpGValidate flags = ("validation", SlawList (map dgv1 flags))
 
 dgv1 :: ValidationFlag -> Slaw
