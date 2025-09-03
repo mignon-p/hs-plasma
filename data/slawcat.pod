@@ -1,4 +1,4 @@
-date: 2025-09-01
+date: 2025-09-03
 
 =head1 NAME
 
@@ -185,6 +185,12 @@ before B<-o> are applied to this file/pool.  Then all of the
 per-file/pool options are reset to defaults for the next file/pool on
 the command line.
 
+Output files are created if they do not exist, and are overwritten if
+they do exist.
+
+Output pools are created if they do not exist.  Created pools are
+S<1 MiB> with default options.
+
 =item B<-b>, B<--binary>
 
 Write to a binary slaw file.  Native endianness will be used, if not
@@ -262,6 +268,10 @@ Seek to one past the last protein in an input pool.
 Seek to specified index in an input pool.
 (Default is to rewind input pools.)
 
+This can also be used on file inputs, as well.  This is implemented by
+skipping slawx in the file until the desired index is reached.  (Slawx
+in files are numbered starting with 0.)
+
 =item B<-f>, B<--file>
 
 Read from a file.  The type of the file is auto-detected, but this
@@ -331,6 +341,13 @@ Print proteins from the file C<proteins.yaml> to stdout in "spew"
 format, only if they contain an ingest named "bunnies".
 
     slawcat -I bunnies proteins.yaml -s -o -
+
+Print the second slaw from C<stuff.yaml> to stdout in "spew" format.
+This is accomplished by using B<-i1> to start with the second slaw in
+the file (slawx in a file are numbered starting with zero), and then
+B<-c1> is used so that only one slaw is printed.
+
+    slawcat -c1 -i1 stuff.yaml -s -o -
 
 =head1 EXIT STATUS
 

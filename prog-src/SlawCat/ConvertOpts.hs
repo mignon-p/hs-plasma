@@ -217,8 +217,11 @@ warnInQuiet True  =
   ["--no-metadata-comment has no effect on inputs"]
 
 warnInPos :: InitialPos -> IoType -> [T.Text]
-warnInPos _   IoPool = []
-warnInPos pos _      =
+warnInPos _            IoPool = []
+-- we now support seek-to for files, by skipping until we reach
+-- the right index
+warnInPos (PosSeekTo _) _     = []
+warnInPos pos           _     =
   case posOption pos of
     Nothing  -> []
     Just opt -> [opt <> " has no effect on file inputs"]
@@ -413,14 +416,13 @@ dmpEntity ae = (key, SlawMap pairs)
 
     isOut    = dir == DirOutput
     isIn     = dir == DirInput
-    isInPool = isIn && typ == Just IoPool
 
     key   = toSlaw $ fixName name dir
     pairs = catMaybes
       [ Just (dmpEType tTxt)
-      , if isInPool then      dmpEPos  pos  idx else Nothing
-      , if isOut    then      dmpEOpts opts     else Nothing
-      , if isOut    then fmap dmpEMeta meta     else Nothing
+      , if isIn  then      dmpEPos  typ pos idx else Nothing
+      , if isOut then      dmpEOpts opts        else Nothing
+      , if isOut then fmap dmpEMeta meta        else Nothing
       , if isOut && commentOk typ
         then Just ("add metadata comment", SlawBool (not quiet))
         else Nothing
@@ -440,13 +442,25 @@ det1 IoSpew   = "spew"
 det1 IoPool   = "pool"
 det1 IoFile   = "file"
 
-dmpEPos :: InitialPos -> Maybe PoolIndex -> Maybe (Slaw, Slaw)
-dmpEPos PosRewind        idx = posPair "rewind"       idx
-dmpEPos PosToLast        idx = posPair "toLast"       idx
-dmpEPos PosRunout        idx = posPair "runout"       idx
-dmpEPos (PosSeekTo idx1) (Just idx2)
+dmpEPos
+  :: Maybe IoType
+  -> InitialPos
+  -> Maybe PoolIndex
+  -> Maybe (Slaw, Slaw)
+dmpEPos (Just IoPool) = dmpEPosPool
+dmpEPos _             = dmpEPosFile
+
+dmpEPosFile :: InitialPos -> Maybe PoolIndex -> Maybe (Slaw, Slaw)
+dmpEPosFile (PosSeekTo idx) _ = Just ("initial position", toSlaw (idx))
+dmpEPosFile _               _ = Nothing
+
+dmpEPosPool :: InitialPos -> Maybe PoolIndex -> Maybe (Slaw, Slaw)
+dmpEPosPool PosRewind        idx = posPair "rewind"       idx
+dmpEPosPool PosToLast        idx = posPair "toLast"       idx
+dmpEPosPool PosRunout        idx = posPair "runout"       idx
+dmpEPosPool (PosSeekTo idx1) (Just idx2)
   | idx1 /= idx2             = posPair (fmtSeek idx1) (Just idx2)
-dmpEPos (PosSeekTo idx)  _   = posPair (fmtSeek idx)  Nothing
+dmpEPosPool (PosSeekTo idx)  _   = posPair (fmtSeek idx)  Nothing
 
 fmtSeek :: PoolIndex -> String
 fmtSeek idx = "seekTo " ++ show idx

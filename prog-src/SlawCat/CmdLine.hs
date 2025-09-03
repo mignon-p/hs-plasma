@@ -365,7 +365,7 @@ descrs = concatMap expandR
        }
   , AR { shrt = "i", long = "seek-to", argD = "INTEGER"
        , optS = intArg (OptEntPos . PosSeekTo)
-       , desc = "seek to specified index in input pool"
+       , desc = "seek to specified index in input pool (or file)"
        }
   , AX { shrt = "f", long = "file"
        , optX = cfgOther IoFile

@@ -163,11 +163,14 @@ readStream
   -> IO (Maybe MetaSlaw)
 readStream mo ent serial si = do
   let name    = entName ent
+      idxOk   = case entPos ent of
+                  PosSeekTo idx -> serial >= idx
+                  _             -> True
   maybeSlaw <- siRead si
   case maybeSlaw of
     Nothing                -> return Nothing
     Just s
-      | matchDescrips s mo && matchIngests s mo ->
+      | idxOk && matchDescrips s mo && matchIngests s mo ->
           return $ Just $ MetaSlaw { msSlaw      = s
                                    , msIndex     = serial
                                    , msTimestamp = Nothing
