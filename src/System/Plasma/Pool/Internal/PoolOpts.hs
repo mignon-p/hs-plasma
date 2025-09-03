@@ -43,19 +43,19 @@ size2opts sz = def { pcoType = Just kMmap
                    , pcoSize = Just (fromIntegral sz)
                    }
 
--- | 1 Megabyte @mmap@ pool.
+-- | 1 MiB @mmap@ pool.
 small :: PoolCreateOptions
 small = size2opts c_pool_size_small
 
--- | 10 Megabyte @mmap@ pool.
+-- | 10 MiB @mmap@ pool.
 medium :: PoolCreateOptions
 medium = size2opts c_pool_size_medium
 
--- | 100 Megabyte @mmap@ pool.
+-- | 100 MiB @mmap@ pool.
 large :: PoolCreateOptions
 large = size2opts c_pool_size_large
 
--- | 2 Gigabyte @mmap@ pool.
+-- | 2 GiB @mmap@ pool.
 huge :: PoolCreateOptions
 huge = size2opts c_pool_size_huge
 
