@@ -36,6 +36,7 @@ import Data.Slaw.Util
 import System.Plasma.Pool
 
 import SlawCat.CmdLine
+import SlawCat.PathUtil
 import SlawCat.Types
 import SlawCat.Units
 import SlawCat.Wrap
@@ -172,11 +173,6 @@ typeFromExtension fp =
         | ext `elem` ["yaml", "pro"] -> Just IoYaml
         | ext `elem` ["spew", "txt"] -> Just IoSpew
         | otherwise                  -> Nothing
-
-isStdInOut :: FilePath -> Bool
-isStdInOut ""  = True
-isStdInOut "-" = True
-isStdInOut _   = False
 
 looksLikeFile :: FilePath -> Bool
 looksLikeFile fp
@@ -433,11 +429,6 @@ dmpEntity ae = (key, SlawMap pairs)
 commentOk :: Maybe IoType -> Bool
 commentOk Nothing  = True
 commentOk (Just t) = Nothing == noComment t
-
-fixName :: String -> IoDir -> T.Text
-fixName name _        | not (isStdInOut name) = T.pack name
-fixName _    DirInput                         = "stdin"
-fixName _    DirOutput                        = "stdout"
 
 dmpEType :: T.Text -> (Slaw, Slaw)
 dmpEType t = ("type", š t)

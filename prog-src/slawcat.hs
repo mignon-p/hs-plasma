@@ -8,14 +8,13 @@ Portability : GHC
 -}
 
 import Control.Exception
-import Data.List
+-- import Data.List
 import qualified Data.Text                as T
 import qualified Data.Text.IO             as T
 import qualified Data.Text.Lazy           as LT
 import qualified Data.Text.Lazy.IO        as LT
 import System.Environment
 import System.Exit
-import System.FilePath
 import System.IO
 import System.IO.Error
 import Text.Printf
@@ -23,12 +22,13 @@ import Text.Printf
 import Data.Slaw
 import Data.Slaw.Util
 
-import SlawCat.ConvertOpts
 import SlawCat.CmdLine
+import SlawCat.ConvertOpts
+import SlawCat.PathUtil
 import SlawCat.Run
 import SlawCat.Types
-import SlawCat.Wrap
 import SlawCat.Vers
+import SlawCat.Wrap
 
 printVersion :: IO ()
 printVersion = do
@@ -45,60 +45,31 @@ ethExc :: IO a -> IO (Either String a)
 ethExc action = do
   eth <- tryIO $ tryPE action
   case eth of
-    Left ioe        -> formatIOE ioe
-    Right (Left pe) -> formatPE  pe
+    Left ioe        -> return $ formatIOE ioe
+    Right (Left pe) -> return $ formatPE  pe
     Right (Right x) -> return $ Right x
 
-formatIOE :: IOError -> IO (Either String a)
-formatIOE ioe = do
-  ioe' <- substIOE ioe
-  return $ Left  $ displayException ioe'
+formatIOE :: IOError -> Either String a
+formatIOE ioe = Left $ displayException $ substIOE ioe
 
-formatPE :: PlasmaException -> IO (Either String a)
-formatPE pe = do
-  pe' <- substPE pe
-  return $ Left  $ displayPlasmaException False pe'
+formatPE :: PlasmaException -> Either String a
+formatPE pe = Left $ displayPlasmaException False $ substPE pe
 
-substIOE :: IOError -> IO IOError
-substIOE ioe = do
+substIOE :: IOError -> IOError
+substIOE ioe =
   case ioeGetFileName ioe of
-    Nothing -> return ioe
-    Just fp -> do
-      fp' <- substTilde fp
-      return $ ioeSetFileName ioe fp'
+    Nothing -> ioe
+    Just fp -> ioeSetFileName ioe $ substTilde fp
 
-substPE :: PlasmaException -> IO PlasmaException
-substPE pe@(PlasmaException { peLocation = Just erl }) = do
-  ds' <- substDS $ elSource erl
-  let erl' = erl { elSource = ds' }
-  return $ pe { peLocation = Just erl' }
-substPE pe = return pe
+substPE :: PlasmaException -> PlasmaException
+substPE pe@(PlasmaException { peLocation = Just erl }) =
+  let erl' = erl { elSource = substDS (elSource erl) }
+  in pe { peLocation = Just erl' }
+substPE pe = pe
 
-substDS :: DataSource -> IO DataSource
-substDS (DsFile fp) = DsFile <$> substTilde fp
-substDS ds          = return ds
-
-substTilde :: FilePath -> IO FilePath
-substTilde fp
-  | isRelative fp = return fp
-  | otherwise     = do
-      home <- lookupEnv "HOME"
-      return $ st1 home fp
-
-st1 :: Maybe FilePath -> FilePath -> FilePath
-st1 Nothing     orig = orig
-st1 (Just home) orig
-  | null home || isRelative home = orig
-  | tilde                        = '~' : rest
-  | otherwise                    = orig
-  where h    = dropTrailingPathSeparator home
-        hLen = length h
-        rest = drop hLen orig
-        slash = case rest of
-                  ('/' :_) -> True
-                  ('\\':_) -> True
-                  _        -> False
-        tilde = h `isPrefixOf` orig && slash
+substDS :: DataSource -> DataSource
+substDS (DsFile fp) = DsFile $ substTilde fp
+substDS ds          = ds
 
 prExc :: GlobalOpts -> IO ExitCode -> IO ExitCode
 prExc gopt action = do

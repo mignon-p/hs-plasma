@@ -243,6 +243,7 @@ executable slawcat
   other-modules:       SlawCat.CmdLine
                      , SlawCat.CmdLine.Pretty
                      , SlawCat.ConvertOpts
+                     , SlawCat.PathUtil
                      , SlawCat.Run
                      , SlawCat.Types
                      , SlawCat.Units

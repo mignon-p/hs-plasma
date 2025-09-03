@@ -36,6 +36,7 @@ import System.Loam.Retorts.Constants
 import System.Loam.Time
 import System.Plasma.Pool
 
+import SlawCat.PathUtil
 import SlawCat.Types
 import SlawCat.Units
 import SlawCat.Wrap
@@ -368,7 +369,11 @@ fam1 fracDigs str
     newDigs     = take fracDigs $ digs ++ repeat '0'
 
 fmtSource :: (String, String) -> R.Builder
-fmtSource (typ, name) = R.fromString typ <> ": " <> R.fromString name
+fmtSource (typ, name) = R.fromString typ <> ": " <> fs1 typ name
+
+fs1 :: String -> String -> R.Builder
+fs1 "file" name = R.fromText $ fixName name DirInput
+fs1 _      name = R.fromString name
 
 joinLine :: R.Builder -> R.Builder -> R.Builder
 joinLine pfx ln = pfx <> ln <> nl
