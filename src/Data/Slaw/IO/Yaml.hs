@@ -6,10 +6,10 @@ License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
 
-Adds additional capabilities to "Data.Slaw.IO", by allowing
-t'SlawInputStream' and t'SlawOutputStream' to be created with YAML
-slaw files, in addition to binary slaw files.  The streams can then
-be used with existing functions like 'siRead' and 'soWrite'.
+Adds additional capabilities to "Data.Slaw.IO", by
+allowing t'SlawInputStream' and t'SlawOutputStream' to be created
+with YAML slaw files, in addition to binary slaw files.  The streams
+can then be used with existing functions like 'siRead' and 'soWrite'.
 -}
 
 module Data.Slaw.IO.Yaml

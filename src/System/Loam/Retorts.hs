@@ -8,8 +8,8 @@ Portability : GHC
 
 Success and failure codes in libPlasma are indicated with a t'Retort',
 which is a signed 64-bit integer.  Failure codes are indicated with
-negative t'Retort's, and success is indicated with nonnegative
-t'Retort's.  The canonical success value is
+negative t'Retort's, and success is indicated with
+nonnegative t'Retort's.  The canonical success value is
 'System.Loam.Retorts.Constants.OB_OK', with the numerical value 0, but
 it is possible to define other, positive, success codes, which convey
 additional information.  But failure codes are where most of the
