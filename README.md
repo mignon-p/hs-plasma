@@ -15,15 +15,9 @@ libLoam and libPlasma C libraries.  See [their
 repository](https://purl.org/funwithsoftware/libPlasma) for
 information.
 
-Note: Currently, we expect the libLoam and libPlasma C libraries
-to be installed in `/opt/plasma`.  Unfortunately, for now, this
-is hardcoded in the `include-dirs` and `extra-lib-dirs` of
-`plasma.cabal`.  In the future, we would like to use the
-`pkg-config` files, but I ran into some trouble with that, and
-this was expedient.
-
-So, for example, the files `/opt/plasma/lib/libLoam.a` and
-`/opt/plasma/lib/libPlasma.a` are expected to exist.
+`hs-plasma.cabal` uses `pkg-config` to find the libLoam and libPlasma
+libraries.  Therefore, the directory that contains `libLoam.pc` and
+`libPlasma.pc` needs to be on your `PKG_CONFIG_PATH`.
 
 You also need to have `perl` on your `PATH`, because Perl is used
 to preprocess some files in `hs-slaw`.
@@ -93,7 +87,7 @@ To install the manpage for `slawcat`, run the `install-man.pl` script in this di
 ./install-man.pl
 ```
 
-By default, it install the manpage in `~/.local/share/man/man1`.  However, you can specify a `--prefix`, and then it will install into `$prefix/share/man/man1`.  For example:
+By default, it installs the manpage in `~/.local/share/man/man1`.  However, you can specify a `--prefix`, and then it will install into `$prefix/share/man/man1`.  For example:
 
 ```
 sudo ./install-man.pl --prefix=/usr/local

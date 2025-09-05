@@ -161,24 +161,10 @@ library
                      , time                 >= 1.8.0.2   && < 1.15
                      , unordered-containers >= 0.2.10.0  && < 0.3
 
-  -- pkgconfig-depends:   libLoam
-
-  include-dirs:        /opt/plasma/include
-
-  extra-lib-dirs:      /opt/plasma/lib
-
-  -- extra-lib-dirs-static: /opt/plasma/lib
-
-  -- Ugh, order is important!  Loam must come after Plasma,
-  -- since Plasma calls functions in Loam.
-  extra-libraries:     Plasma
-                     , Loam
-                     , yaml
-                     , ssl
-                     , crypto
-
-  -- extra-libraries-static: Loam
-  --                       , Plasma
+  -- For this to work, libLoam.pc and libPlasma.pc need to be in
+  -- a directory that is on your PKG_CONFIG_PATH.
+  pkgconfig-depends:   libLoam
+                     , libPlasma
 
   -- Directories containing source files.
   hs-source-dirs:      src
