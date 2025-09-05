@@ -8,12 +8,17 @@ This library does not expose the "slaw" API from libPlasma.
 Instead, marshaling of slawx is expected to be done with the
 [hs-slaw](https://github.com/mignon-p/hs-slaw) Haskell library.
 
+Pre-built Haddock documentation for `hs-slaw` and `hs-plasma` is
+available [here](https://funwithsoftware.org/hs-plasma/).
+
 ## Prerequisites
 
-Before building, you will need to have built and installed the
-libLoam and libPlasma C libraries.  See [their
-repository](https://purl.org/funwithsoftware/libPlasma) for
-information.
+Before building, you will need to have built and installed
+the libLoam and libPlasma C libraries.  See
+[their repository](https://purl.org/funwithsoftware/libPlasma)
+for information.  You will need Plasma version 5.6.0 or later
+(something downstream of
+[97140008](https://github.com/plasma-hamper/plasma/pull/16)).
 
 `hs-plasma.cabal` uses `pkg-config` to find the libLoam and libPlasma
 libraries.  Therefore, the directory that contains `libLoam.pc` and
@@ -26,8 +31,15 @@ to preprocess some files in `hs-slaw`.
 
 The Haskell Plasma binding can be built with either
 [Cabal](https://www.haskell.org/cabal/) or
-[Stack](https://haskellstack.org/).  In either case, the hs-slaw
-and hs-plasma repositories should be checked out as siblings:
+[Stack](https://haskellstack.org/).  If you don't know anything about
+Haskell, I recommend using Stack.  Just [install
+Stack](https://docs.haskellstack.org/en/stable/#how-to-install-stack)
+and then it will take care of downloading known-to-work versions of
+[GHC](https://www.haskell.org/ghc/) and other tools automatically as
+needed.
+
+In either case, the hs-slaw and hs-plasma repositories should be
+checked out as siblings:
 
 ```
 cd ~/some/where

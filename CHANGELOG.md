@@ -1,4 +1,4 @@
-# Revision history for plasma
+# Revision history for hs-plasma
 
 ## 0.1.0.0 -- YYYY-mm-dd
 
