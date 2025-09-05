@@ -1,7 +1,7 @@
 {-|
 Module      : System.Loam.Internal.Enums
-Description : Enumerations from ob-vers.h
-Copyright   : © Mignon Pelletier, 2024
+Description : Enumerations from ob-vers.h, ob-dirs.h, and ob-log.h
+Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
@@ -55,7 +55,7 @@ import Data.Slaw
 
 -- | Which version string to return.
 data VersionOfWhat =
-    GspeakVersion
+    PlasmaVersion
   | CompilerVersion
   | OsVersion
   | KernelVersion
@@ -71,7 +71,7 @@ instance Nameable VersionOfWhat where
   typeName _ = "VersionOfWhat"
 
 versionOfWhat2int :: VersionOfWhat -> CInt
-versionOfWhat2int GspeakVersion      = #{const OB_VERSION_OF_GSPEAK}
+versionOfWhat2int PlasmaVersion      = #{const OB_VERSION_OF_GSPEAK}
 versionOfWhat2int CompilerVersion    = #{const OB_VERSION_OF_COMPILER}
 versionOfWhat2int OsVersion          = #{const OB_VERSION_OF_OS}
 versionOfWhat2int KernelVersion      = #{const OB_VERSION_OF_KERNEL}

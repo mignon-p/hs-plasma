@@ -55,7 +55,7 @@ handleEmptyVers v
 
 scVers :: IO [(T.Text, T.Text)]
 scVers = do
-  plasmaVers <- getVersion GspeakVersion
+  plasmaVers <- getVersion PlasmaVersion
   let (pkgTxt, versTxt) = T.span (not . isSpace) $ T.strip plasmaVers
       pair1 = (handleEmptyPkg pkgTxt, handleEmptyVers versTxt)
       pair2 = ("platform", T.pack (os ++ "/" ++ arch))

@@ -190,7 +190,7 @@ pattern OB_DISCONNECTED      :: Retort
 pattern OB_DISCONNECTED      =  Retort (#{const OB_DISCONNECTED})
 
 -- | __Failure code:__ Illegal mixing of different versions of
--- g-speak headers and shared libs.
+-- Plasma headers and shared libs.
 pattern OB_VERSION_MISMATCH  :: Retort
 pattern OB_VERSION_MISMATCH  =  Retort (#{const OB_VERSION_MISMATCH})
 

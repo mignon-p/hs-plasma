@@ -1,16 +1,15 @@
 {-|
 Module      : System.Loam.Version
 Description : Functions from ob-vers.h
-Copyright   : © Mignon Pelletier, 2024
+Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
 
 Functions for getting information about the current system.  You can
-get things like the g-speak version number and the yobuild version
-number (neither of which mean anything in the current state that
-libPlasma is in).  You can also get things like the OS version,
-compiler version, and CPU model.
+get the c-plasma version number ('PlasmaVersion'), and also things
+like the OS version ('OsVersion'), compiler version
+('CompilerVersion'), and CPU model ('CpuModel').
 -}
 
 module System.Loam.Version

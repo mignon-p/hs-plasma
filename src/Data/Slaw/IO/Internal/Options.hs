@@ -1,7 +1,7 @@
 {-|
 Module      : Data.Slaw.IO.Internal.Options
 Description : Types that represent slaw option maps
-Copyright   : © Mignon Pelletier, 2024
+Copyright   : © Mignon Pelletier, 2024-2025
 License     : MIT
 Maintainer  : code@funwithsoftware.org
 Portability : GHC
@@ -115,7 +115,7 @@ data WriteYamlOptions = WriteYamlOptions
     -- [default]: 'True'
   , wyoOrderedMaps      :: Maybe Bool
     -- | If 'True', starts the file with a comment which includes
-    -- the g-speak and libYaml version numbers.
+    -- the c-plasma and libYaml version numbers.
     --
     -- [key]: @comment@
     --
@@ -201,7 +201,7 @@ data PoolCreateOptions = PoolCreateOptions
     -- after it is created.  You should almost always have this
     -- enabled.  The only reason to ever disable it is if you want
     -- to create pools that can be read by very old versions of
-    -- Plasma (g-speak < v2.0).
+    -- Plasma (c-plasma < v2.0).
     --
     -- [key]: @resizable@
     --

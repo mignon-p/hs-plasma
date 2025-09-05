@@ -84,7 +84,7 @@ tortTuples =
     )
   , ( OB_VERSION_MISMATCH
     , "OB_VERSION_MISMATCH"
-    , "Illegal mixing of different versions of g-speak headers and \
+    , "Illegal mixing of different versions of Plasma headers and \
       \shared libs"
     , Nothing
     )
