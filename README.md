@@ -11,6 +11,12 @@ Instead, marshaling of slawx is expected to be done with the
 Pre-built Haddock documentation for `hs-slaw` and `hs-plasma` is
 available [here](https://funwithsoftware.org/hs-plasma/).
 
+This repository also contains the [slawcat](data/slawcat.pod) utility
+program, which can be used to copy slawx between pools and/or files
+from the command line.  A binary of `slawcat` for x86\_64 Linux is
+available under
+[releases](https://github.com/mignon-p/hs-plasma/releases).
+
 ## Prerequisites
 
 Before building, you will need to have built and installed
