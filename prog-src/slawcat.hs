@@ -32,7 +32,7 @@ import SlawCat.Wrap
 
 printVersion :: IO ()
 printVersion = do
-  T.putStrLn "slawcat 2025-09-03"
+  T.putStrLn "slawcat 2025-09-06"
   T.putStrLn "https://github.com/mignon-p/hs-plasma"
   T.putStrLn ""
   pairs <- scVers
